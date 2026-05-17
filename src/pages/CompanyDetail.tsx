@@ -291,6 +291,44 @@ export default function CompanyDetail() {
     setShareholders(prev => prev.filter(s => s.id !== sid));
   }
 
+  async function uploadDocument(category: string, file: File) {
+    if (!id) return;
+    setUploadingCat(category);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${id}/${category}/${Date.now()}_${safeName}`;
+    const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
+    if (upErr) { setUploadingCat(null); return toast.error(upErr.message); }
+    const { data, error } = await supabase
+      .from("company_documents")
+      .insert({
+        company_id: id,
+        category,
+        file_name: file.name,
+        file_path: path,
+        file_size: file.size,
+        mime_type: file.type || null,
+      })
+      .select()
+      .single();
+    setUploadingCat(null);
+    if (error) return toast.error(error.message);
+    setDocuments(prev => [...prev, data as CompanyDoc]);
+    toast.success("File uploaded");
+  }
+
+  async function downloadDocument(doc: CompanyDoc) {
+    const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
+    if (error || !data) return toast.error(error?.message || "Failed to get URL");
+    window.open(data.signedUrl, "_blank");
+  }
+
+  async function deleteDocument(doc: CompanyDoc) {
+    await supabase.storage.from("company-documents").remove([doc.file_path]);
+    const { error } = await supabase.from("company_documents").delete().eq("id", doc.id);
+    if (error) return toast.error(error.message);
+    setDocuments(prev => prev.filter(d => d.id !== doc.id));
+  }
+
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
