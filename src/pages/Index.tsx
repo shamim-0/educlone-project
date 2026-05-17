@@ -12,6 +12,8 @@ interface Company {
   type: string;
   branch_id: string | null;
   created_at: string;
+  emergency?: boolean | null;
+  take_action?: boolean | null;
   branches?: { name: string } | null;
 }
 
