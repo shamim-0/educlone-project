@@ -107,6 +107,9 @@ export default function CompanyDetail() {
     phone: "", email: "", birthdate: "", passport: "", nid: "", iqama: "",
   });
   const [savingSh, setSavingSh] = useState(false);
+  const [documents, setDocuments] = useState<CompanyDoc[]>([]);
+  const [uploadingCat, setUploadingCat] = useState<string | null>(null);
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
