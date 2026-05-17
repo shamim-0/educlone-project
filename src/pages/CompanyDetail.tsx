@@ -472,6 +472,37 @@ export default function CompanyDetail() {
               </ul>
             )}
           </Card>
+
+          {/* All Credentials */}
+          <Card className="p-4 space-y-3">
+            <h2 className="font-semibold flex items-center gap-2">
+              <span className="text-accent">🔑</span> All Credentials
+            </h2>
+            {(() => {
+              const creds = STEP_DEFS.filter(d => {
+                const s = steps[d.key];
+                return s && ((s.username && s.username.trim()) || (s.password && s.password.trim()));
+              });
+              if (creds.length === 0) {
+                return <p className="text-center text-sm text-muted-foreground py-6">No credentials saved yet</p>;
+              }
+              return (
+                <ul className="space-y-2">
+                  {creds.map(d => {
+                    const s = steps[d.key];
+                    return (
+                      <li key={d.key} className="rounded-md border border-border bg-muted/30 px-3 py-2">
+                        <div className="text-sm font-semibold">{d.label}</div>
+                        {s.username && <div className="text-xs text-muted-foreground mt-1">User: <span className="text-foreground font-mono">{s.username}</span></div>}
+                        {s.password && <div className="text-xs text-muted-foreground">Pass: <span className="text-foreground font-mono">{s.password}</span></div>}
+                        {s.note && <div className="text-xs text-muted-foreground">Notes: <span className="text-foreground">{s.note}</span></div>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              );
+            })()}
+          </Card>
         </div>
       </div>
 
