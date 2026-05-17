@@ -240,6 +240,43 @@ export default function CompanyDetail() {
     setManagers(prev => prev.filter(m => m.id !== mid));
   }
 
+  async function addShareholder() {
+    if (!id) return;
+    const name = shForm.name.trim();
+    if (!name) return toast.error("Name is required");
+    setSavingSh(true);
+    const sp = shForm.share_percent.trim();
+    const { data, error } = await supabase
+      .from("company_shareholders")
+      .insert({
+        company_id: id,
+        shareholder_type: shForm.shareholder_type,
+        name,
+        arabic_name: shForm.arabic_name.trim() || null,
+        share_percent: sp ? Number(sp) : null,
+        phone: shForm.phone.trim() || null,
+        email: shForm.email.trim() || null,
+        birthdate: shForm.birthdate || null,
+        passport: shForm.passport.trim() || null,
+        nid: shForm.nid.trim() || null,
+        iqama: shForm.iqama.trim() || null,
+      })
+      .select()
+      .single();
+    setSavingSh(false);
+    if (error) return toast.error(error.message);
+    setShareholders(prev => [...prev, data as Shareholder]);
+    setShForm({ shareholder_type: "owner", name: "", arabic_name: "", share_percent: "", phone: "", email: "", birthdate: "", passport: "", nid: "", iqama: "" });
+    setShOpen(false);
+    toast.success("Shareholder added");
+  }
+
+  async function deleteShareholder(sid: string) {
+    const { error } = await supabase.from("company_shareholders").delete().eq("id", sid);
+    if (error) return toast.error(error.message);
+    setShareholders(prev => prev.filter(s => s.id !== sid));
+  }
+
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
