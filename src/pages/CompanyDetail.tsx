@@ -116,19 +116,21 @@ export default function CompanyDetail() {
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const [c, b, s, a, m, sh] = await Promise.all([
+      const [c, b, s, a, m, sh, docs] = await Promise.all([
         supabase.from("companies").select("*").eq("id", id).maybeSingle(),
         supabase.from("branches").select("id,name").order("name"),
         supabase.from("company_steps").select("*").eq("company_id", id),
         supabase.from("cr_activities").select("*").eq("company_id", id).order("created_at"),
         supabase.from("company_managers").select("*").eq("company_id", id).order("created_at"),
         supabase.from("company_shareholders").select("*").eq("company_id", id).order("created_at"),
+        supabase.from("company_documents").select("*").eq("company_id", id).order("created_at"),
       ]);
       if (c.data) setCompany(c.data as Company);
       if (b.data) setBranches(b.data as Branch[]);
       if (a.data) setActivities(a.data as CrActivity[]);
       if (m.data) setManagers(m.data as Manager[]);
       if (sh.data) setShareholders(sh.data as Shareholder[]);
+      if (docs.data) setDocuments(docs.data as CompanyDoc[]);
       const map: Record<string, Step> = {};
       (s.data ?? []).forEach((row: any) => { map[row.step_key] = row; });
       STEP_DEFS.forEach(def => {
