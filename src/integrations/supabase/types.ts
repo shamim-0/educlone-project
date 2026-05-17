@@ -178,6 +178,38 @@ export type Database = {
           },
         ]
       }
+      cr_activities: {
+        Row: {
+          code: string
+          company_id: string
+          created_at: string
+          id: string
+          label: string
+        }
+        Insert: {
+          code: string
+          company_id: string
+          created_at?: string
+          id?: string
+          label: string
+        }
+        Update: {
+          code?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cr_activities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_tasks: {
         Row: {
           assigned_to: string | null
