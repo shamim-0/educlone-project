@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Zap, Save, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Zap, Save, Plus, Trash2, Upload, FileText, Download, Folder } from "lucide-react";
+
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -39,6 +40,14 @@ interface Shareholder {
   share_percent: number | null; phone: string | null; email: string | null;
   birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
 }
+interface CompanyDoc { id: string; category: string; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
+
+const DOC_CATEGORIES = [
+  { key: "bangladesh", label: "Bangladesh Papers", flag: "BD", color: "border-accent/30" },
+  { key: "uk", label: "UK Papers", flag: "GB", color: "border-primary/30" },
+  { key: "usa", label: "USA Papers", flag: "US", color: "border-destructive/30" },
+  { key: "other", label: "Other Documents", flag: "📁", color: "border-border" },
+] as const;
 
 const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolean }[] = [
   { key: "email_account", label: "Email Account", tags: ["Credentials"], hasCreds: true },
@@ -98,25 +107,30 @@ export default function CompanyDetail() {
     phone: "", email: "", birthdate: "", passport: "", nid: "", iqama: "",
   });
   const [savingSh, setSavingSh] = useState(false);
+  const [documents, setDocuments] = useState<CompanyDoc[]>([]);
+  const [uploadingCat, setUploadingCat] = useState<string | null>(null);
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const [c, b, s, a, m, sh] = await Promise.all([
+      const [c, b, s, a, m, sh, docs] = await Promise.all([
         supabase.from("companies").select("*").eq("id", id).maybeSingle(),
         supabase.from("branches").select("id,name").order("name"),
         supabase.from("company_steps").select("*").eq("company_id", id),
         supabase.from("cr_activities").select("*").eq("company_id", id).order("created_at"),
         supabase.from("company_managers").select("*").eq("company_id", id).order("created_at"),
         supabase.from("company_shareholders").select("*").eq("company_id", id).order("created_at"),
+        supabase.from("company_documents").select("*").eq("company_id", id).order("created_at"),
       ]);
       if (c.data) setCompany(c.data as Company);
       if (b.data) setBranches(b.data as Branch[]);
       if (a.data) setActivities(a.data as CrActivity[]);
       if (m.data) setManagers(m.data as Manager[]);
       if (sh.data) setShareholders(sh.data as Shareholder[]);
+      if (docs.data) setDocuments(docs.data as CompanyDoc[]);
       const map: Record<string, Step> = {};
       (s.data ?? []).forEach((row: any) => { map[row.step_key] = row; });
       STEP_DEFS.forEach(def => {
@@ -275,6 +289,44 @@ export default function CompanyDetail() {
     const { error } = await supabase.from("company_shareholders").delete().eq("id", sid);
     if (error) return toast.error(error.message);
     setShareholders(prev => prev.filter(s => s.id !== sid));
+  }
+
+  async function uploadDocument(category: string, file: File) {
+    if (!id) return;
+    setUploadingCat(category);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${id}/${category}/${Date.now()}_${safeName}`;
+    const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
+    if (upErr) { setUploadingCat(null); return toast.error(upErr.message); }
+    const { data, error } = await supabase
+      .from("company_documents")
+      .insert({
+        company_id: id,
+        category,
+        file_name: file.name,
+        file_path: path,
+        file_size: file.size,
+        mime_type: file.type || null,
+      })
+      .select()
+      .single();
+    setUploadingCat(null);
+    if (error) return toast.error(error.message);
+    setDocuments(prev => [...prev, data as CompanyDoc]);
+    toast.success("File uploaded");
+  }
+
+  async function downloadDocument(doc: CompanyDoc) {
+    const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
+    if (error || !data) return toast.error(error?.message || "Failed to get URL");
+    window.open(data.signedUrl, "_blank");
+  }
+
+  async function deleteDocument(doc: CompanyDoc) {
+    await supabase.storage.from("company-documents").remove([doc.file_path]);
+    const { error } = await supabase.from("company_documents").delete().eq("id", doc.id);
+    if (error) return toast.error(error.message);
+    setDocuments(prev => prev.filter(d => d.id !== doc.id));
   }
 
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
@@ -601,6 +653,74 @@ export default function CompanyDetail() {
           </Card>
         </div>
       </div>
+
+      {/* Documents */}
+      <Card className="p-4 space-y-4">
+        <h2 className="font-semibold flex items-center gap-2">
+          <Folder className="h-5 w-5 text-accent" /> Documents
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {DOC_CATEGORIES.map(cat => {
+            const files = documents.filter(d => d.category === cat.key);
+            return (
+              <Card key={cat.key} className={cn("p-4 space-y-3 bg-muted/20", cat.color)}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{cat.flag}</span>
+                    <span className="font-medium truncate">{cat.label}</span>
+                    <span className="text-xs text-muted-foreground">({files.length} files)</span>
+                  </div>
+                  <input
+                    ref={(el) => { fileInputs.current[cat.key] = el; }}
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) uploadDocument(cat.key, f);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    disabled={uploadingCat === cat.key}
+                    onClick={() => fileInputs.current[cat.key]?.click()}
+                  >
+                    <Upload className="h-3.5 w-3.5 mr-1" />
+                    {uploadingCat === cat.key ? "Uploading…" : "Upload"}
+                  </Button>
+                </div>
+                {files.length === 0 ? (
+                  <p className="text-center text-xs text-muted-foreground py-4">No files uploaded</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {files.map(f => (
+                      <li key={f.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2.5 py-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="text-sm truncate">{f.file_name}</span>
+                          {f.file_size != null && (
+                            <span className="text-[10px] text-muted-foreground shrink-0">
+                              {(f.file_size / 1024).toFixed(1)} KB
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadDocument(f)}>
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      </Card>
 
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
         <DialogContent>
