@@ -37,7 +37,7 @@ export default function CompanyPage() {
   const load = async () => {
     setLoading(true);
     const [{ data: c, error }, { data: b }] = await Promise.all([
-      supabase.from("companies").select("id, name, type, branch_id, branches(name)").order("created_at", { ascending: false }),
+      supabase.from("companies").select("id, name, type, branch_id, branches!companies_branch_id_fkey(name)").order("created_at", { ascending: false }),
       supabase.from("branches").select("id, name").order("name"),
     ]);
     if (error) toast.error(error.message);
