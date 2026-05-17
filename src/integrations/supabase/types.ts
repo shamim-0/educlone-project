@@ -85,32 +85,44 @@ export type Database = {
         Row: {
           address: string | null
           branch_id: string | null
+          contact_email: string | null
+          cr_number: string | null
           created_at: string
           created_by: string | null
           id: string
           name: string
+          note: string | null
           phone: string | null
           type: Database["public"]["Enums"]["company_type"]
+          whatsapp: string | null
         }
         Insert: {
           address?: string | null
           branch_id?: string | null
+          contact_email?: string | null
+          cr_number?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          note?: string | null
           phone?: string | null
           type?: Database["public"]["Enums"]["company_type"]
+          whatsapp?: string | null
         }
         Update: {
           address?: string | null
           branch_id?: string | null
+          contact_email?: string | null
+          cr_number?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          note?: string | null
           phone?: string | null
           type?: Database["public"]["Enums"]["company_type"]
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -118,6 +130,50 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_steps: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          note: string | null
+          password: string | null
+          status: string
+          step_key: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          password?: string | null
+          status?: string
+          step_key: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          password?: string | null
+          status?: string
+          step_key?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_steps_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
