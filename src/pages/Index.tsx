@@ -62,24 +62,13 @@ function CompanyCard({ c, done, processing }: { c: Company; done: number; proces
         </Badge>
       </div>
 
-      {/* Step dots */}
+      {/* Step dots — green=done, blue=processing, muted=not started */}
       <div className="mt-5 flex items-center gap-1.5">
         {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
-          const filled = i < p.steps;
-          const isLast = i === p.steps - 1;
-          return (
-            <span
-              key={i}
-              className={cn(
-                "h-2 w-2 rounded-full",
-                filled
-                  ? isLast
-                    ? "bg-primary"
-                    : "bg-accent"
-                  : "bg-muted"
-              )}
-            />
-          );
+          let cls = "bg-muted";
+          if (i < p.done) cls = "bg-accent";
+          else if (i < p.done + p.processing) cls = "bg-primary";
+          return <span key={i} className={cn("h-2 w-2 rounded-full", cls)} />;
         })}
       </div>
 
@@ -95,11 +84,12 @@ function CompanyCard({ c, done, processing }: { c: Company; done: number; proces
       </div>
 
       <div className="mt-2 flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{p.steps}/{TOTAL_STEPS} steps completed</span>
+        <span className="text-muted-foreground">{p.done}/{TOTAL_STEPS} steps completed</span>
         <span className={cn("font-semibold", p.overdue ? "text-destructive" : "text-primary")}>
           {p.percent}%
         </span>
       </div>
+
 
       {/* Days status */}
       <div className="mt-4 pt-4 border-t flex items-center gap-2 text-xs">
@@ -132,24 +122,36 @@ function CompanyCard({ c, done, processing }: { c: Company; done: number; proces
 
 export default function Index() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Dashboard | ISBI Tracker";
     const load = async () => {
-      const { data, error } = await supabase
-        .from("companies")
-        .select("id, name, type, branch_id, created_at, branches!companies_branch_id_fkey(name)")
-        .order("created_at", { ascending: false });
-      if (!error) setCompanies((data as Company[]) ?? []);
+      const [cRes, sRes] = await Promise.all([
+        supabase
+          .from("companies")
+          .select("id, name, type, branch_id, created_at, branches!companies_branch_id_fkey(name)")
+          .order("created_at", { ascending: false }),
+        supabase.from("company_steps").select("company_id, status"),
+      ]);
+      if (!cRes.error) setCompanies((cRes.data as Company[]) ?? []);
+      const counts: Record<string, { done: number; processing: number }> = {};
+      (sRes.data ?? []).forEach((r: any) => {
+        const c = counts[r.company_id] ?? { done: 0, processing: 0 };
+        if (r.status === "done") c.done++;
+        else if (r.status === "processing") c.processing++;
+        counts[r.company_id] = c;
+      });
+      setStepCounts(counts);
       setLoading(false);
     };
     load();
   }, []);
 
   const sorted = [...companies].sort((a, b) => {
-    const ao = deriveProgress(a.created_at).overdue ? 0 : 1;
-    const bo = deriveProgress(b.created_at).overdue ? 0 : 1;
+    const ao = deriveProgress(a.created_at, 0, 0).overdue ? 0 : 1;
+    const bo = deriveProgress(b.created_at, 0, 0).overdue ? 0 : 1;
     return ao - bo;
   });
 
@@ -170,7 +172,14 @@ export default function Index() {
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sorted.map((c) => <CompanyCard key={c.id} c={c} />)}
+          {sorted.map((c) => (
+            <CompanyCard
+              key={c.id}
+              c={c}
+              done={stepCounts[c.id]?.done ?? 0}
+              processing={stepCounts[c.id]?.processing ?? 0}
+            />
+          ))}
         </div>
       )}
     </div>
