@@ -34,6 +34,11 @@ interface Step {
 }
 interface CrActivity { id: string; code: string; label: string }
 interface Manager { id: string; name: string; manager_type: string; iqama: string | null; birthdate: string | null }
+interface Shareholder {
+  id: string; shareholder_type: string; name: string; arabic_name: string | null;
+  share_percent: number | null; phone: string | null; email: string | null;
+  birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
+}
 
 const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolean }[] = [
   { key: "email_account", label: "Email Account", tags: ["Credentials"], hasCreds: true },
