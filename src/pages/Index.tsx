@@ -16,7 +16,7 @@ interface Company {
 }
 
 const TARGET_DAYS = 45;
-const TOTAL_STEPS = 18;
+const TOTAL_STEPS = 17;
 
 function deriveProgress(createdAt: string, done: number, processing: number) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));

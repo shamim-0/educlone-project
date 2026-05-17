@@ -48,7 +48,7 @@ const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolea
   { key: "kafala", label: "Kafala", tags: ["KSA"] },
   { key: "cr_extract", label: "CR Extract", tags: ["KSA"] },
   { key: "bank_account", label: "Bank Account", tags: ["Banking"] },
-  { key: "final_handover", label: "Final Handover", tags: ["Closing"] },
+  
 ];
 
 const STATUS_OPTS = [
