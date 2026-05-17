@@ -142,7 +142,7 @@ export default function Index() {
       const [cRes, sRes] = await Promise.all([
         supabase
           .from("companies")
-          .select("id, name, type, branch_id, created_at, branches!companies_branch_id_fkey(name)")
+          .select("id, name, type, branch_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
           .order("created_at", { ascending: false }),
         supabase.from("company_steps").select("company_id, status"),
       ]);
