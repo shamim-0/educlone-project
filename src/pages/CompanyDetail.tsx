@@ -654,6 +654,74 @@ export default function CompanyDetail() {
         </div>
       </div>
 
+      {/* Documents */}
+      <Card className="p-4 space-y-4">
+        <h2 className="font-semibold flex items-center gap-2">
+          <Folder className="h-5 w-5 text-accent" /> Documents
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {DOC_CATEGORIES.map(cat => {
+            const files = documents.filter(d => d.category === cat.key);
+            return (
+              <Card key={cat.key} className={cn("p-4 space-y-3 bg-muted/20", cat.color)}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{cat.flag}</span>
+                    <span className="font-medium truncate">{cat.label}</span>
+                    <span className="text-xs text-muted-foreground">({files.length} files)</span>
+                  </div>
+                  <input
+                    ref={(el) => { fileInputs.current[cat.key] = el; }}
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) uploadDocument(cat.key, f);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    disabled={uploadingCat === cat.key}
+                    onClick={() => fileInputs.current[cat.key]?.click()}
+                  >
+                    <Upload className="h-3.5 w-3.5 mr-1" />
+                    {uploadingCat === cat.key ? "Uploading…" : "Upload"}
+                  </Button>
+                </div>
+                {files.length === 0 ? (
+                  <p className="text-center text-xs text-muted-foreground py-4">No files uploaded</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {files.map(f => (
+                      <li key={f.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2.5 py-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="text-sm truncate">{f.file_name}</span>
+                          {f.file_size != null && (
+                            <span className="text-[10px] text-muted-foreground shrink-0">
+                              {(f.file_size / 1024).toFixed(1)} KB
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadDocument(f)}>
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      </Card>
+
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
         <DialogContent>
           <DialogHeader>
