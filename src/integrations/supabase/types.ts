@@ -89,10 +89,12 @@ export type Database = {
           cr_number: string | null
           created_at: string
           created_by: string | null
+          emergency: boolean
           id: string
           name: string
           note: string | null
           phone: string | null
+          take_action: boolean
           type: Database["public"]["Enums"]["company_type"]
           whatsapp: string | null
         }
@@ -103,10 +105,12 @@ export type Database = {
           cr_number?: string | null
           created_at?: string
           created_by?: string | null
+          emergency?: boolean
           id?: string
           name: string
           note?: string | null
           phone?: string | null
+          take_action?: boolean
           type?: Database["public"]["Enums"]["company_type"]
           whatsapp?: string | null
         }
@@ -117,10 +121,12 @@ export type Database = {
           cr_number?: string | null
           created_at?: string
           created_by?: string | null
+          emergency?: boolean
           id?: string
           name?: string
           note?: string | null
           phone?: string | null
+          take_action?: boolean
           type?: Database["public"]["Enums"]["company_type"]
           whatsapp?: string | null
         }

@@ -12,6 +12,8 @@ interface Company {
   type: string;
   branch_id: string | null;
   created_at: string;
+  emergency?: boolean | null;
+  take_action?: boolean | null;
   branches?: { name: string } | null;
 }
 
@@ -29,19 +31,28 @@ function deriveProgress(createdAt: string, done: number, processing: number) {
 function CompanyCard({ c, done, processing }: { c: Company; done: number; processing: number }) {
   const p = deriveProgress(c.created_at, done, processing);
   const branchName = c.branches?.name ?? "—";
+  const isEmergency = !!c.emergency;
+  const isTakeAction = !!c.take_action;
 
   return (
     <Link to={`/company/${c.id}`} className="block">
     <Card
       className={cn(
-        "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant cursor-pointer hover:-translate-y-0.5",
-        p.overdue && "border-destructive/40 ring-1 ring-destructive/30"
+        "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant cursor-pointer hover:-translate-y-0.5 border-2",
+        isEmergency && "border-destructive animate-border-pulse-red",
+        !isEmergency && isTakeAction && "border-[rgb(249,115,22)] animate-border-pulse-orange",
+        !isEmergency && !isTakeAction && p.overdue && "border-destructive/40 ring-1 ring-destructive/30"
       )}
     >
-      {p.overdue && (
-        <div className="-mx-5 -mt-5 mb-4 px-5 py-2 bg-destructive/10 border-b border-destructive/30 flex items-center gap-2 text-destructive text-[11px] font-bold tracking-wider">
+      {(isEmergency || isTakeAction || p.overdue) && (
+        <div className={cn(
+          "-mx-5 -mt-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider",
+          isEmergency ? "bg-destructive/15 border-destructive/40 text-destructive"
+            : isTakeAction ? "bg-[rgb(249,115,22)]/15 border-[rgb(249,115,22)]/40 text-[rgb(234,88,12)]"
+            : "bg-destructive/10 border-destructive/30 text-destructive"
+        )}>
           <Zap className="h-3.5 w-3.5 fill-current" />
-          TAKE ACTION — ATTENTION NEEDED
+          {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : isTakeAction ? "TAKE ACTION REQUIRED" : "TAKE ACTION — ATTENTION NEEDED"}
         </div>
       )}
 
@@ -131,7 +142,7 @@ export default function Index() {
       const [cRes, sRes] = await Promise.all([
         supabase
           .from("companies")
-          .select("id, name, type, branch_id, created_at, branches!companies_branch_id_fkey(name)")
+          .select("id, name, type, branch_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
           .order("created_at", { ascending: false }),
         supabase.from("company_steps").select("company_id, status"),
       ]);

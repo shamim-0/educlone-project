@@ -28,6 +28,7 @@ interface Company {
   cr_number: string | null; whatsapp: string | null;
   contact_email: string | null; note: string | null;
   created_at: string;
+  emergency?: boolean | null; take_action?: boolean | null;
 }
 interface Step {
   id?: string; step_key: string; status: string;
@@ -127,7 +128,11 @@ export default function CompanyDetail() {
         supabase.from("company_shareholders").select("*").eq("company_id", id).order("created_at"),
         supabase.from("company_documents").select("*").eq("company_id", id).order("created_at"),
       ]);
-      if (c.data) setCompany(c.data as Company);
+      if (c.data) {
+        setCompany(c.data as Company);
+        setEmergency(!!(c.data as any).emergency);
+        setTakeAction(!!(c.data as any).take_action);
+      }
       if (b.data) setBranches(b.data as Branch[]);
       if (a.data) setActivities(a.data as CrActivity[]);
       if (m.data) setManagers(m.data as Manager[]);
@@ -413,14 +418,26 @@ export default function CompanyDetail() {
           <Button
             variant={emergency ? "destructive" : "outline"}
             size="sm"
-            onClick={() => { setEmergency(v => !v); toast.success(emergency ? "Emergency cleared" : "Emergency set"); }}
+            onClick={async () => {
+              const next = !emergency;
+              setEmergency(next);
+              const { error } = await supabase.from("companies").update({ emergency: next } as any).eq("id", company.id);
+              if (error) { setEmergency(!next); return toast.error(error.message); }
+              toast.success(next ? "Emergency set" : "Emergency cleared");
+            }}
           >
             <AlertTriangle className="h-4 w-4 mr-1" /> {emergency ? "Clear Emergency" : "Set Emergency"}
           </Button>
           <Button
             variant={takeAction ? "destructive" : "outline"}
             size="sm"
-            onClick={() => { setTakeAction(v => !v); toast.success(takeAction ? "Take Action cleared" : "Take Action set"); }}
+            onClick={async () => {
+              const next = !takeAction;
+              setTakeAction(next);
+              const { error } = await supabase.from("companies").update({ take_action: next } as any).eq("id", company.id);
+              if (error) { setTakeAction(!next); return toast.error(error.message); }
+              toast.success(next ? "Take Action set" : "Take Action cleared");
+            }}
           >
             <Zap className="h-4 w-4 mr-1" /> {takeAction ? "Clear Take Action" : "Set Take Action"}
           </Button>
