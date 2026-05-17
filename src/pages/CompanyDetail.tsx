@@ -40,6 +40,14 @@ interface Shareholder {
   share_percent: number | null; phone: string | null; email: string | null;
   birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
 }
+interface CompanyDoc { id: string; category: string; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
+
+const DOC_CATEGORIES = [
+  { key: "bangladesh", label: "Bangladesh Papers", flag: "BD", color: "border-accent/30" },
+  { key: "uk", label: "UK Papers", flag: "GB", color: "border-primary/30" },
+  { key: "usa", label: "USA Papers", flag: "US", color: "border-destructive/30" },
+  { key: "other", label: "Other Documents", flag: "📁", color: "border-border" },
+] as const;
 
 const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolean }[] = [
   { key: "email_account", label: "Email Account", tags: ["Credentials"], hasCreds: true },
