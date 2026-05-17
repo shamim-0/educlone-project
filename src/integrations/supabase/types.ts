@@ -134,6 +134,36 @@ export type Database = {
           },
         ]
       }
+      company_managers: {
+        Row: {
+          birthdate: string | null
+          company_id: string
+          created_at: string
+          id: string
+          iqama: string | null
+          manager_type: string
+          name: string
+        }
+        Insert: {
+          birthdate?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          iqama?: string | null
+          manager_type?: string
+          name: string
+        }
+        Update: {
+          birthdate?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          iqama?: string | null
+          manager_type?: string
+          name?: string
+        }
+        Relationships: []
+      }
       company_steps: {
         Row: {
           company_id: string
