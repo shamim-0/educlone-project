@@ -51,21 +51,21 @@ export type Database = {
       }
       branches: {
         Row: {
-          company_id: string
+          company_id: string | null
           created_at: string
           id: string
           location: string | null
           name: string
         }
         Insert: {
-          company_id: string
+          company_id?: string | null
           created_at?: string
           id?: string
           location?: string | null
           name: string
         }
         Update: {
-          company_id?: string
+          company_id?: string | null
           created_at?: string
           id?: string
           location?: string | null
