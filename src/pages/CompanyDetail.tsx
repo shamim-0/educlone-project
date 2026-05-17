@@ -91,6 +91,13 @@ export default function CompanyDetail() {
   const [mgrIqama, setMgrIqama] = useState("");
   const [mgrBirthdate, setMgrBirthdate] = useState("");
   const [savingManager, setSavingManager] = useState(false);
+  const [shareholders, setShareholders] = useState<Shareholder[]>([]);
+  const [shOpen, setShOpen] = useState(false);
+  const [shForm, setShForm] = useState({
+    shareholder_type: "owner", name: "", arabic_name: "", share_percent: "",
+    phone: "", email: "", birthdate: "", passport: "", nid: "", iqama: "",
+  });
+  const [savingSh, setSavingSh] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
