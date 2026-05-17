@@ -665,6 +665,75 @@ export default function CompanyDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={shOpen} onOpenChange={setShOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Shareholder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Type</Label>
+              <Select value={shForm.shareholder_type} onValueChange={(v) => setShForm({ ...shForm, shareholder_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="partner">Partner</SelectItem>
+                  <SelectItem value="investor">Investor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Name</Label>
+              <Input value={shForm.name} onChange={(e) => setShForm({ ...shForm, name: e.target.value })} maxLength={150} />
+            </div>
+            <div>
+              <Label className="text-xs">Arabic Name</Label>
+              <Input value={shForm.arabic_name} onChange={(e) => setShForm({ ...shForm, arabic_name: e.target.value })} maxLength={150} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Share %</Label>
+                <Input type="number" value={shForm.share_percent} onChange={(e) => setShForm({ ...shForm, share_percent: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Phone</Label>
+                <Input value={shForm.phone} onChange={(e) => setShForm({ ...shForm, phone: e.target.value })} maxLength={50} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={shForm.email} onChange={(e) => setShForm({ ...shForm, email: e.target.value })} maxLength={255} />
+              </div>
+              <div>
+                <Label className="text-xs">Birthdate</Label>
+                <Input type="date" value={shForm.birthdate} onChange={(e) => setShForm({ ...shForm, birthdate: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className="text-xs">Passport</Label>
+                <Input value={shForm.passport} onChange={(e) => setShForm({ ...shForm, passport: e.target.value })} maxLength={50} />
+              </div>
+              <div>
+                <Label className="text-xs">NID</Label>
+                <Input value={shForm.nid} onChange={(e) => setShForm({ ...shForm, nid: e.target.value })} maxLength={50} />
+              </div>
+              <div>
+                <Label className="text-xs">Iqama</Label>
+                <Input value={shForm.iqama} onChange={(e) => setShForm({ ...shForm, iqama: e.target.value })} maxLength={50} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShOpen(false)}>Cancel</Button>
+            <Button onClick={addShareholder} disabled={savingSh}>
+              {savingSh ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
