@@ -376,8 +376,61 @@ export default function CompanyDetail() {
               <Save className="h-4 w-4 mr-1" /> {savingProfile ? "Saving…" : "Save Profile"}
             </Button>
           </Card>
+
+          {/* CR Activities */}
+          <Card className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold flex items-center gap-2">
+                <span className="text-accent">✅</span> CR Activities
+              </h2>
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setActivityOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Add Activity
+              </Button>
+            </div>
+            {activities.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-6">No activities assigned yet</p>
+            ) : (
+              <ul className="space-y-2">
+                {activities.map(a => (
+                  <li key={a.id} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                    <div className="min-w-0">
+                      <div className="text-xs font-mono text-muted-foreground">{a.code}</div>
+                      <div className="text-sm font-medium truncate">{a.label}</div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteActivity(a.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
         </div>
       </div>
+
+      <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add CR Activity</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Activity Code</Label>
+              <Input value={actCode} onChange={(e) => setActCode(e.target.value)} placeholder="e.g. 4711" maxLength={50} />
+            </div>
+            <div>
+              <Label className="text-xs">Activity Label</Label>
+              <Input value={actLabel} onChange={(e) => setActLabel(e.target.value)} placeholder="e.g. Wholesale of electronics" maxLength={200} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActivityOpen(false)}>Cancel</Button>
+            <Button onClick={addActivity} disabled={savingActivity}>
+              {savingActivity ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
