@@ -73,19 +73,26 @@ export default function CompanyDetail() {
   const [company, setCompany] = useState<Company | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
+  const [activities, setActivities] = useState<CrActivity[]>([]);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [actCode, setActCode] = useState("");
+  const [actLabel, setActLabel] = useState("");
+  const [savingActivity, setSavingActivity] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const [c, b, s] = await Promise.all([
+      const [c, b, s, a] = await Promise.all([
         supabase.from("companies").select("*").eq("id", id).maybeSingle(),
         supabase.from("branches").select("id,name").order("name"),
         supabase.from("company_steps").select("*").eq("company_id", id),
+        supabase.from("cr_activities").select("*").eq("company_id", id).order("created_at"),
       ]);
       if (c.data) setCompany(c.data as Company);
       if (b.data) setBranches(b.data as Branch[]);
+      if (a.data) setActivities(a.data as CrActivity[]);
       const map: Record<string, Step> = {};
       (s.data ?? []).forEach((row: any) => { map[row.step_key] = row; });
       STEP_DEFS.forEach(def => {
