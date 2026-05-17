@@ -128,7 +128,11 @@ export default function CompanyDetail() {
         supabase.from("company_shareholders").select("*").eq("company_id", id).order("created_at"),
         supabase.from("company_documents").select("*").eq("company_id", id).order("created_at"),
       ]);
-      if (c.data) setCompany(c.data as Company);
+      if (c.data) {
+        setCompany(c.data as Company);
+        setEmergency(!!(c.data as any).emergency);
+        setTakeAction(!!(c.data as any).take_action);
+      }
       if (b.data) setBranches(b.data as Branch[]);
       if (a.data) setActivities(a.data as CrActivity[]);
       if (m.data) setManagers(m.data as Manager[]);
