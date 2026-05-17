@@ -168,6 +168,30 @@ export default function CompanyDetail() {
     setSteps(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
   }
 
+  async function addActivity() {
+    if (!id) return;
+    const code = actCode.trim();
+    const label = actLabel.trim();
+    if (!code || !label) return toast.error("Code and Label are required");
+    setSavingActivity(true);
+    const { data, error } = await supabase
+      .from("cr_activities")
+      .insert({ company_id: id, code, label })
+      .select()
+      .single();
+    setSavingActivity(false);
+    if (error) return toast.error(error.message);
+    setActivities(prev => [...prev, data as CrActivity]);
+    setActCode(""); setActLabel(""); setActivityOpen(false);
+    toast.success("Activity added");
+  }
+
+  async function deleteActivity(actId: string) {
+    const { error } = await supabase.from("cr_activities").delete().eq("id", actId);
+    if (error) return toast.error(error.message);
+    setActivities(prev => prev.filter(a => a.id !== actId));
+  }
+
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
