@@ -14,7 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Zap, Save } from "lucide-react";
+import { ArrowLeft, Zap, Save, Plus, Trash2 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +32,7 @@ interface Step {
   id?: string; step_key: string; status: string;
   note: string | null; username: string | null; password: string | null;
 }
+interface CrActivity { id: string; code: string; label: string }
 
 const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolean }[] = [
   { key: "email_account", label: "Email Account", tags: ["Credentials"], hasCreds: true },
