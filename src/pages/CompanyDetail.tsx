@@ -418,14 +418,26 @@ export default function CompanyDetail() {
           <Button
             variant={emergency ? "destructive" : "outline"}
             size="sm"
-            onClick={() => { setEmergency(v => !v); toast.success(emergency ? "Emergency cleared" : "Emergency set"); }}
+            onClick={async () => {
+              const next = !emergency;
+              setEmergency(next);
+              const { error } = await supabase.from("companies").update({ emergency: next } as any).eq("id", company.id);
+              if (error) { setEmergency(!next); return toast.error(error.message); }
+              toast.success(next ? "Emergency set" : "Emergency cleared");
+            }}
           >
             <AlertTriangle className="h-4 w-4 mr-1" /> {emergency ? "Clear Emergency" : "Set Emergency"}
           </Button>
           <Button
             variant={takeAction ? "destructive" : "outline"}
             size="sm"
-            onClick={() => { setTakeAction(v => !v); toast.success(takeAction ? "Take Action cleared" : "Take Action set"); }}
+            onClick={async () => {
+              const next = !takeAction;
+              setTakeAction(next);
+              const { error } = await supabase.from("companies").update({ take_action: next } as any).eq("id", company.id);
+              if (error) { setTakeAction(!next); return toast.error(error.message); }
+              toast.success(next ? "Take Action set" : "Take Action cleared");
+            }}
           >
             <Zap className="h-4 w-4 mr-1" /> {takeAction ? "Clear Take Action" : "Set Take Action"}
           </Button>
