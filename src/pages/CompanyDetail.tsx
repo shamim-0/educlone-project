@@ -112,6 +112,8 @@ export default function CompanyDetail() {
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [emergency, setEmergency] = useState(false);
+  const [takeAction, setTakeAction] = useState(false);
 
   useEffect(() => {
     if (!id) return;
