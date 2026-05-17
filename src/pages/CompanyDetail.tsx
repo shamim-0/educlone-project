@@ -33,6 +33,7 @@ interface Step {
   note: string | null; username: string | null; password: string | null;
 }
 interface CrActivity { id: string; code: string; label: string }
+interface Manager { id: string; name: string; manager_type: string; iqama: string | null; birthdate: string | null }
 
 const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolean }[] = [
   { key: "email_account", label: "Email Account", tags: ["Credentials"], hasCreds: true },
