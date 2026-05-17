@@ -1,0 +1,1 @@
+ALTER TABLE public.branches ALTER COLUMN company_id DROP NOT NULL;
