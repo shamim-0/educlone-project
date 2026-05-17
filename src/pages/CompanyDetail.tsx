@@ -498,6 +498,46 @@ export default function CompanyDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={managerOpen} onOpenChange={setManagerOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Manager</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Name</Label>
+              <Input value={mgrName} onChange={(e) => setMgrName(e.target.value)} placeholder="Full name" maxLength={150} />
+            </div>
+            <div>
+              <Label className="text-xs">Manager Type</Label>
+              <Select value={mgrType} onValueChange={setMgrType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="temporary_manager">Temporary Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Iqama</Label>
+                <Input value={mgrIqama} onChange={(e) => setMgrIqama(e.target.value)} maxLength={50} />
+              </div>
+              <div>
+                <Label className="text-xs">Birthdate</Label>
+                <Input type="date" value={mgrBirthdate} onChange={(e) => setMgrBirthdate(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManagerOpen(false)}>Cancel</Button>
+            <Button onClick={addManager} disabled={savingManager}>
+              {savingManager ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
