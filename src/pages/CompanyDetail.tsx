@@ -79,6 +79,13 @@ export default function CompanyDetail() {
   const [actCode, setActCode] = useState("");
   const [actLabel, setActLabel] = useState("");
   const [savingActivity, setSavingActivity] = useState(false);
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [managerOpen, setManagerOpen] = useState(false);
+  const [mgrName, setMgrName] = useState("");
+  const [mgrType, setMgrType] = useState("manager");
+  const [mgrIqama, setMgrIqama] = useState("");
+  const [mgrBirthdate, setMgrBirthdate] = useState("");
+  const [savingManager, setSavingManager] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
