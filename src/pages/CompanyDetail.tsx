@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Zap, Save, Plus, Trash2, Upload, FileText, Download, Folder } from "lucide-react";
+import { ArrowLeft, Zap, Save, Plus, Trash2, Upload, FileText, Download, Folder, FileDown, AlertTriangle, Pencil } from "lucide-react";
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -112,6 +112,8 @@ export default function CompanyDetail() {
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [emergency, setEmergency] = useState(false);
+  const [takeAction, setTakeAction] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -329,6 +331,25 @@ export default function CompanyDetail() {
     setDocuments(prev => prev.filter(d => d.id !== doc.id));
   }
 
+  async function renameCompany() {
+    if (!company) return;
+    const next = window.prompt("Rename company", company.name);
+    if (!next || next.trim() === "" || next === company.name) return;
+    const { error } = await supabase.from("companies").update({ name: next.trim() }).eq("id", company.id);
+    if (error) return toast.error(error.message);
+    setCompany({ ...company, name: next.trim() });
+    toast.success("Renamed");
+  }
+
+  async function deleteCompany() {
+    if (!company) return;
+    if (!window.confirm(`Delete "${company.name}"? This cannot be undone.`)) return;
+    const { error } = await supabase.from("companies").delete().eq("id", company.id);
+    if (error) return toast.error(error.message);
+    toast.success("Company deleted");
+    navigate("/");
+  }
+
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
@@ -338,10 +359,16 @@ export default function CompanyDetail() {
         <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
         </Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
+          <FileDown className="h-4 w-4 mr-1" /> Export PDF
+        </Button>
       </div>
 
       {/* Header */}
-      <Card className={cn("p-6", progress.overdue && "border-destructive/40 ring-1 ring-destructive/30")}>
+      <Card className={cn(
+        "p-6",
+        (progress.overdue || emergency) && "border-destructive/40 ring-1 ring-destructive/30"
+      )}>
         <h1 className="text-2xl font-bold">{company.name}</h1>
         <div className="mt-2 flex flex-wrap gap-2">
           <Badge variant="secondary">{branches.find(b => b.id === company.branch_id)?.name ?? "—"}</Badge>
@@ -349,18 +376,61 @@ export default function CompanyDetail() {
           <Badge className="bg-accent/15 text-accent border border-accent/30">
             {progress.percent}% ({progress.done}/{progress.total})
           </Badge>
-          {progress.overdue && (
+          {emergency && (
+            <Badge className="bg-destructive/15 text-destructive border border-destructive/30">
+              <AlertTriangle className="h-3 w-3 mr-1" /> EMERGENCY
+            </Badge>
+          )}
+          {(progress.overdue || takeAction) && (
             <Badge className="bg-destructive/15 text-destructive border border-destructive/30">
               <Zap className="h-3 w-3 mr-1" /> TAKE ACTION
             </Badge>
           )}
         </div>
 
-        {progress.overdue && (
-          <div className="mt-4 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-sm text-destructive">
-            <span className="font-semibold">{progress.days} দিন হয়ে গেছে</span> — {Math.abs(progress.remaining)} দিন অতিরিক্ত
-          </div>
-        )}
+        {/* Day status banner — always visible */}
+        <div className={cn(
+          "mt-4 p-3 rounded-md border text-sm flex items-center gap-2",
+          progress.overdue
+            ? "bg-destructive/10 border-destructive/30 text-destructive"
+            : "bg-accent/10 border-accent/30 text-foreground"
+        )}>
+          <span className={cn("h-2.5 w-2.5 rounded-full", progress.overdue ? "bg-destructive" : "bg-accent")} />
+          {progress.overdue ? (
+            <span>
+              <span className="font-semibold">{progress.days} দিন হয়ে গেছে</span> — {Math.abs(progress.remaining)} দিন অতিরিক্ত
+            </span>
+          ) : (
+            <span>
+              <span className="font-semibold">{progress.days} দিন</span> — {progress.remaining} দিন বাকি আছে
+              <span className="ml-2 text-xs text-muted-foreground">Day {progress.days} since creation</span>
+            </span>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            variant={emergency ? "destructive" : "outline"}
+            size="sm"
+            onClick={() => { setEmergency(v => !v); toast.success(emergency ? "Emergency cleared" : "Emergency set"); }}
+          >
+            <AlertTriangle className="h-4 w-4 mr-1" /> {emergency ? "Clear Emergency" : "Set Emergency"}
+          </Button>
+          <Button
+            variant={takeAction ? "destructive" : "outline"}
+            size="sm"
+            onClick={() => { setTakeAction(v => !v); toast.success(takeAction ? "Take Action cleared" : "Take Action set"); }}
+          >
+            <Zap className="h-4 w-4 mr-1" /> {takeAction ? "Clear Take Action" : "Set Take Action"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={renameCompany}>
+            <Pencil className="h-4 w-4 mr-1" /> Rename
+          </Button>
+          <Button variant="destructive" size="sm" onClick={deleteCompany}>
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </Button>
+        </div>
 
         <div className="mt-5">
           <div className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">STEP OVERVIEW</div>
