@@ -18,17 +18,16 @@ interface Company {
 const TARGET_DAYS = 45;
 const TOTAL_STEPS = 18;
 
-function deriveProgress(createdAt: string) {
+function deriveProgress(createdAt: string, done: number, processing: number) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
   const remaining = TARGET_DAYS - days;
-  const steps = Math.min(TOTAL_STEPS, Math.max(1, Math.floor((days / TARGET_DAYS) * TOTAL_STEPS) + 1));
-  const percent = Math.round((steps / TOTAL_STEPS) * 100);
+  const percent = Math.round((done / TOTAL_STEPS) * 100);
   const overdue = remaining < 0;
-  return { days, remaining, steps, percent, overdue };
+  return { days, remaining, done, processing, percent, overdue };
 }
 
-function CompanyCard({ c }: { c: Company }) {
-  const p = deriveProgress(c.created_at);
+function CompanyCard({ c, done, processing }: { c: Company; done: number; processing: number }) {
+  const p = deriveProgress(c.created_at, done, processing);
   const branchName = c.branches?.name ?? "—";
 
   return (
