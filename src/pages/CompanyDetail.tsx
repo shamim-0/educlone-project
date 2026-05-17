@@ -715,6 +715,8 @@ export default function CompanyDetail() {
               })}
             </div>
           </Card>
+        </div>
+      </div>
 
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
         <DialogContent>
