@@ -28,6 +28,7 @@ interface Company {
   cr_number: string | null; whatsapp: string | null;
   contact_email: string | null; note: string | null;
   created_at: string;
+  emergency?: boolean | null; take_action?: boolean | null;
 }
 interface Step {
   id?: string; step_key: string; status: string;
