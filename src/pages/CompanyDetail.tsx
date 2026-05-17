@@ -202,6 +202,30 @@ export default function CompanyDetail() {
     setActivities(prev => prev.filter(a => a.id !== actId));
   }
 
+  async function addManager() {
+    if (!id) return;
+    const name = mgrName.trim();
+    if (!name) return toast.error("Name is required");
+    setSavingManager(true);
+    const { data, error } = await supabase
+      .from("company_managers")
+      .insert({ company_id: id, name, manager_type: mgrType, iqama: mgrIqama.trim() || null, birthdate: mgrBirthdate || null })
+      .select()
+      .single();
+    setSavingManager(false);
+    if (error) return toast.error(error.message);
+    setManagers(prev => [...prev, data as Manager]);
+    setMgrName(""); setMgrType("manager"); setMgrIqama(""); setMgrBirthdate("");
+    setManagerOpen(false);
+    toast.success("Manager added");
+  }
+
+  async function deleteManager(mid: string) {
+    const { error } = await supabase.from("company_managers").delete().eq("id", mid);
+    if (error) return toast.error(error.message);
+    setManagers(prev => prev.filter(m => m.id !== mid));
+  }
+
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
