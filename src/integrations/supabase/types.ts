@@ -84,29 +84,43 @@ export type Database = {
       companies: {
         Row: {
           address: string | null
+          branch_id: string | null
           created_at: string
           created_by: string | null
           id: string
           name: string
           phone: string | null
+          type: Database["public"]["Enums"]["company_type"]
         }
         Insert: {
           address?: string | null
+          branch_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
           phone?: string | null
+          type?: Database["public"]["Enums"]["company_type"]
         }
         Update: {
           address?: string | null
+          branch_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
           phone?: string | null
+          type?: Database["public"]["Enums"]["company_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pending_tasks: {
         Row: {
@@ -200,6 +214,7 @@ export type Database = {
     Enums: {
       account_type: "enterpaner" | "trading" | "services"
       app_role: "admin" | "editor" | "viewer"
+      company_type: "entrepreneur" | "trading" | "services"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -329,6 +344,7 @@ export const Constants = {
     Enums: {
       account_type: ["enterpaner", "trading", "services"],
       app_role: ["admin", "editor", "viewer"],
+      company_type: ["entrepreneur", "trading", "services"],
     },
   },
 } as const
