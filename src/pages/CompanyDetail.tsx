@@ -331,6 +331,25 @@ export default function CompanyDetail() {
     setDocuments(prev => prev.filter(d => d.id !== doc.id));
   }
 
+  async function renameCompany() {
+    if (!company) return;
+    const next = window.prompt("Rename company", company.name);
+    if (!next || next.trim() === "" || next === company.name) return;
+    const { error } = await supabase.from("companies").update({ name: next.trim() }).eq("id", company.id);
+    if (error) return toast.error(error.message);
+    setCompany({ ...company, name: next.trim() });
+    toast.success("Renamed");
+  }
+
+  async function deleteCompany() {
+    if (!company) return;
+    if (!window.confirm(`Delete "${company.name}"? This cannot be undone.`)) return;
+    const { error } = await supabase.from("companies").delete().eq("id", company.id);
+    if (error) return toast.error(error.message);
+    toast.success("Company deleted");
+    navigate("/");
+  }
+
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
