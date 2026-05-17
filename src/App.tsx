@@ -9,6 +9,7 @@ import AppLayout from "@/components/AppLayout";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Company from "./pages/Company";
+import CompanyDetail from "./pages/CompanyDetail";
 import Branch from "./pages/Branch";
 import Accounts from "./pages/Accounts";
 import Pending from "./pages/Pending";
@@ -35,6 +36,7 @@ const App = () => (
             >
               <Route path="/" element={<Index />} />
               <Route path="/company" element={<Company />} />
+              <Route path="/company/:id" element={<CompanyDetail />} />
               <Route path="/branch" element={<Branch />} />
               <Route path="/accounts" element={<Accounts />} />
               <Route path="/pending" element={<Pending />} />

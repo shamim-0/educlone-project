@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,9 +32,10 @@ function CompanyCard({ c }: { c: Company }) {
   const branchName = c.branches?.name ?? "—";
 
   return (
+    <Link to={`/company/${c.id}`} className="block">
     <Card
       className={cn(
-        "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant",
+        "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant cursor-pointer hover:-translate-y-0.5",
         p.overdue && "border-destructive/40 ring-1 ring-destructive/30"
       )}
     >
@@ -125,6 +127,7 @@ function CompanyCard({ c }: { c: Company }) {
         <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন</p>
       )}
     </Card>
+    </Link>
   );
 }
 
