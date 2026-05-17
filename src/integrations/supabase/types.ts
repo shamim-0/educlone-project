@@ -164,6 +164,62 @@ export type Database = {
         }
         Relationships: []
       }
+      company_shareholders: {
+        Row: {
+          arabic_name: string | null
+          birthdate: string | null
+          company_id: string
+          created_at: string
+          email: string | null
+          id: string
+          iqama: string | null
+          name: string
+          nid: string | null
+          passport: string | null
+          phone: string | null
+          share_percent: number | null
+          shareholder_type: string
+        }
+        Insert: {
+          arabic_name?: string | null
+          birthdate?: string | null
+          company_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          iqama?: string | null
+          name: string
+          nid?: string | null
+          passport?: string | null
+          phone?: string | null
+          share_percent?: number | null
+          shareholder_type?: string
+        }
+        Update: {
+          arabic_name?: string | null
+          birthdate?: string | null
+          company_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          iqama?: string | null
+          name?: string
+          nid?: string | null
+          passport?: string | null
+          phone?: string | null
+          share_percent?: number | null
+          shareholder_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_shareholders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_steps: {
         Row: {
           company_id: string

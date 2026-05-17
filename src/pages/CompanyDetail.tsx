@@ -34,6 +34,11 @@ interface Step {
 }
 interface CrActivity { id: string; code: string; label: string }
 interface Manager { id: string; name: string; manager_type: string; iqama: string | null; birthdate: string | null }
+interface Shareholder {
+  id: string; shareholder_type: string; name: string; arabic_name: string | null;
+  share_percent: number | null; phone: string | null; email: string | null;
+  birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
+}
 
 const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolean }[] = [
   { key: "email_account", label: "Email Account", tags: ["Credentials"], hasCreds: true },
@@ -86,23 +91,32 @@ export default function CompanyDetail() {
   const [mgrIqama, setMgrIqama] = useState("");
   const [mgrBirthdate, setMgrBirthdate] = useState("");
   const [savingManager, setSavingManager] = useState(false);
+  const [shareholders, setShareholders] = useState<Shareholder[]>([]);
+  const [shOpen, setShOpen] = useState(false);
+  const [shForm, setShForm] = useState({
+    shareholder_type: "owner", name: "", arabic_name: "", share_percent: "",
+    phone: "", email: "", birthdate: "", passport: "", nid: "", iqama: "",
+  });
+  const [savingSh, setSavingSh] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const [c, b, s, a, m] = await Promise.all([
+      const [c, b, s, a, m, sh] = await Promise.all([
         supabase.from("companies").select("*").eq("id", id).maybeSingle(),
         supabase.from("branches").select("id,name").order("name"),
         supabase.from("company_steps").select("*").eq("company_id", id),
         supabase.from("cr_activities").select("*").eq("company_id", id).order("created_at"),
         supabase.from("company_managers").select("*").eq("company_id", id).order("created_at"),
+        supabase.from("company_shareholders").select("*").eq("company_id", id).order("created_at"),
       ]);
       if (c.data) setCompany(c.data as Company);
       if (b.data) setBranches(b.data as Branch[]);
       if (a.data) setActivities(a.data as CrActivity[]);
       if (m.data) setManagers(m.data as Manager[]);
+      if (sh.data) setShareholders(sh.data as Shareholder[]);
       const map: Record<string, Step> = {};
       (s.data ?? []).forEach((row: any) => { map[row.step_key] = row; });
       STEP_DEFS.forEach(def => {
@@ -224,6 +238,43 @@ export default function CompanyDetail() {
     const { error } = await supabase.from("company_managers").delete().eq("id", mid);
     if (error) return toast.error(error.message);
     setManagers(prev => prev.filter(m => m.id !== mid));
+  }
+
+  async function addShareholder() {
+    if (!id) return;
+    const name = shForm.name.trim();
+    if (!name) return toast.error("Name is required");
+    setSavingSh(true);
+    const sp = shForm.share_percent.trim();
+    const { data, error } = await supabase
+      .from("company_shareholders")
+      .insert({
+        company_id: id,
+        shareholder_type: shForm.shareholder_type,
+        name,
+        arabic_name: shForm.arabic_name.trim() || null,
+        share_percent: sp ? Number(sp) : null,
+        phone: shForm.phone.trim() || null,
+        email: shForm.email.trim() || null,
+        birthdate: shForm.birthdate || null,
+        passport: shForm.passport.trim() || null,
+        nid: shForm.nid.trim() || null,
+        iqama: shForm.iqama.trim() || null,
+      })
+      .select()
+      .single();
+    setSavingSh(false);
+    if (error) return toast.error(error.message);
+    setShareholders(prev => [...prev, data as Shareholder]);
+    setShForm({ shareholder_type: "owner", name: "", arabic_name: "", share_percent: "", phone: "", email: "", birthdate: "", passport: "", nid: "", iqama: "" });
+    setShOpen(false);
+    toast.success("Shareholder added");
+  }
+
+  async function deleteShareholder(sid: string) {
+    const { error } = await supabase.from("company_shareholders").delete().eq("id", sid);
+    if (error) return toast.error(error.message);
+    setShareholders(prev => prev.filter(s => s.id !== sid));
   }
 
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
@@ -503,6 +554,51 @@ export default function CompanyDetail() {
               );
             })()}
           </Card>
+
+          {/* Shareholders */}
+          <Card className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold flex items-center gap-2">
+                <span className="text-accent">👥</span> Shareholders
+              </h2>
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setShOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Add
+              </Button>
+            </div>
+            {shareholders.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-6">No shareholders added yet</p>
+            ) : (
+              <ul className="space-y-2">
+                {shareholders.map(sh => (
+                  <li key={sh.id} className="flex items-start justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">
+                        {sh.name}
+                        {sh.share_percent != null && <span className="ml-2 text-xs text-accent">{sh.share_percent}%</span>}
+                      </div>
+                      <div className="text-xs text-muted-foreground capitalize">
+                        {sh.shareholder_type}
+                        {sh.arabic_name ? ` · ${sh.arabic_name}` : ""}
+                        {sh.phone ? ` · ${sh.phone}` : ""}
+                        {sh.email ? ` · ${sh.email}` : ""}
+                      </div>
+                      {(sh.passport || sh.nid || sh.iqama || sh.birthdate) && (
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {sh.birthdate ? `DOB: ${sh.birthdate}` : ""}
+                          {sh.passport ? ` · Passport: ${sh.passport}` : ""}
+                          {sh.nid ? ` · NID: ${sh.nid}` : ""}
+                          {sh.iqama ? ` · Iqama: ${sh.iqama}` : ""}
+                        </div>
+                      )}
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteShareholder(sh.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
         </div>
       </div>
 
@@ -565,6 +661,75 @@ export default function CompanyDetail() {
             <Button variant="outline" onClick={() => setManagerOpen(false)}>Cancel</Button>
             <Button onClick={addManager} disabled={savingManager}>
               {savingManager ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={shOpen} onOpenChange={setShOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Shareholder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Type</Label>
+              <Select value={shForm.shareholder_type} onValueChange={(v) => setShForm({ ...shForm, shareholder_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="partner">Partner</SelectItem>
+                  <SelectItem value="investor">Investor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Name</Label>
+              <Input value={shForm.name} onChange={(e) => setShForm({ ...shForm, name: e.target.value })} maxLength={150} />
+            </div>
+            <div>
+              <Label className="text-xs">Arabic Name</Label>
+              <Input value={shForm.arabic_name} onChange={(e) => setShForm({ ...shForm, arabic_name: e.target.value })} maxLength={150} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Share %</Label>
+                <Input type="number" value={shForm.share_percent} onChange={(e) => setShForm({ ...shForm, share_percent: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Phone</Label>
+                <Input value={shForm.phone} onChange={(e) => setShForm({ ...shForm, phone: e.target.value })} maxLength={50} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={shForm.email} onChange={(e) => setShForm({ ...shForm, email: e.target.value })} maxLength={255} />
+              </div>
+              <div>
+                <Label className="text-xs">Birthdate</Label>
+                <Input type="date" value={shForm.birthdate} onChange={(e) => setShForm({ ...shForm, birthdate: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className="text-xs">Passport</Label>
+                <Input value={shForm.passport} onChange={(e) => setShForm({ ...shForm, passport: e.target.value })} maxLength={50} />
+              </div>
+              <div>
+                <Label className="text-xs">NID</Label>
+                <Input value={shForm.nid} onChange={(e) => setShForm({ ...shForm, nid: e.target.value })} maxLength={50} />
+              </div>
+              <div>
+                <Label className="text-xs">Iqama</Label>
+                <Input value={shForm.iqama} onChange={(e) => setShForm({ ...shForm, iqama: e.target.value })} maxLength={50} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShOpen(false)}>Cancel</Button>
+            <Button onClick={addShareholder} disabled={savingSh}>
+              {savingSh ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
