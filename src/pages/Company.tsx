@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 type CompanyType = "entrepreneur" | "trading" | "services";
 interface Company {
@@ -26,18 +27,21 @@ const TYPES: { value: CompanyType; label: string }[] = [
 ];
 
 export default function CompanyPage() {
+  const { role, branchId } = useAuth();
   const [rows, setRows] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Company | null>(null);
   const [type, setType] = useState<CompanyType>("trading");
-  const [branchId, setBranchId] = useState<string>("");
+  const [branchId2, setBranchId] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
+    let q = supabase.from("companies").select("id, name, type, branch_id, branches!companies_branch_id_fkey(name)").order("created_at", { ascending: false });
+    if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }] = await Promise.all([
-      supabase.from("companies").select("id, name, type, branch_id, branches!companies_branch_id_fkey(name)").order("created_at", { ascending: false }),
+      q,
       supabase.from("branches").select("id, name").order("name"),
     ]);
     if (error) toast.error(error.message);
@@ -45,7 +49,7 @@ export default function CompanyPage() {
     setBranches(b ?? []);
     setLoading(false);
   };
-  useEffect(() => { document.title = "Company | ISBI Tracker"; load(); }, []);
+  useEffect(() => { document.title = "Company | ISBI Tracker"; if (role !== null) load(); }, [role, branchId]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
