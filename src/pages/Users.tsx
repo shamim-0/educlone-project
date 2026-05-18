@@ -125,6 +125,7 @@ export default function UsersPage() {
               <TableHead>Email</TableHead>
               <TableHead className="w-56">Branch</TableHead>
               <TableHead className="w-48">Role</TableHead>
+              <TableHead className="w-40">Accounts Access</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
