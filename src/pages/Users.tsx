@@ -162,6 +162,13 @@ export default function UsersPage() {
                     <Badge variant="secondary" className="capitalize">{roles[p.id] ?? "viewer"}</Badge>
                   )}
                 </TableCell>
+                <TableCell>
+                  {isAdmin ? (
+                    <Switch checked={!!p.accounts_access} onCheckedChange={(v) => toggleAccountsAccess(p.id, v)} />
+                  ) : (
+                    <Badge variant="secondary">{p.accounts_access ? "Yes" : "No"}</Badge>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
