@@ -386,7 +386,7 @@ export default function CompanyDetail() {
               <AlertTriangle className="h-3 w-3 mr-1" /> EMERGENCY
             </Badge>
           )}
-          {(progress.overdue || takeAction) && (
+          {takeAction && (
             <Badge className="bg-destructive/15 text-destructive border border-destructive/30">
               <Zap className="h-3 w-3 mr-1" /> TAKE ACTION
             </Badge>

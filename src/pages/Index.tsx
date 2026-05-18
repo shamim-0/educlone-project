@@ -45,15 +45,14 @@ function CompanyCard({ c, done, processing }: { c: Company; done: number; proces
         !isEmergency && !isTakeAction && p.overdue && "border-destructive/40 ring-1 ring-destructive/30"
       )}
     >
-      {(isEmergency || isTakeAction || p.overdue) && (
+      {(isEmergency || isTakeAction) && (
         <div className={cn(
           "-mx-5 -mt-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider",
           isEmergency ? "bg-destructive/15 border-destructive/40 text-destructive"
-            : isTakeAction ? "bg-[rgb(249,115,22)]/15 border-[rgb(249,115,22)]/40 text-[rgb(234,88,12)]"
-            : "bg-destructive/10 border-destructive/30 text-destructive"
+            : "bg-[rgb(249,115,22)]/15 border-[rgb(249,115,22)]/40 text-[rgb(234,88,12)]"
         )}>
           <Zap className="h-3.5 w-3.5 fill-current" />
-          {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : isTakeAction ? "TAKE ACTION REQUIRED" : "TAKE ACTION — ATTENTION NEEDED"}
+          {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : "TAKE ACTION REQUIRED"}
         </div>
       )}
 
