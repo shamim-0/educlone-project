@@ -176,6 +176,23 @@ export default function Index() {
     return m ? parseInt(m[1], 10) : -1;
   };
 
+  const stats = useMemo(() => {
+    const total = companies.length;
+    const service = companies.filter((c) => c.type === "service").length;
+    const trading = companies.filter((c) => c.type === "trading").length;
+    const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
+    const completed = companies.filter((c) => (stepCounts[c.id]?.done ?? 0) === TOTAL_STEPS).length;
+    const takeAction = companies.filter((c) => c.take_action).length;
+    const emergency = companies.filter((c) => c.emergency).length;
+    const avgProgress =
+      total > 0
+        ? Math.round(
+            companies.reduce((sum, c) => sum + ((stepCounts[c.id]?.done ?? 0) / TOTAL_STEPS) * 100, 0) / total
+          )
+        : 0;
+    return { total, service, trading, entrepreneur, completed, takeAction, emergency, avgProgress };
+  }, [companies, stepCounts]);
+
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
     companies.forEach((c) => {
