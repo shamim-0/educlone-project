@@ -17,12 +17,30 @@ export default function BranchPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data: branches, error } = await supabase
       .from("branches")
-      .select("id, name, location")
+      .select("id, name")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
-    setRows(data ?? []);
+
+    const { data: companies } = await supabase
+      .from("companies")
+      .select("branch_id");
+
+    const counts: Record<string, number> = {};
+    for (const c of (companies ?? [])) {
+      if (c.branch_id) {
+        counts[c.branch_id] = (counts[c.branch_id] ?? 0) + 1;
+      }
+    }
+
+    setRows(
+      (branches ?? []).map((b) => ({
+        id: b.id,
+        name: b.name,
+        company_count: counts[b.id] ?? 0,
+      }))
+    );
     setLoading(false);
   };
   useEffect(() => { document.title = "Branch | ISBI Tracker"; load(); }, []);
@@ -32,7 +50,6 @@ export default function BranchPage() {
     const fd = new FormData(e.currentTarget);
     const payload = {
       name: String(fd.get("name") ?? "").trim(),
-      location: String(fd.get("location") ?? "").trim() || null,
     };
     if (!payload.name) { toast.error("Name required"); return; }
     const { error } = editing
@@ -58,7 +75,7 @@ export default function BranchPage() {
         loading={loading}
         columns={[
           { key: "name", header: "Name" },
-          { key: "location", header: "Location" },
+          { key: "company_count", header: "Companies" },
         ]}
         onAdd={() => { setEditing(null); setOpen(true); }}
         onEdit={(r) => { setEditing(r); setOpen(true); }}
@@ -72,10 +89,6 @@ export default function BranchPage() {
             <div>
               <Label htmlFor="name">Name</Label>
               <Input id="name" name="name" defaultValue={editing?.name} required maxLength={120} />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" name="location" defaultValue={editing?.location ?? ""} maxLength={255} />
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>
