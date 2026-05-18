@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
@@ -26,14 +27,14 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole });
+  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false });
 
   const isAdmin = myRole === "admin";
 
   const load = async () => {
     setLoading(true);
     const [{ data: p }, { data: r }, { data: b }] = await Promise.all([
-      supabase.from("profiles").select("id, username, email, branch_id").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, username, email, branch_id, accounts_access").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("branches").select("id, name").order("name"),
     ]);
@@ -68,6 +69,13 @@ export default function UsersPage() {
     setProfiles((s) => s.map((p) => p.id === userId ? { ...p, branch_id: value } : p));
   };
 
+  const toggleAccountsAccess = async (userId: string, value: boolean) => {
+    const { error } = await supabase.from("profiles").update({ accounts_access: value }).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Accounts access updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, accounts_access: value } : p));
+  };
+
   const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name ?? "—";
 
   const createUser = async () => {
@@ -81,6 +89,7 @@ export default function UsersPage() {
         password: form.password,
         branch_id: form.branch_id || null,
         role: form.role,
+        accounts_access: form.accounts_access,
       },
     });
     setSubmitting(false);
@@ -90,7 +99,7 @@ export default function UsersPage() {
     }
     toast.success("User created");
     setOpen(false);
-    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer" });
+    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false });
     load();
   };
 
@@ -116,13 +125,14 @@ export default function UsersPage() {
               <TableHead>Email</TableHead>
               <TableHead className="w-56">Branch</TableHead>
               <TableHead className="w-48">Role</TableHead>
+              <TableHead className="w-40">Accounts Access</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : profiles.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
             ) : profiles.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.username}{p.id === me?.id && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}</TableCell>
@@ -150,6 +160,13 @@ export default function UsersPage() {
                     </Select>
                   ) : (
                     <Badge variant="secondary" className="capitalize">{roles[p.id] ?? "viewer"}</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {isAdmin ? (
+                    <Switch checked={!!p.accounts_access} onCheckedChange={(v) => toggleAccountsAccess(p.id, v)} />
+                  ) : (
+                    <Badge variant="secondary">{p.accounts_access ? "Yes" : "No"}</Badge>
                   )}
                 </TableCell>
               </TableRow>
@@ -192,6 +209,13 @@ export default function UsersPage() {
                   {ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label>Accounts Access</Label>
+                <p className="text-xs text-muted-foreground">Allow this user to open the Accounts page.</p>
+              </div>
+              <Switch checked={form.accounts_access} onCheckedChange={(v) => setForm({ ...form, accounts_access: v })} />
             </div>
           </div>
           <DialogFooter>

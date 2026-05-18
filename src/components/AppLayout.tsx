@@ -16,14 +16,17 @@ const menu = [
   { to: "/", label: "Dashboard", icon: CheckSquare, end: true },
   { to: "/company", label: "Company", icon: Building2 },
   { to: "/branch", label: "Branch", icon: GitBranch },
-  { to: "/accounts", label: "Accounts", icon: Wallet },
+  { to: "/accounts", label: "Accounts", icon: Wallet, requiresAccounts: true },
   { to: "/pending", label: "Pending", icon: ClipboardList },
   { to: "/users", label: "Users", icon: Users },
 ];
 
 export default function AppLayout() {
-  const { signOut, username, role } = useAuth();
+  const { signOut, username, role, accountsAccess } = useAuth();
   const nav = useNavigate();
+  const visibleMenu = menu.filter(
+    (m) => !m.requiresAccounts || role === "admin" || accountsAccess,
+  );
 
   const handleLogout = async () => {
     await signOut();
@@ -36,7 +39,7 @@ export default function AppLayout() {
         <div className="container flex h-16 items-center justify-between gap-4">
           {/* Left: menu */}
           <nav className="flex items-center gap-1 overflow-x-auto">
-            {menu.map((m) => (
+            {visibleMenu.map((m) => (
               <NavLink
                 key={m.to}
                 to={m.to}

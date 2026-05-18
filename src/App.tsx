@@ -38,7 +38,7 @@ const App = () => (
               <Route path="/company" element={<Company />} />
               <Route path="/company/:id" element={<CompanyDetail />} />
               <Route path="/branch" element={<Branch />} />
-              <Route path="/accounts" element={<Accounts />} />
+              <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
               <Route path="/users" element={<Users />} />
             </Route>

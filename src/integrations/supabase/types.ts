@@ -378,6 +378,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accounts_access: boolean
           branch_id: string | null
           created_at: string
           email: string | null
@@ -385,6 +386,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          accounts_access?: boolean
           branch_id?: string | null
           created_at?: string
           email?: string | null
@@ -392,6 +394,7 @@ export type Database = {
           username: string
         }
         Update: {
+          accounts_access?: boolean
           branch_id?: string | null
           created_at?: string
           email?: string | null
