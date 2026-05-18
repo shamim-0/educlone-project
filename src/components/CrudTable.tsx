@@ -20,6 +20,7 @@ export function CrudTable<T extends { id: string }>({
   onEdit,
   onDelete,
   loading,
+  showIndex = false,
 }: {
   title: string;
   description?: string;
@@ -29,6 +30,7 @@ export function CrudTable<T extends { id: string }>({
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   loading?: boolean;
+  showIndex?: boolean;
 }) {
   const { role } = useAuth();
   const canWrite = role === "admin" || role === "editor";
