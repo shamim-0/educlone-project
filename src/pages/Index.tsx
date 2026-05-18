@@ -138,6 +138,10 @@ export default function Index() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
   const [loading, setLoading] = useState(true);
+  const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("default");
 
   useEffect(() => {
     document.title = "Dashboard | ISBI Tracker";
@@ -171,18 +175,65 @@ export default function Index() {
     const m = name.match(/ISBI[A-Z]*(\d+)/i);
     return m ? parseInt(m[1], 10) : -1;
   };
-  const sorted = [...companies].sort((a, b) => {
-    const ae = a.emergency ? 0 : 1;
-    const be = b.emergency ? 0 : 1;
-    if (ae !== be) return ae - be;
-    const at = a.take_action ? 0 : 1;
-    const bt = b.take_action ? 0 : 1;
-    if (at !== bt) return at - bt;
-    const ac = extractCode(a.name);
-    const bc = extractCode(b.name);
-    if (ac !== bc) return bc - ac;
-    return b.name.localeCompare(a.name);
-  });
+
+  const branchTabs = useMemo(() => {
+    const map = new Map<string, number>();
+    companies.forEach((c) => {
+      const name = c.branches?.name ?? "—";
+      map.set(name, (map.get(name) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [companies]);
+
+  const typeOptions = useMemo(() => {
+    const s = new Set<string>();
+    companies.forEach((c) => c.type && s.add(c.type));
+    return Array.from(s).sort();
+  }, [companies]);
+
+  const filtered = useMemo(() => {
+    return companies.filter((c) => {
+      if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
+      if (typeFilter !== "all" && c.type !== typeFilter) return false;
+      if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      return true;
+    });
+  }, [companies, branchFilter, typeFilter, search]);
+
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    const defaultSort = (a: Company, b: Company) => {
+      const ae = a.emergency ? 0 : 1;
+      const be = b.emergency ? 0 : 1;
+      if (ae !== be) return ae - be;
+      const at = a.take_action ? 0 : 1;
+      const bt = b.take_action ? 0 : 1;
+      if (at !== bt) return at - bt;
+      const ac = extractCode(a.name);
+      const bc = extractCode(b.name);
+      if (ac !== bc) return bc - ac;
+      return b.name.localeCompare(a.name);
+    };
+    switch (sortBy) {
+      case "name_asc":
+        return arr.sort((a, b) => a.name.localeCompare(b.name));
+      case "name_desc":
+        return arr.sort((a, b) => b.name.localeCompare(a.name));
+      case "recent":
+        return arr.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case "oldest":
+        return arr.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      case "progress": {
+        return arr.sort((a, b) => {
+          const ap = stepCounts[a.id]?.done ?? 0;
+          const bp = stepCounts[b.id]?.done ?? 0;
+          return bp - ap;
+        });
+      }
+      default:
+        return arr.sort(defaultSort);
+    }
+  }, [filtered, sortBy, stepCounts]);
 
   return (
     <div>
@@ -193,11 +244,73 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Branch tabs */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          onClick={() => setBranchFilter("all")}
+          className={cn(
+            "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+            branchFilter === "all"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card text-foreground border-border hover:bg-muted"
+          )}
+        >
+          All <span className="opacity-70">({companies.length})</span>
+        </button>
+        {branchTabs.map(([name, count]) => (
+          <button
+            key={name}
+            onClick={() => setBranchFilter(name)}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+              branchFilter === name
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-foreground border-border hover:bg-muted"
+            )}
+          >
+            {name} <span className="opacity-70">({count})</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Search + filters */}
+      <div className="mb-6 flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search company by name..."
+            className="pl-9"
+          />
+        </div>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="md:w-48"><SelectValue placeholder="All Types" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {typeOptions.map((t) => (
+              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="md:w-48"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">🚨 Priority (default)</SelectItem>
+            <SelectItem value="name_asc">A–Z</SelectItem>
+            <SelectItem value="name_desc">Z–A</SelectItem>
+            <SelectItem value="progress">📈 Progress</SelectItem>
+            <SelectItem value="recent">🕐 Recent</SelectItem>
+            <SelectItem value="oldest">⏳ Oldest</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground text-center py-12">Loading…</p>
       ) : sorted.length === 0 ? (
         <p className="text-muted-foreground text-center py-12">
-          No companies yet. Add one from the Company page.
+          No companies match your filters.
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
