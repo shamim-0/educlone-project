@@ -9,6 +9,7 @@ interface AuthCtx {
   user: User | null;
   role: AppRole | null;
   username: string | null;
+  branchId: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (username: string, email: string, password: string) => Promise<{ error: string | null }>;
@@ -22,15 +23,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [branchId, setBranchId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (uid: string) => {
     const [{ data: roleRow }, { data: profile }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", uid).order("role").limit(1).maybeSingle(),
-      supabase.from("profiles").select("username").eq("id", uid).maybeSingle(),
+      supabase.from("profiles").select("username, branch_id").eq("id", uid).maybeSingle(),
     ]);
     setRole((roleRow?.role as AppRole) ?? "viewer");
     setUsername(profile?.username ?? null);
+    setBranchId((profile as any)?.branch_id ?? null);
   };
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setRole(null);
         setUsername(null);
+        setBranchId(null);
       }
     });
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -75,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <Ctx.Provider value={{ session, user, role, username, loading, signIn, signUp, signOut }}>
+    <Ctx.Provider value={{ session, user, role, username, branchId, loading, signIn, signUp, signOut }}>
       {children}
     </Ctx.Provider>
   );
