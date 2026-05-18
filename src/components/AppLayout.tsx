@@ -39,7 +39,7 @@ export default function AppLayout() {
         <div className="container flex h-16 items-center justify-between gap-4">
           {/* Left: menu */}
           <nav className="flex items-center gap-1 overflow-x-auto">
-            {menu.map((m) => (
+            {visibleMenu.map((m) => (
               <NavLink
                 key={m.to}
                 to={m.to}
