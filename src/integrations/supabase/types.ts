@@ -83,51 +83,75 @@ export type Database = {
       }
       companies: {
         Row: {
+          account_note: string | null
           address: string | null
           branch_id: string | null
           contact_email: string | null
           cr_number: string | null
           created_at: string
           created_by: string | null
+          currency: string
           emergency: boolean
           id: string
+          legacy_id: number | null
           name: string
           note: string | null
           phone: string | null
+          slug: string | null
           take_action: boolean
+          total_deal: number
           type: Database["public"]["Enums"]["company_type"]
+          update_by: string | null
+          updated_at: string
+          vat: string | null
           whatsapp: string | null
         }
         Insert: {
+          account_note?: string | null
           address?: string | null
           branch_id?: string | null
           contact_email?: string | null
           cr_number?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           emergency?: boolean
           id?: string
+          legacy_id?: number | null
           name: string
           note?: string | null
           phone?: string | null
+          slug?: string | null
           take_action?: boolean
+          total_deal?: number
           type?: Database["public"]["Enums"]["company_type"]
+          update_by?: string | null
+          updated_at?: string
+          vat?: string | null
           whatsapp?: string | null
         }
         Update: {
+          account_note?: string | null
           address?: string | null
           branch_id?: string | null
           contact_email?: string | null
           cr_number?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           emergency?: boolean
           id?: string
+          legacy_id?: number | null
           name?: string
           note?: string | null
           phone?: string | null
+          slug?: string | null
           take_action?: boolean
+          total_deal?: number
           type?: Database["public"]["Enums"]["company_type"]
+          update_by?: string | null
+          updated_at?: string
+          vat?: string | null
           whatsapp?: string | null
         }
         Relationships: [
@@ -184,33 +208,83 @@ export type Database = {
           },
         ]
       }
+      company_installments: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          id: string
+          note: string | null
+          payment_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          payment_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          payment_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_installments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_managers: {
         Row: {
           birthdate: string | null
           company_id: string
           created_at: string
+          email: string | null
           id: string
           iqama: string | null
           manager_type: string
           name: string
+          phone: string | null
+          sort_order: number
+          updated_at: string
         }
         Insert: {
           birthdate?: string | null
           company_id: string
           created_at?: string
+          email?: string | null
           id?: string
           iqama?: string | null
           manager_type?: string
           name: string
+          phone?: string | null
+          sort_order?: number
+          updated_at?: string
         }
         Update: {
           birthdate?: string | null
           company_id?: string
           created_at?: string
+          email?: string | null
           id?: string
           iqama?: string | null
           manager_type?: string
           name?: string
+          phone?: string | null
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -274,33 +348,45 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          cred_notes: string | null
+          cred_pass: string | null
+          cred_user: string | null
           id: string
           note: string | null
           password: string | null
           status: string
           step_key: string
+          update_status_by: string | null
           updated_at: string
           username: string | null
         }
         Insert: {
           company_id: string
           created_at?: string
+          cred_notes?: string | null
+          cred_pass?: string | null
+          cred_user?: string | null
           id?: string
           note?: string | null
           password?: string | null
           status?: string
           step_key: string
+          update_status_by?: string | null
           updated_at?: string
           username?: string | null
         }
         Update: {
           company_id?: string
           created_at?: string
+          cred_notes?: string | null
+          cred_pass?: string | null
+          cred_user?: string | null
           id?: string
           note?: string | null
           password?: string | null
           status?: string
           step_key?: string
+          update_status_by?: string | null
           updated_at?: string
           username?: string | null
         }
