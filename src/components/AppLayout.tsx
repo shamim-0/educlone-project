@@ -7,8 +7,11 @@ import {
   Users,
   LogOut,
   CheckSquare,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +27,7 @@ const menu = [
 export default function AppLayout() {
   const { signOut, username, role, accountsAccess } = useAuth();
   const nav = useNavigate();
+  const { theme, toggle } = useTheme();
   const visibleMenu = menu.filter(
     (m) => !m.requiresAccounts || role === "admin" || accountsAccess,
   );
@@ -70,6 +74,15 @@ export default function AppLayout() {
 
           {/* Right: logo + user */}
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggle}
+              aria-label="Toggle theme"
+              className="text-foreground/70 hover:text-foreground"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             {username && (
               <div className="hidden md:flex flex-col items-end leading-tight">
                 <span className="text-sm font-semibold">{username}</span>
