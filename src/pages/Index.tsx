@@ -5,6 +5,7 @@ import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Company {
   id: string;
@@ -132,6 +133,7 @@ function CompanyCard({ c, done, processing }: { c: Company; done: number; proces
 }
 
 export default function Index() {
+  const { role, branchId } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
   const [loading, setLoading] = useState(true);
@@ -139,11 +141,15 @@ export default function Index() {
   useEffect(() => {
     document.title = "Dashboard | ISBI Tracker";
     const load = async () => {
+      let q = supabase
+        .from("companies")
+        .select("id, name, type, branch_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
+        .order("created_at", { ascending: false });
+      if (role && role !== "admin" && branchId) {
+        q = q.eq("branch_id", branchId);
+      }
       const [cRes, sRes] = await Promise.all([
-        supabase
-          .from("companies")
-          .select("id, name, type, branch_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
-          .order("created_at", { ascending: false }),
+        q,
         supabase.from("company_steps").select("company_id, status"),
       ]);
       if (!cRes.error) setCompanies((cRes.data as Company[]) ?? []);
@@ -157,8 +163,8 @@ export default function Index() {
       setStepCounts(counts);
       setLoading(false);
     };
-    load();
-  }, []);
+    if (role !== null) load();
+  }, [role, branchId]);
 
   const sorted = [...companies].sort((a, b) => {
     const ao = deriveProgress(a.created_at, 0, 0).overdue ? 0 : 1;
