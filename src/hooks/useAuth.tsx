@@ -49,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setRole(null);
         setUsername(null);
         setBranchId(null);
+        setAccountsAccess(false);
       }
     });
     supabase.auth.getSession().then(({ data: { session: s } }) => {
