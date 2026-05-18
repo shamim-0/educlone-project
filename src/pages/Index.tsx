@@ -166,8 +166,8 @@ export default function Index() {
   }, [role, branchId]);
 
   const extractCode = (name: string) => {
-    const m = name.match(/ISBI(\d+)/i);
-    return m ? parseInt(m[1], 10) : Number.MAX_SAFE_INTEGER;
+    const m = name.match(/ISBI[A-Z]*(\d+)/i);
+    return m ? parseInt(m[1], 10) : -1;
   };
   const sorted = [...companies].sort((a, b) => {
     const ae = a.emergency ? 0 : 1;
@@ -178,8 +178,8 @@ export default function Index() {
     if (at !== bt) return at - bt;
     const ac = extractCode(a.name);
     const bc = extractCode(b.name);
-    if (ac !== bc) return ac - bc;
-    return a.name.localeCompare(b.name);
+    if (ac !== bc) return bc - ac;
+    return b.name.localeCompare(a.name);
   });
 
   return (
