@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-interface Branch { id: string; name: string; location: string | null; }
+interface Branch { id: string; name: string; company_count: number; }
 
 export default function BranchPage() {
   const [rows, setRows] = useState<Branch[]>([]);
