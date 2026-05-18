@@ -84,6 +84,7 @@ export default function CompanyPage() {
         description="Manage your companies with branch and type."
         rows={rows}
         loading={loading}
+        showIndex
         columns={[
           { key: "name", header: "Company Name" },
           { key: "branch", header: "Branch", render: (r) => r.branches?.name ?? "—" },

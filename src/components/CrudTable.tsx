@@ -20,6 +20,7 @@ export function CrudTable<T extends { id: string }>({
   onEdit,
   onDelete,
   loading,
+  showIndex = false,
 }: {
   title: string;
   description?: string;
@@ -29,6 +30,7 @@ export function CrudTable<T extends { id: string }>({
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   loading?: boolean;
+  showIndex?: boolean;
 }) {
   const { role } = useAuth();
   const canWrite = role === "admin" || role === "editor";
@@ -52,6 +54,7 @@ export function CrudTable<T extends { id: string }>({
         <Table>
           <TableHeader>
             <TableRow>
+              {showIndex && <TableHead className="w-14 text-center">#</TableHead>}
               {columns.map((c) => (
                 <TableHead key={String(c.key)}>{c.header}</TableHead>
               ))}
@@ -61,19 +64,20 @@ export function CrudTable<T extends { id: string }>({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={columns.length + 1} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={columns.length + (showIndex ? 2 : 1)} className="text-center text-muted-foreground py-10">
                   Loading…
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length + 1} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={columns.length + (showIndex ? 2 : 1)} className="text-center text-muted-foreground py-10">
                   No records yet.
                 </TableCell>
               </TableRow>
             ) : (
-              rows.map((r) => (
+              rows.map((r, idx) => (
                 <TableRow key={r.id}>
+                  {showIndex && <TableCell className="w-14 text-center text-muted-foreground">{idx + 1}</TableCell>}
                   {columns.map((c) => (
                     <TableCell key={String(c.key)}>
                       {c.render ? c.render(r) : ((r as Record<string, unknown>)[c.key as string] as ReactNode) ?? "—"}
