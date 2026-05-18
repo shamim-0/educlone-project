@@ -12,7 +12,7 @@ import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
