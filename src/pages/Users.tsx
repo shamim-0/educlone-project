@@ -69,6 +69,13 @@ export default function UsersPage() {
     setProfiles((s) => s.map((p) => p.id === userId ? { ...p, branch_id: value } : p));
   };
 
+  const toggleAccountsAccess = async (userId: string, value: boolean) => {
+    const { error } = await supabase.from("profiles").update({ accounts_access: value }).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Accounts access updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, accounts_access: value } : p));
+  };
+
   const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name ?? "—";
 
   const createUser = async () => {
