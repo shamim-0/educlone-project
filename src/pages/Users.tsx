@@ -82,6 +82,7 @@ export default function UsersPage() {
         password: form.password,
         branch_id: form.branch_id || null,
         role: form.role,
+        accounts_access: form.accounts_access,
       },
     });
     setSubmitting(false);
@@ -91,7 +92,7 @@ export default function UsersPage() {
     }
     toast.success("User created");
     setOpen(false);
-    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer" });
+    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false });
     load();
   };
 
