@@ -176,6 +176,23 @@ export default function Index() {
     return m ? parseInt(m[1], 10) : -1;
   };
 
+  const stats = useMemo(() => {
+    const total = companies.length;
+    const service = companies.filter((c) => c.type === "service").length;
+    const trading = companies.filter((c) => c.type === "trading").length;
+    const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
+    const completed = companies.filter((c) => (stepCounts[c.id]?.done ?? 0) === TOTAL_STEPS).length;
+    const takeAction = companies.filter((c) => c.take_action).length;
+    const emergency = companies.filter((c) => c.emergency).length;
+    const avgProgress =
+      total > 0
+        ? Math.round(
+            companies.reduce((sum, c) => sum + ((stepCounts[c.id]?.done ?? 0) / TOTAL_STEPS) * 100, 0) / total
+          )
+        : 0;
+    return { total, service, trading, entrepreneur, completed, takeAction, emergency, avgProgress };
+  }, [companies, stepCounts]);
+
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
     companies.forEach((c) => {
@@ -241,6 +258,44 @@ export default function Index() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Company Tracker</h1>
           <p className="text-sm text-muted-foreground mt-1">{companies.length} companies</p>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-foreground">{stats.total}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-primary">{stats.service}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Service</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-primary">{stats.trading}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Trading</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-primary">{stats.entrepreneur}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Entrepreneur</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-accent">{stats.completed}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">সম্পন্ন</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-[rgb(234,88,12)]">{stats.takeAction}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
+            <Zap className="h-3 w-3" /> Take Action
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-destructive">{stats.emergency}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Emergency</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-foreground">{stats.avgProgress}%</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Avg Progress</div>
         </div>
       </div>
 
