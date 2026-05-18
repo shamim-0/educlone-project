@@ -165,10 +165,21 @@ export default function Index() {
     if (role !== null) load();
   }, [role, branchId]);
 
+  const extractCode = (name: string) => {
+    const m = name.match(/ISBI(\d+)/i);
+    return m ? parseInt(m[1], 10) : Number.MAX_SAFE_INTEGER;
+  };
   const sorted = [...companies].sort((a, b) => {
-    const ao = deriveProgress(a.created_at, 0, 0).overdue ? 0 : 1;
-    const bo = deriveProgress(b.created_at, 0, 0).overdue ? 0 : 1;
-    return ao - bo;
+    const ae = a.emergency ? 0 : 1;
+    const be = b.emergency ? 0 : 1;
+    if (ae !== be) return ae - be;
+    const at = a.take_action ? 0 : 1;
+    const bt = b.take_action ? 0 : 1;
+    if (at !== bt) return at - bt;
+    const ac = extractCode(a.name);
+    const bc = extractCode(b.name);
+    if (ac !== bc) return ac - bc;
+    return a.name.localeCompare(b.name);
   });
 
   return (
