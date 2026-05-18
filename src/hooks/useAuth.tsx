@@ -10,6 +10,7 @@ interface AuthCtx {
   role: AppRole | null;
   username: string | null;
   branchId: string | null;
+  accountsAccess: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (username: string, email: string, password: string) => Promise<{ error: string | null }>;
