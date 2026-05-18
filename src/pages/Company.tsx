@@ -57,7 +57,7 @@ export default function CompanyPage() {
     const payload = {
       name: String(fd.get("name") ?? "").trim(),
       type,
-      branch_id: branchId || null,
+      branch_id: branchId2 || null,
     };
     if (!payload.name) { toast.error("Company name required"); return; }
     const { error } = editing
@@ -100,7 +100,7 @@ export default function CompanyPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <Label>Branch</Label>
-              <Select value={branchId} onValueChange={setBranchId}>
+              <Select value={branchId2} onValueChange={setBranchId}>
                 <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
                 <SelectContent>
                   {branches.length === 0 ? (
