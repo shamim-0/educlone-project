@@ -25,10 +25,29 @@ export default function PendingPage() {
   useEffect(() => {
     document.title = "Pending Services | ISBI Tracker";
     (async () => {
+      // Paginate company_steps to bypass the 1000-row default cap
+      const fetchAllSteps = async () => {
+        const pageSize = 1000;
+        let from = 0;
+        const all: StepRow[] = [];
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data, error } = await supabase
+            .from("company_steps")
+            .select("company_id,step_key,status")
+            .range(from, from + pageSize - 1);
+          if (error) { toast.error(error.message); break; }
+          const rows = (data ?? []) as StepRow[];
+          all.push(...rows);
+          if (rows.length < pageSize) break;
+          from += pageSize;
+        }
+        return all;
+      };
       const [c, b, s] = await Promise.all([
         supabase.from("companies").select("id,name,type,branch_id").order("name"),
         supabase.from("branches").select("id,name"),
-        supabase.from("company_steps").select("company_id,step_key,status"),
+        fetchAllSteps(),
       ]);
       if (c.error) toast.error(c.error.message);
       setCompanies((c.data ?? []) as Company[]);
