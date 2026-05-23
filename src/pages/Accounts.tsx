@@ -71,6 +71,7 @@ export default function AccountsPage() {
   const [editingDeal, setEditingDeal] = useState(false);
   const [dealAmount, setDealAmount] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
+  const [discountMode, setDiscountMode] = useState<"sr" | "pct">("sr");
   const [savingDeal, setSavingDeal] = useState(false);
 
   const [instOpen, setInstOpen] = useState(false);
@@ -135,6 +136,7 @@ export default function AccountsPage() {
     setOpenCompany(c);
     setDealAmount(String(c.total_deal ?? 0));
     setDiscountAmount(String(c.discount ?? 0));
+    setDiscountMode("sr");
     setEditingDeal(false);
   }
 
@@ -144,16 +146,23 @@ export default function AccountsPage() {
     const d = Number(discountAmount);
     if (Number.isNaN(v) || v < 0) { toast.error("Invalid deal amount"); return; }
     if (Number.isNaN(d) || d < 0) { toast.error("Invalid discount"); return; }
-    if (d > v) { toast.error("Discount cannot exceed deal amount"); return; }
+    let discSr = d;
+    if (discountMode === "pct") {
+      if (d > 100) { toast.error("Discount % cannot exceed 100"); return; }
+      discSr = +(v * d / 100).toFixed(2);
+    }
+    if (discSr > v) { toast.error("Discount cannot exceed deal amount"); return; }
     setSavingDeal(true);
     const { error } = await supabase
       .from("companies")
-      .update({ total_deal: v, discount: d })
+      .update({ total_deal: v, discount: discSr })
       .eq("id", openCompany.id);
     setSavingDeal(false);
     if (error) return toast.error(error.message);
-    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v, discount: d } : c));
-    setOpenCompany({ ...openCompany, total_deal: v, discount: d });
+    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v, discount: discSr } : c));
+    setOpenCompany({ ...openCompany, total_deal: v, discount: discSr });
+    setDiscountAmount(String(discSr));
+    setDiscountMode("sr");
     setEditingDeal(false);
     toast.success("Deal updated");
   }
@@ -411,10 +420,43 @@ export default function AccountsPage() {
                         <Input id="dealAmt" type="number" step="0.01" min="0" value={dealAmount} onChange={(e) => setDealAmount(e.target.value)} />
                       </div>
                       <div>
-                        <Label htmlFor="discAmt" className="text-xs flex items-center gap-1">
-                          <Percent className="h-3 w-3" /> Discount (SR)
-                        </Label>
-                        <Input id="discAmt" type="number" step="0.01" min="0" value={discountAmount} onChange={(e) => setDiscountAmount(e.target.value)} />
+                        <div className="flex items-center justify-between mb-1">
+                          <Label htmlFor="discAmt" className="text-xs flex items-center gap-1">
+                            <Percent className="h-3 w-3" /> Discount ({discountMode === "pct" ? "%" : "SR"})
+                          </Label>
+                          <div className="inline-flex rounded-md border bg-muted/40 p-0.5 text-[11px] font-medium">
+                            <button
+                              type="button"
+                              onClick={() => setDiscountMode("sr")}
+                              className={`px-2 py-0.5 rounded-sm transition-colors ${discountMode === "sr" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                            >SR</button>
+                            <button
+                              type="button"
+                              onClick={() => setDiscountMode("pct")}
+                              className={`px-2 py-0.5 rounded-sm transition-colors ${discountMode === "pct" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                            >%</button>
+                          </div>
+                        </div>
+                        <Input
+                          id="discAmt"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max={discountMode === "pct" ? "100" : undefined}
+                          value={discountAmount}
+                          onChange={(e) => setDiscountAmount(e.target.value)}
+                          placeholder={discountMode === "pct" ? "e.g. 10" : "e.g. 500"}
+                        />
+                        {discountMode === "pct" && Number(dealAmount) > 0 && Number(discountAmount) > 0 && (
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            = {fmt(Number(dealAmount) * Number(discountAmount) / 100)}
+                          </p>
+                        )}
+                        {discountMode === "sr" && Number(dealAmount) > 0 && Number(discountAmount) > 0 && (
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            = {((Number(discountAmount) / Number(dealAmount)) * 100).toFixed(2)}%
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
