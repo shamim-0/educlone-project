@@ -128,13 +128,14 @@ export default function UsersPage() {
               <TableHead className="w-56">Branch</TableHead>
               <TableHead className="w-48">Role</TableHead>
               <TableHead className="w-40">Accounts Access</TableHead>
+              {isAdmin && <TableHead className="w-32 text-right">Password</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : profiles.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
             ) : profiles.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.username}{p.id === me?.id && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}</TableCell>
@@ -171,6 +172,13 @@ export default function UsersPage() {
                     <Badge variant="secondary">{p.accounts_access ? "Yes" : "No"}</Badge>
                   )}
                 </TableCell>
+                {isAdmin && (
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" className="gap-1" onClick={() => setPwdTarget(p)}>
+                      <KeyRound className="h-3.5 w-3.5" /> Change
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
