@@ -52,7 +52,7 @@ export default function PendingPage() {
       if (c.error) toast.error(c.error.message);
       setCompanies((c.data ?? []) as Company[]);
       setBranches((b.data ?? []) as Branch[]);
-      setSteps((s.data ?? []) as StepRow[]);
+      setSteps(s);
       setLoading(false);
     })();
   }, []);
