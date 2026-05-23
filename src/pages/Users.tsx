@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, KeyRound } from "lucide-react";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
