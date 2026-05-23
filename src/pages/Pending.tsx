@@ -69,12 +69,18 @@ export default function PendingPage() {
     return m;
   }, [steps]);
 
-  // For each service, list of companies where status !== "done" && !== "no_need"
+  // For each service, list companies where status !== done/no_need
+  // AND all earlier services in STEP_DEFS order are done/no_need (sequential gating).
   const pendingByService = useMemo(() => {
     const out: Record<string, Company[]> = {};
-    STEP_DEFS.forEach(def => {
+    STEP_DEFS.forEach((def, idx) => {
       out[def.key] = companies.filter(co => {
-        const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
+        const cMap = stepMap.get(co.id);
+        for (let i = 0; i < idx; i++) {
+          const prev = cMap?.get(STEP_DEFS[i].key) ?? "not_started";
+          if (prev !== "done" && prev !== "no_need") return false;
+        }
+        const st = cMap?.get(def.key) ?? "not_started";
         return st !== "done" && st !== "no_need";
       });
     });
