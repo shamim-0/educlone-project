@@ -9,12 +9,14 @@ import { ChevronDown, ChevronUp, Search, ListChecks, Clock, Building2 } from "lu
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { STEP_DEFS } from "@/lib/steps";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Company { id: string; name: string; type: string; branch_id: string | null; }
 interface Branch { id: string; name: string; }
 interface StepRow { company_id: string; step_key: string; status: string; }
 
 export default function PendingPage() {
+  const { role, branchId } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<StepRow[]>([]);
@@ -24,6 +26,7 @@ export default function PendingPage() {
 
   useEffect(() => {
     document.title = "Pending Services | ISBI Tracker";
+    if (role === null) return;
     (async () => {
       // Paginate company_steps to bypass the 1000-row default cap
       const fetchAllSteps = async () => {
@@ -44,8 +47,10 @@ export default function PendingPage() {
         }
         return all;
       };
+      let cq = supabase.from("companies").select("id,name,type,branch_id").order("name");
+      if (role !== "admin" && branchId) cq = cq.eq("branch_id", branchId);
       const [c, b, s] = await Promise.all([
-        supabase.from("companies").select("id,name,type,branch_id").order("name"),
+        cq,
         supabase.from("branches").select("id,name"),
         fetchAllSteps(),
       ]);
@@ -55,7 +60,7 @@ export default function PendingPage() {
       setSteps(s);
       setLoading(false);
     })();
-  }, []);
+  }, [role, branchId]);
 
   const branchName = (id: string | null) => branches.find(x => x.id === id)?.name ?? "—";
 
