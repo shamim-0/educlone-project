@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { STEP_DEFS, STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Branch { id: string; name: string }
 interface Company {
@@ -54,6 +55,7 @@ const DOC_CATEGORIES = [
 export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { role, branchId: myBranchId } = useAuth();
   const [company, setCompany] = useState<Company | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
@@ -327,8 +329,19 @@ export default function CompanyDetail() {
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
+  const isAdmin = role === "admin";
+  const isEditor = role === "editor";
+  // Admin always edits. Editor edits only companies in their assigned branch (or if they have no branch restriction). Viewer cannot edit.
+  const canEdit = isAdmin || (isEditor && (!myBranchId || company.branch_id === myBranchId));
+  const canDelete = isAdmin;
+
   return (
     <div className="space-y-6">
+      {!canEdit && (
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 px-4 py-2 text-sm">
+          You have read-only access to this company.
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
@@ -383,6 +396,7 @@ export default function CompanyDetail() {
         </div>
 
         {/* Action buttons */}
+        {canEdit && (
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
             variant={emergency ? "destructive" : "outline"}
@@ -413,10 +427,13 @@ export default function CompanyDetail() {
           <Button variant="outline" size="sm" onClick={renameCompany}>
             <Pencil className="h-4 w-4 mr-1" /> Rename
           </Button>
-          <Button variant="destructive" size="sm" onClick={deleteCompany}>
-            <Trash2 className="h-4 w-4 mr-1" /> Delete
-          </Button>
+          {canDelete && (
+            <Button variant="destructive" size="sm" onClick={deleteCompany}>
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
+          )}
         </div>
+        )}
 
         <div className="mt-5">
           <div className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">STEP OVERVIEW</div>
@@ -477,13 +494,13 @@ export default function CompanyDetail() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Select value={s.status} onValueChange={(v) => updateStep(def.key, { status: v })}>
+                    <Select value={s.status} onValueChange={(v) => updateStep(def.key, { status: v })} disabled={!canEdit}>
                       <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {STATUS_OPTS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Button size="sm" onClick={() => saveStep(def.key)}>Save</Button>
+                    {canEdit && <Button size="sm" onClick={() => saveStep(def.key)}>Save</Button>}
                   </div>
                 </div>
 
@@ -491,11 +508,11 @@ export default function CompanyDetail() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-xs text-muted-foreground">Username / Email</Label>
-                      <Input value={s.username ?? ""} onChange={(e) => updateStep(def.key, { username: e.target.value })} />
+                      <Input value={s.username ?? ""} onChange={(e) => updateStep(def.key, { username: e.target.value })} disabled={!canEdit} />
                     </div>
                     <div>
                       <Label className="text-xs text-muted-foreground">Password</Label>
-                      <Input value={s.password ?? ""} onChange={(e) => updateStep(def.key, { password: e.target.value })} />
+                      <Input value={s.password ?? ""} onChange={(e) => updateStep(def.key, { password: e.target.value })} disabled={!canEdit} />
                     </div>
                   </div>
                 )}
@@ -507,6 +524,7 @@ export default function CompanyDetail() {
                     placeholder="Notes…"
                     value={s.note ?? ""}
                     onChange={(e) => updateStep(def.key, { note: e.target.value })}
+                    disabled={!canEdit}
                   />
                 </div>
               </Card>
@@ -523,6 +541,7 @@ export default function CompanyDetail() {
               <Select
                 value={company.branch_id ?? ""}
                 onValueChange={(v) => setCompany({ ...company, branch_id: v })}
+                disabled={!canEdit}
               >
                 <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
                 <SelectContent>
@@ -532,12 +551,12 @@ export default function CompanyDetail() {
             </div>
             <div>
               <Label className="text-xs">COMPANY NAME</Label>
-              <Input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} />
+              <Input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} disabled={!canEdit} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">TYPE</Label>
-                <Select value={company.type} onValueChange={(v) => setCompany({ ...company, type: v })}>
+                <Select value={company.type} onValueChange={(v) => setCompany({ ...company, type: v })} disabled={!canEdit}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
@@ -548,26 +567,28 @@ export default function CompanyDetail() {
               </div>
               <div>
                 <Label className="text-xs">CR NUMBER</Label>
-                <Input value={company.cr_number ?? ""} onChange={(e) => setCompany({ ...company, cr_number: e.target.value })} />
+                <Input value={company.cr_number ?? ""} onChange={(e) => setCompany({ ...company, cr_number: e.target.value })} disabled={!canEdit} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">WHATSAPP</Label>
-                <Input value={company.whatsapp ?? ""} onChange={(e) => setCompany({ ...company, whatsapp: e.target.value })} />
+                <Input value={company.whatsapp ?? ""} onChange={(e) => setCompany({ ...company, whatsapp: e.target.value })} disabled={!canEdit} />
               </div>
               <div>
                 <Label className="text-xs">EMAIL</Label>
-                <Input value={company.contact_email ?? ""} onChange={(e) => setCompany({ ...company, contact_email: e.target.value })} />
+                <Input value={company.contact_email ?? ""} onChange={(e) => setCompany({ ...company, contact_email: e.target.value })} disabled={!canEdit} />
               </div>
             </div>
             <div>
               <Label className="text-xs">NOTE / CONDITION</Label>
-              <Textarea rows={3} value={company.note ?? ""} onChange={(e) => setCompany({ ...company, note: e.target.value })} />
+              <Textarea rows={3} value={company.note ?? ""} onChange={(e) => setCompany({ ...company, note: e.target.value })} disabled={!canEdit} />
             </div>
-            <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
-              <Save className="h-4 w-4 mr-1" /> {savingProfile ? "Saving…" : "Save Profile"}
-            </Button>
+            {canEdit && (
+              <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
+                <Save className="h-4 w-4 mr-1" /> {savingProfile ? "Saving…" : "Save Profile"}
+              </Button>
+            )}
           </Card>
 
           {/* CR Activities */}
@@ -576,9 +597,11 @@ export default function CompanyDetail() {
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">✅</span> CR Activities
               </h2>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setActivityOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add Activity
-              </Button>
+              {canEdit && (
+                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setActivityOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Activity
+                </Button>
+              )}
             </div>
             {activities.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-6">No activities assigned yet</p>
@@ -590,9 +613,11 @@ export default function CompanyDetail() {
                       <div className="text-xs font-mono text-muted-foreground">{a.code}</div>
                       <div className="text-sm font-medium truncate">{a.label}</div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteActivity(a.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteActivity(a.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -605,9 +630,11 @@ export default function CompanyDetail() {
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">👥</span> Managers
               </h2>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setManagerOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
+              {canEdit && (
+                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setManagerOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              )}
             </div>
             {managers.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-6">No managers added yet</p>
@@ -623,9 +650,11 @@ export default function CompanyDetail() {
                         {m.birthdate ? ` · ${m.birthdate}` : ""}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteManager(m.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteManager(m.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -669,9 +698,11 @@ export default function CompanyDetail() {
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">👥</span> Shareholders
               </h2>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setShOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
+              {canEdit && (
+                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setShOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              )}
             </div>
             {shareholders.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-6">No shareholders added yet</p>
@@ -699,9 +730,11 @@ export default function CompanyDetail() {
                         </div>
                       )}
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteShareholder(sh.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteShareholder(sh.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -734,15 +767,17 @@ export default function CompanyDetail() {
                           e.target.value = "";
                         }}
                       />
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs"
-                        disabled={uploadingCat === cat.key}
-                        onClick={() => fileInputs.current[cat.key]?.click()}
-                      >
-                        <Upload className="h-3 w-3 mr-1" />
-                        {uploadingCat === cat.key ? "…" : "Upload"}
-                      </Button>
+                      {canEdit && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={uploadingCat === cat.key}
+                          onClick={() => fileInputs.current[cat.key]?.click()}
+                        >
+                          <Upload className="h-3 w-3 mr-1" />
+                          {uploadingCat === cat.key ? "…" : "Upload"}
+                        </Button>
+                      )}
                     </div>
                     {files.length === 0 ? (
                       <p className="text-center text-xs text-muted-foreground py-2">No files uploaded</p>
@@ -758,9 +793,11 @@ export default function CompanyDetail() {
                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => downloadDocument(f)}>
                                 <Download className="h-3 w-3" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              {canEdit && (
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
                             </div>
                           </li>
                         ))}

@@ -35,12 +35,12 @@ const App = () => (
               }
             >
               <Route path="/" element={<Index />} />
-              <Route path="/company" element={<Company />} />
+              <Route path="/company" element={<ProtectedRoute requireAdmin><Company /></ProtectedRoute>} />
               <Route path="/company/:id" element={<CompanyDetail />} />
-              <Route path="/branch" element={<Branch />} />
+              <Route path="/branch" element={<ProtectedRoute requireAdmin><Branch /></ProtectedRoute>} />
               <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
-              <Route path="/users" element={<Users />} />
+              <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

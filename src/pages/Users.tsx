@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, KeyRound } from "lucide-react";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
@@ -28,6 +29,7 @@ export default function UsersPage() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false });
+  const [pwdTarget, setPwdTarget] = useState<Profile | null>(null);
 
   const isAdmin = myRole === "admin";
 
@@ -126,13 +128,14 @@ export default function UsersPage() {
               <TableHead className="w-56">Branch</TableHead>
               <TableHead className="w-48">Role</TableHead>
               <TableHead className="w-40">Accounts Access</TableHead>
+              {isAdmin && <TableHead className="w-32 text-right">Password</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : profiles.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
             ) : profiles.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.username}{p.id === me?.id && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}</TableCell>
@@ -169,6 +172,13 @@ export default function UsersPage() {
                     <Badge variant="secondary">{p.accounts_access ? "Yes" : "No"}</Badge>
                   )}
                 </TableCell>
+                {isAdmin && (
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" className="gap-1" onClick={() => setPwdTarget(p)}>
+                      <KeyRound className="h-3.5 w-3.5" /> Change
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -223,6 +233,13 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ChangePasswordDialog
+        open={!!pwdTarget}
+        onOpenChange={(v) => { if (!v) setPwdTarget(null); }}
+        targetUserId={pwdTarget?.id}
+        targetLabel={pwdTarget?.username}
+      />
     </Card>
   );
 }
