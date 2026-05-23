@@ -71,6 +71,7 @@ export default function AccountsPage() {
   const [editingDeal, setEditingDeal] = useState(false);
   const [dealAmount, setDealAmount] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
+  const [discountMode, setDiscountMode] = useState<"sr" | "pct">("sr");
   const [savingDeal, setSavingDeal] = useState(false);
 
   const [instOpen, setInstOpen] = useState(false);
