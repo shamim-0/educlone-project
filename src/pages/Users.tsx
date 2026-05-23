@@ -233,6 +233,13 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ChangePasswordDialog
+        open={!!pwdTarget}
+        onOpenChange={(v) => { if (!v) setPwdTarget(null); }}
+        targetUserId={pwdTarget?.id}
+        targetLabel={pwdTarget?.username}
+      />
     </Card>
   );
 }
