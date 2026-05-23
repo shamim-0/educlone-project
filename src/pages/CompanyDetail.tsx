@@ -597,9 +597,11 @@ export default function CompanyDetail() {
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">✅</span> CR Activities
               </h2>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setActivityOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add Activity
-              </Button>
+              {canEdit && (
+                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setActivityOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Activity
+                </Button>
+              )}
             </div>
             {activities.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-6">No activities assigned yet</p>
@@ -611,9 +613,11 @@ export default function CompanyDetail() {
                       <div className="text-xs font-mono text-muted-foreground">{a.code}</div>
                       <div className="text-sm font-medium truncate">{a.label}</div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteActivity(a.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteActivity(a.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -626,9 +630,11 @@ export default function CompanyDetail() {
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">👥</span> Managers
               </h2>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setManagerOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
+              {canEdit && (
+                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setManagerOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              )}
             </div>
             {managers.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-6">No managers added yet</p>
@@ -644,9 +650,11 @@ export default function CompanyDetail() {
                         {m.birthdate ? ` · ${m.birthdate}` : ""}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteManager(m.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteManager(m.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -690,9 +698,11 @@ export default function CompanyDetail() {
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">👥</span> Shareholders
               </h2>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setShOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
+              {canEdit && (
+                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setShOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              )}
             </div>
             {shareholders.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-6">No shareholders added yet</p>
@@ -720,9 +730,11 @@ export default function CompanyDetail() {
                         </div>
                       )}
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteShareholder(sh.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteShareholder(sh.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -755,15 +767,17 @@ export default function CompanyDetail() {
                           e.target.value = "";
                         }}
                       />
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs"
-                        disabled={uploadingCat === cat.key}
-                        onClick={() => fileInputs.current[cat.key]?.click()}
-                      >
-                        <Upload className="h-3 w-3 mr-1" />
-                        {uploadingCat === cat.key ? "…" : "Upload"}
-                      </Button>
+                      {canEdit && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={uploadingCat === cat.key}
+                          onClick={() => fileInputs.current[cat.key]?.click()}
+                        >
+                          <Upload className="h-3 w-3 mr-1" />
+                          {uploadingCat === cat.key ? "…" : "Upload"}
+                        </Button>
+                      )}
                     </div>
                     {files.length === 0 ? (
                       <p className="text-center text-xs text-muted-foreground py-2">No files uploaded</p>
@@ -779,9 +793,11 @@ export default function CompanyDetail() {
                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => downloadDocument(f)}>
                                 <Download className="h-3 w-3" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              {canEdit && (
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
                             </div>
                           </li>
                         ))}
