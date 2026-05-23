@@ -29,6 +29,7 @@ export default function UsersPage() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false });
+  const [pwdTarget, setPwdTarget] = useState<Profile | null>(null);
 
   const isAdmin = myRole === "admin";
 
