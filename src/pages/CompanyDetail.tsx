@@ -541,6 +541,7 @@ export default function CompanyDetail() {
               <Select
                 value={company.branch_id ?? ""}
                 onValueChange={(v) => setCompany({ ...company, branch_id: v })}
+                disabled={!canEdit}
               >
                 <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
                 <SelectContent>
@@ -550,12 +551,12 @@ export default function CompanyDetail() {
             </div>
             <div>
               <Label className="text-xs">COMPANY NAME</Label>
-              <Input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} />
+              <Input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} disabled={!canEdit} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">TYPE</Label>
-                <Select value={company.type} onValueChange={(v) => setCompany({ ...company, type: v })}>
+                <Select value={company.type} onValueChange={(v) => setCompany({ ...company, type: v })} disabled={!canEdit}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
@@ -566,26 +567,28 @@ export default function CompanyDetail() {
               </div>
               <div>
                 <Label className="text-xs">CR NUMBER</Label>
-                <Input value={company.cr_number ?? ""} onChange={(e) => setCompany({ ...company, cr_number: e.target.value })} />
+                <Input value={company.cr_number ?? ""} onChange={(e) => setCompany({ ...company, cr_number: e.target.value })} disabled={!canEdit} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">WHATSAPP</Label>
-                <Input value={company.whatsapp ?? ""} onChange={(e) => setCompany({ ...company, whatsapp: e.target.value })} />
+                <Input value={company.whatsapp ?? ""} onChange={(e) => setCompany({ ...company, whatsapp: e.target.value })} disabled={!canEdit} />
               </div>
               <div>
                 <Label className="text-xs">EMAIL</Label>
-                <Input value={company.contact_email ?? ""} onChange={(e) => setCompany({ ...company, contact_email: e.target.value })} />
+                <Input value={company.contact_email ?? ""} onChange={(e) => setCompany({ ...company, contact_email: e.target.value })} disabled={!canEdit} />
               </div>
             </div>
             <div>
               <Label className="text-xs">NOTE / CONDITION</Label>
-              <Textarea rows={3} value={company.note ?? ""} onChange={(e) => setCompany({ ...company, note: e.target.value })} />
+              <Textarea rows={3} value={company.note ?? ""} onChange={(e) => setCompany({ ...company, note: e.target.value })} disabled={!canEdit} />
             </div>
-            <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
-              <Save className="h-4 w-4 mr-1" /> {savingProfile ? "Saving…" : "Save Profile"}
-            </Button>
+            {canEdit && (
+              <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
+                <Save className="h-4 w-4 mr-1" /> {savingProfile ? "Saving…" : "Save Profile"}
+              </Button>
+            )}
           </Card>
 
           {/* CR Activities */}
