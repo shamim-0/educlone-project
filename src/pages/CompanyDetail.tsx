@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { STEP_DEFS, STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Branch { id: string; name: string }
 interface Company {
@@ -54,6 +55,7 @@ const DOC_CATEGORIES = [
 export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { role, branchId: myBranchId } = useAuth();
   const [company, setCompany] = useState<Company | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
