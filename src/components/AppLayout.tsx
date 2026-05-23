@@ -9,28 +9,34 @@ import {
   CheckSquare,
   Moon,
   Sun,
+  KeyRound,
 } from "lucide-react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { cn } from "@/lib/utils";
 
 const menu = [
   { to: "/", label: "Dashboard", icon: CheckSquare, end: true },
-  { to: "/company", label: "Company", icon: Building2 },
-  { to: "/branch", label: "Branch", icon: GitBranch },
+  { to: "/company", label: "Company", icon: Building2, adminOnly: true },
+  { to: "/branch", label: "Branch", icon: GitBranch, adminOnly: true },
   { to: "/accounts", label: "Accounts", icon: Wallet, requiresAccounts: true },
   { to: "/pending", label: "Pending", icon: ClipboardList },
-  { to: "/users", label: "Users", icon: Users },
+  { to: "/users", label: "Users", icon: Users, adminOnly: true },
 ];
 
 export default function AppLayout() {
   const { signOut, username, role, accountsAccess } = useAuth();
   const nav = useNavigate();
   const { theme, toggle } = useTheme();
-  const visibleMenu = menu.filter(
-    (m) => !m.requiresAccounts || role === "admin" || accountsAccess,
-  );
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const visibleMenu = menu.filter((m) => {
+    if (m.adminOnly && role !== "admin") return false;
+    if (m.requiresAccounts && role !== "admin" && !accountsAccess) return false;
+    return true;
+  });
 
   const handleLogout = async () => {
     await signOut();
@@ -61,6 +67,15 @@ export default function AppLayout() {
                 <span className="hidden sm:inline">{m.label}</span>
               </NavLink>
             ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPwdOpen(true)}
+              className="flex items-center gap-2 text-foreground/70 hover:text-foreground"
+            >
+              <KeyRound className="h-4 w-4" />
+              <span className="hidden sm:inline">Password</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -104,6 +119,8 @@ export default function AppLayout() {
       <main className="container py-8">
         <Outlet />
       </main>
+
+      <ChangePasswordDialog open={pwdOpen} onOpenChange={setPwdOpen} />
     </div>
   );
 }
