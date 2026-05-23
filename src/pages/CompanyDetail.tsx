@@ -396,6 +396,7 @@ export default function CompanyDetail() {
         </div>
 
         {/* Action buttons */}
+        {canEdit && (
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
             variant={emergency ? "destructive" : "outline"}
@@ -426,10 +427,13 @@ export default function CompanyDetail() {
           <Button variant="outline" size="sm" onClick={renameCompany}>
             <Pencil className="h-4 w-4 mr-1" /> Rename
           </Button>
-          <Button variant="destructive" size="sm" onClick={deleteCompany}>
-            <Trash2 className="h-4 w-4 mr-1" /> Delete
-          </Button>
+          {canDelete && (
+            <Button variant="destructive" size="sm" onClick={deleteCompany}>
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
+          )}
         </div>
+        )}
 
         <div className="mt-5">
           <div className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">STEP OVERVIEW</div>
