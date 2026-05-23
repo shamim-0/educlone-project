@@ -136,6 +136,7 @@ export default function AccountsPage() {
     setOpenCompany(c);
     setDealAmount(String(c.total_deal ?? 0));
     setDiscountAmount(String(c.discount ?? 0));
+    setDiscountMode("sr");
     setEditingDeal(false);
   }
 
@@ -145,16 +146,23 @@ export default function AccountsPage() {
     const d = Number(discountAmount);
     if (Number.isNaN(v) || v < 0) { toast.error("Invalid deal amount"); return; }
     if (Number.isNaN(d) || d < 0) { toast.error("Invalid discount"); return; }
-    if (d > v) { toast.error("Discount cannot exceed deal amount"); return; }
+    let discSr = d;
+    if (discountMode === "pct") {
+      if (d > 100) { toast.error("Discount % cannot exceed 100"); return; }
+      discSr = +(v * d / 100).toFixed(2);
+    }
+    if (discSr > v) { toast.error("Discount cannot exceed deal amount"); return; }
     setSavingDeal(true);
     const { error } = await supabase
       .from("companies")
-      .update({ total_deal: v, discount: d })
+      .update({ total_deal: v, discount: discSr })
       .eq("id", openCompany.id);
     setSavingDeal(false);
     if (error) return toast.error(error.message);
-    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v, discount: d } : c));
-    setOpenCompany({ ...openCompany, total_deal: v, discount: d });
+    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v, discount: discSr } : c));
+    setOpenCompany({ ...openCompany, total_deal: v, discount: discSr });
+    setDiscountAmount(String(discSr));
+    setDiscountMode("sr");
     setEditingDeal(false);
     toast.success("Deal updated");
   }
