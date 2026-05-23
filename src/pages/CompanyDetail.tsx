@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { STEP_DEFS, STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
 
 interface Branch { id: string; name: string }
 interface Company {
@@ -49,39 +50,6 @@ const DOC_CATEGORIES = [
   { key: "usa", label: "USA Papers", flag: "US", color: "border-destructive/30" },
   { key: "other", label: "Other Documents", flag: "📁", color: "border-border" },
 ] as const;
-
-const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?: boolean }[] = [
-  { key: "email_account", label: "Email Account", tags: ["Credentials"], hasCreds: true },
-  { key: "bd_formation", label: "BD Formation", tags: ["Bangladesh"] },
-  { key: "usa_subsidiary", label: "USA Subsidiary", tags: ["International"] },
-  { key: "uk_subsidiary", label: "UK Subsidiary", tags: ["International"] },
-  { key: "dhl_send", label: "DHL Send", tags: ["Logistics"] },
-  { key: "sbc_clearance", label: "SBC Clearance", tags: ["Portal"], hasCreds: true },
-  { key: "misa_license", label: "MISA License", tags: ["Portal"], hasCreds: true },
-  { key: "cr_comm_reg", label: "CR (Comm. Reg)", tags: ["KSA"] },
-  { key: "qiwa", label: "QIWA", tags: ["KSA"] },
-  { key: "muqeem", label: "MUQEEM", tags: ["KSA"], hasCreds: true },
-  { key: "gosi", label: "GOSI", tags: ["KSA"] },
-  { key: "zatca", label: "ZATCA", tags: ["KSA"], hasCreds: true },
-  { key: "spl", label: "SPL", tags: ["KSA"], hasCreds: true },
-  { key: "chamber", label: "Chamber", tags: ["KSA"], hasCreds: true },
-  { key: "kafala", label: "Kafala", tags: ["KSA"] },
-  { key: "cr_extract", label: "CR Extract", tags: ["KSA"] },
-  { key: "bank_account", label: "Bank Account", tags: ["Banking"] },
-  
-];
-
-const STATUS_OPTS = [
-  { value: "not_started", label: "Not Started" },
-  { value: "processing", label: "Processing" },
-  { value: "done", label: "Done" },
-];
-
-function statusBadgeClass(s: string) {
-  if (s === "done") return "bg-accent/15 text-accent border-accent/30";
-  if (s === "processing") return "bg-primary/15 text-primary border-primary/30";
-  return "bg-muted text-muted-foreground border-border";
-}
 
 export default function CompanyDetail() {
   const { id } = useParams();
@@ -155,14 +123,15 @@ export default function CompanyDetail() {
   }, [company]);
 
   const progress = useMemo(() => {
-    const total = STEP_DEFS.length;
-    const done = STEP_DEFS.filter(d => steps[d.key]?.status === "done").length;
+    const applicable = STEP_DEFS.filter(d => steps[d.key]?.status !== "no_need");
+    const total = applicable.length;
+    const done = applicable.filter(d => steps[d.key]?.status === "done").length;
     const days = company
       ? Math.floor((Date.now() - new Date(company.created_at).getTime()) / 86400000)
       : 0;
     const target = 45;
     const overdue = days > target;
-    return { total, done, percent: Math.round((done / total) * 100), days, overdue, remaining: target - days };
+    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days };
   }, [steps, company]);
 
   const currentlyWorking = STEP_DEFS.filter(d => steps[d.key]?.status === "processing");
