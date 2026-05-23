@@ -494,13 +494,13 @@ export default function CompanyDetail() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Select value={s.status} onValueChange={(v) => updateStep(def.key, { status: v })}>
+                    <Select value={s.status} onValueChange={(v) => updateStep(def.key, { status: v })} disabled={!canEdit}>
                       <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {STATUS_OPTS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Button size="sm" onClick={() => saveStep(def.key)}>Save</Button>
+                    {canEdit && <Button size="sm" onClick={() => saveStep(def.key)}>Save</Button>}
                   </div>
                 </div>
 
@@ -508,11 +508,11 @@ export default function CompanyDetail() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-xs text-muted-foreground">Username / Email</Label>
-                      <Input value={s.username ?? ""} onChange={(e) => updateStep(def.key, { username: e.target.value })} />
+                      <Input value={s.username ?? ""} onChange={(e) => updateStep(def.key, { username: e.target.value })} disabled={!canEdit} />
                     </div>
                     <div>
                       <Label className="text-xs text-muted-foreground">Password</Label>
-                      <Input value={s.password ?? ""} onChange={(e) => updateStep(def.key, { password: e.target.value })} />
+                      <Input value={s.password ?? ""} onChange={(e) => updateStep(def.key, { password: e.target.value })} disabled={!canEdit} />
                     </div>
                   </div>
                 )}
@@ -524,6 +524,7 @@ export default function CompanyDetail() {
                     placeholder="Notes…"
                     value={s.note ?? ""}
                     onChange={(e) => updateStep(def.key, { note: e.target.value })}
+                    disabled={!canEdit}
                   />
                 </div>
               </Card>
