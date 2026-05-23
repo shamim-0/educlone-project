@@ -123,14 +123,15 @@ export default function CompanyDetail() {
   }, [company]);
 
   const progress = useMemo(() => {
-    const total = STEP_DEFS.length;
-    const done = STEP_DEFS.filter(d => steps[d.key]?.status === "done").length;
+    const applicable = STEP_DEFS.filter(d => steps[d.key]?.status !== "no_need");
+    const total = applicable.length;
+    const done = applicable.filter(d => steps[d.key]?.status === "done").length;
     const days = company
       ? Math.floor((Date.now() - new Date(company.created_at).getTime()) / 86400000)
       : 0;
     const target = 45;
     const overdue = days > target;
-    return { total, done, percent: Math.round((done / total) * 100), days, overdue, remaining: target - days };
+    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days };
   }, [steps, company]);
 
   const currentlyWorking = STEP_DEFS.filter(d => steps[d.key]?.status === "processing");
