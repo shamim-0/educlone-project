@@ -329,8 +329,19 @@ export default function CompanyDetail() {
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
+  const isAdmin = role === "admin";
+  const isEditor = role === "editor";
+  // Admin always edits. Editor edits only companies in their assigned branch (or if they have no branch restriction). Viewer cannot edit.
+  const canEdit = isAdmin || (isEditor && (!myBranchId || company.branch_id === myBranchId));
+  const canDelete = isAdmin;
+
   return (
     <div className="space-y-6">
+      {!canEdit && (
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 px-4 py-2 text-sm">
+          You have read-only access to this company.
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
