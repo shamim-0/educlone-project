@@ -1,99 +1,217 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CrudTable } from "@/components/CrudTable";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp, Search, ListChecks, Clock, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { STEP_DEFS } from "@/lib/steps";
 
-interface Task { id: string; title: string; description: string | null; status: string; created_at: string; }
-
-const STATUSES = ["pending", "in_progress", "done"];
+interface Company { id: string; name: string; type: string; branch_id: string | null; }
+interface Branch { id: string; name: string; }
+interface StepRow { company_id: string; step_key: string; status: string; }
 
 export default function PendingPage() {
-  const [rows, setRows] = useState<Task[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [steps, setSteps] = useState<StepRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Task | null>(null);
-  const [status, setStatus] = useState<string>("pending");
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
-  const load = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("pending_tasks").select("*").order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    setRows(data ?? []);
-    setLoading(false);
-  };
-  useEffect(() => { document.title = "Pending | ISBI Tracker"; load(); }, []);
+  useEffect(() => {
+    document.title = "Pending Services | ISBI Tracker";
+    (async () => {
+      const [c, b, s] = await Promise.all([
+        supabase.from("companies").select("id,name,type,branch_id").order("name"),
+        supabase.from("branches").select("id,name"),
+        supabase.from("company_steps").select("company_id,step_key,status"),
+      ]);
+      if (c.error) toast.error(c.error.message);
+      setCompanies((c.data ?? []) as Company[]);
+      setBranches((b.data ?? []) as Branch[]);
+      setSteps((s.data ?? []) as StepRow[]);
+      setLoading(false);
+    })();
+  }, []);
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const payload = {
-      title: String(fd.get("title") ?? "").trim(),
-      description: String(fd.get("description") ?? "").trim() || null,
-      status,
-    };
-    if (!payload.title) { toast.error("Title required"); return; }
-    const { error } = editing
-      ? await supabase.from("pending_tasks").update(payload).eq("id", editing.id)
-      : await supabase.from("pending_tasks").insert(payload);
-    if (error) { toast.error(error.message); return; }
-    toast.success(editing ? "Updated" : "Created");
-    setOpen(false); setEditing(null); load();
-  };
+  const branchName = (id: string | null) => branches.find(x => x.id === id)?.name ?? "—";
 
-  const onDelete = async (row: Task) => {
-    if (!confirm(`Delete "${row.title}"?`)) return;
-    const { error } = await supabase.from("pending_tasks").delete().eq("id", row.id);
-    if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
-  };
+  // Map: company_id -> step_key -> status
+  const stepMap = useMemo(() => {
+    const m = new Map<string, Map<string, string>>();
+    steps.forEach(r => {
+      if (!m.has(r.company_id)) m.set(r.company_id, new Map());
+      m.get(r.company_id)!.set(r.step_key, r.status);
+    });
+    return m;
+  }, [steps]);
+
+  // For each service, list of companies where status !== "done" && !== "no_need"
+  const pendingByService = useMemo(() => {
+    const out: Record<string, Company[]> = {};
+    STEP_DEFS.forEach(def => {
+      out[def.key] = companies.filter(co => {
+        const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
+        return st !== "done" && st !== "no_need";
+      });
+    });
+    return out;
+  }, [companies, stepMap]);
+
+  const filteredDefs = STEP_DEFS.filter(d =>
+    d.label.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPending = Object.values(pendingByService).reduce((a, b) => a + b.length, 0);
 
   return (
-    <>
-      <CrudTable<Task>
-        title="Pending Tasks"
-        description="Track tasks and their status."
-        rows={rows}
-        loading={loading}
-        columns={[
-          { key: "title", header: "Title" },
-          { key: "description", header: "Description", render: (r) => r.description ?? "—" },
-          { key: "status", header: "Status", render: (r) => (
-            <Badge variant={r.status === "done" ? "default" : r.status === "in_progress" ? "secondary" : "outline"} className="capitalize">
-              {r.status.replace("_", " ")}
-            </Badge>
-          )},
-          { key: "created_at", header: "Created", render: (r) => new Date(r.created_at).toLocaleDateString() },
-        ]}
-        onAdd={() => { setEditing(null); setStatus("pending"); setOpen(true); }}
-        onEdit={(r) => { setEditing(r); setStatus(r.status); setOpen(true); }}
-        onDelete={onDelete}
-      />
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editing ? "Edit" : "Add"} Task</DialogTitle></DialogHeader>
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div><Label htmlFor="title">Title</Label><Input id="title" name="title" defaultValue={editing?.title} required maxLength={200} /></div>
-            <div><Label htmlFor="description">Description</Label><Textarea id="description" name="description" defaultValue={editing?.description ?? ""} maxLength={1000} /></div>
-            <div>
-              <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s.replace("_", " ")}</SelectItem>)}
-                </SelectContent>
-              </Select>
+    <div className="space-y-6">
+      {/* Hero */}
+      <Card className="p-6 bg-gradient-to-br from-primary/10 via-background to-accent/10 border-primary/20">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+              <ListChecks className="h-6 w-6 text-primary" /> Pending Services
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Click any service to see the companies where it's still pending.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div className="text-2xl font-bold">{totalPending}</div>
+              <div className="text-xs text-muted-foreground">Total pending</div>
             </div>
-            <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+            <div className="h-10 w-px bg-border" />
+            <div className="text-right">
+              <div className="text-2xl font-bold">{STEP_DEFS.length}</div>
+              <div className="text-xs text-muted-foreground">Services</div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 relative max-w-md">
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search services..."
+            className="pl-9 bg-background/80"
+          />
+        </div>
+      </Card>
+
+      {loading ? (
+        <p className="text-muted-foreground">Loading…</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredDefs.map(def => {
+            const list = pendingByService[def.key] ?? [];
+            const count = list.length;
+            const isOpen = openKey === def.key;
+            const ratio = companies.length ? count / companies.length : 0;
+            return (
+              <Card
+                key={def.key}
+                className={cn(
+                  "overflow-hidden border bg-card transition-all",
+                  isOpen && "ring-2 ring-primary/40"
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenKey(isOpen ? null : def.key)}
+                  className="w-full text-left p-5 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className={cn(
+                        "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
+                        count > 0 ? "bg-destructive/15 text-destructive" : "bg-accent/15 text-accent"
+                      )}>
+                        <Clock className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{def.label}</div>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {def.tags.map(t => (
+                            <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{t}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge className={cn(
+                        "rounded-full px-3 py-1 text-sm font-bold border-0",
+                        count > 0 ? "bg-destructive text-destructive-foreground" : "bg-accent text-accent-foreground"
+                      )}>
+                        {count}
+                      </Badge>
+                      {isOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                  </div>
+                  <div className="mt-4 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={cn("h-full transition-all duration-700", count > 0 ? "bg-destructive" : "bg-accent")}
+                      style={{ width: `${Math.max(4, ratio * 100)}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {isOpen ? "Hide" : "Click to view"} {count} pending company{count === 1 ? "" : "(ies)"}
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="border-t bg-muted/20 px-4 py-3 space-y-2 max-h-[420px] overflow-y-auto">
+                    {count === 0 ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+                        <Building2 className="h-6 w-6 opacity-50" />
+                        All companies completed this service.
+                      </div>
+                    ) : (
+                      list.map(co => {
+                        const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
+                        return (
+                          <div
+                            key={co.id}
+                            className="flex items-center justify-between gap-3 rounded-md border bg-card p-3 hover:border-primary/40 transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <div className="font-medium truncate">{co.name}</div>
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                <Badge variant="outline" className="capitalize text-[10px]">{co.type}</Badge>
+                                <Badge variant="secondary" className="text-[10px]">{branchName(co.branch_id)}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge
+                                className={cn(
+                                  "text-[10px] border",
+                                  st === "processing"
+                                    ? "bg-primary/15 text-primary border-primary/30"
+                                    : "bg-muted text-muted-foreground border-border"
+                                )}
+                              >
+                                {st === "processing" ? "Processing" : "Not Started"}
+                              </Badge>
+                              <Button asChild size="sm" variant="outline">
+                                <Link to={`/company/${co.id}`}>Update</Link>
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
