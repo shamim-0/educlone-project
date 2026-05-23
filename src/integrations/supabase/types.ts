@@ -91,6 +91,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          discount: number
           emergency: boolean
           id: string
           legacy_id: number | null
@@ -115,6 +116,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount?: number
           emergency?: boolean
           id?: string
           legacy_id?: number | null
@@ -139,6 +141,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount?: number
           emergency?: boolean
           id?: string
           legacy_id?: number | null
