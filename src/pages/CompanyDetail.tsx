@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { STEP_DEFS, STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
+import { STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
+import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Branch { id: string; name: string }
@@ -56,6 +57,7 @@ export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role, branchId: myBranchId } = useAuth();
+  const STEP_DEFS = useServiceDefs();
   const [company, setCompany] = useState<Company | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
@@ -123,6 +125,22 @@ export default function CompanyDetail() {
   useEffect(() => {
     if (company) document.title = `${company.name} | ISBI Tracker`;
   }, [company]);
+
+  // Ensure steps map has an entry for every current service def
+  useEffect(() => {
+    if (!STEP_DEFS.length) return;
+    setSteps(prev => {
+      let changed = false;
+      const next = { ...prev };
+      STEP_DEFS.forEach(def => {
+        if (!next[def.key]) {
+          next[def.key] = { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [STEP_DEFS]);
 
   const progress = useMemo(() => {
     const applicable = STEP_DEFS.filter(d => steps[d.key]?.status !== "no_need");

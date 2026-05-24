@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Search, ListChecks, Clock, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { STEP_DEFS } from "@/lib/steps";
+import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Company { id: string; name: string; type: string; branch_id: string | null; }
@@ -17,6 +17,7 @@ interface StepRow { company_id: string; step_key: string; status: string; }
 
 export default function PendingPage() {
   const { role, branchId } = useAuth();
+  const STEP_DEFS = useServiceDefs();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<StepRow[]>([]);
@@ -90,7 +91,7 @@ export default function PendingPage() {
       });
     });
     return out;
-  }, [companies, stepMap]);
+  }, [companies, stepMap, STEP_DEFS]);
 
   const filteredDefs = STEP_DEFS.filter(d =>
     d.label.toLowerCase().includes(search.toLowerCase())
