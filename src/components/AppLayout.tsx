@@ -10,6 +10,7 @@ import {
   Moon,
   Sun,
   KeyRound,
+  ListChecks,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +26,7 @@ const menu = [
   { to: "/accounts", label: "Accounts", icon: Wallet, requiresAccounts: true },
   { to: "/pending", label: "Pending", icon: ClipboardList },
   { to: "/users", label: "Users", icon: Users, adminOnly: true },
+  { to: "/services", label: "Services", icon: ListChecks, adminOnly: true },
 ];
 
 export default function AppLayout() {

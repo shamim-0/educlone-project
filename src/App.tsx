@@ -14,6 +14,7 @@ import Branch from "./pages/Branch";
 import Accounts from "./pages/Accounts";
 import Pending from "./pages/Pending";
 import Users from "./pages/Users";
+import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
+              <Route path="/services" element={<ProtectedRoute requireAdmin><Services /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
