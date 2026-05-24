@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { STEP_DEFS, STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
+import { STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
+import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Branch { id: string; name: string }
@@ -56,6 +57,7 @@ export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role, branchId: myBranchId } = useAuth();
+  const STEP_DEFS = useServiceDefs();
   const [company, setCompany] = useState<Company | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
