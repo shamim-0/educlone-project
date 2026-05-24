@@ -360,7 +360,7 @@ export default function CompanyDetail() {
         <div className="mt-2 flex flex-wrap gap-2">
           <Badge variant="secondary">{branches.find(b => b.id === company.branch_id)?.name ?? "—"}</Badge>
           <Badge className="bg-primary/10 text-primary border border-primary/20 capitalize">{company.type}</Badge>
-          <Badge className="bg-accent/15 text-accent border border-accent/30">
+          <Badge className="bg-success/15 text-success border border-success/30">
             {progress.percent}% ({progress.done}/{progress.total})
           </Badge>
           {emergency && (
