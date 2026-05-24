@@ -280,7 +280,7 @@ export default function Index() {
           <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Entrepreneur</div>
         </div>
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-accent">{stats.completed}</div>
+          <div className="text-lg font-bold text-success">{stats.completed}</div>
           <div className="text-[11px] text-muted-foreground uppercase tracking-wide">সম্পন্ন</div>
         </div>
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
