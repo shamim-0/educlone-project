@@ -160,7 +160,7 @@ export default function PendingPage() {
                     <div className="flex items-start gap-3 min-w-0">
                       <div className={cn(
                         "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
-                        count > 0 ? "bg-destructive/15 text-destructive" : "bg-accent/15 text-accent"
+                        count > 0 ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"
                       )}>
                         <Clock className="h-5 w-5" />
                       </div>
@@ -176,7 +176,7 @@ export default function PendingPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <Badge className={cn(
                         "rounded-full px-3 py-1 text-sm font-bold border-0",
-                        count > 0 ? "bg-destructive text-destructive-foreground" : "bg-accent text-accent-foreground"
+                        count > 0 ? "bg-destructive text-destructive-foreground" : "bg-success text-success-foreground"
                       )}>
                         {count}
                       </Badge>
@@ -185,7 +185,7 @@ export default function PendingPage() {
                   </div>
                   <div className="mt-4 h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className={cn("h-full transition-all duration-700", count > 0 ? "bg-destructive" : "bg-accent")}
+                      className={cn("h-full transition-all duration-700", count > 0 ? "bg-destructive" : "bg-success")}
                       style={{ width: `${Math.max(4, ratio * 100)}%` }}
                     />
                   </div>
