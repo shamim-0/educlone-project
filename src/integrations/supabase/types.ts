@@ -500,6 +500,39 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          created_at: string
+          has_creds: boolean
+          id: string
+          key: string
+          label: string
+          sort_order: number
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          has_creds?: boolean
+          id?: string
+          key: string
+          label: string
+          sort_order?: number
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          has_creds?: boolean
+          id?: string
+          key?: string
+          label?: string
+          sort_order?: number
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
