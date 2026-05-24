@@ -126,6 +126,22 @@ export default function CompanyDetail() {
     if (company) document.title = `${company.name} | ISBI Tracker`;
   }, [company]);
 
+  // Ensure steps map has an entry for every current service def
+  useEffect(() => {
+    if (!STEP_DEFS.length) return;
+    setSteps(prev => {
+      let changed = false;
+      const next = { ...prev };
+      STEP_DEFS.forEach(def => {
+        if (!next[def.key]) {
+          next[def.key] = { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [STEP_DEFS]);
+
   const progress = useMemo(() => {
     const applicable = STEP_DEFS.filter(d => steps[d.key]?.status !== "no_need");
     const total = applicable.length;
