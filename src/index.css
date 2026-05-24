@@ -31,6 +31,8 @@
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     --success-glow: 142 76% 45%;
+
+    /* Bright sky accent */
     --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
 
