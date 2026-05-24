@@ -26,7 +26,7 @@ export const STATUS_OPTS = [
 ];
 
 export function statusBadgeClass(s: string) {
-  if (s === "done") return "bg-accent/15 text-accent border-accent/30";
+  if (s === "done") return "bg-success/15 text-success border-success/30";
   if (s === "processing") return "bg-primary/15 text-primary border-primary/30";
   if (s === "no_need") return "bg-muted/60 text-muted-foreground border-border line-through";
   return "bg-muted text-muted-foreground border-border";

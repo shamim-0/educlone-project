@@ -443,14 +443,14 @@ export default function CompanyDetail() {
               return (
                 <span key={def.key} className={cn(
                   "h-2.5 w-2.5 rounded-full",
-                  st === "done" ? "bg-accent" : st === "processing" ? "bg-primary" : "bg-muted"
+                  st === "done" ? "bg-success" : st === "processing" ? "bg-primary" : "bg-muted"
                 )} title={`${def.label}: ${st}`} />
               );
             })}
           </div>
           <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              className={cn("h-full transition-all", progress.overdue ? "bg-destructive" : "bg-gradient-accent")}
+              className={cn("h-full transition-all", progress.overdue ? "bg-destructive" : "bg-success")}
               style={{ width: `${progress.percent}%` }}
             />
           </div>

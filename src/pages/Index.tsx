@@ -79,7 +79,7 @@ function CompanyCard({ c, done, processing }: { c: Company; done: number; proces
       <div className="mt-5 flex items-center gap-1.5">
         {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
           let cls = "bg-muted";
-          if (i < p.done) cls = "bg-accent";
+          if (i < p.done) cls = "bg-success";
           else if (i < p.done + p.processing) cls = "bg-primary";
           return <span key={i} className={cn("h-2 w-2 rounded-full", cls)} />;
         })}
@@ -90,7 +90,7 @@ function CompanyCard({ c, done, processing }: { c: Company; done: number; proces
         <div
           className={cn(
             "h-full rounded-full transition-all",
-            p.overdue ? "bg-destructive" : "bg-gradient-accent"
+            p.overdue ? "bg-destructive" : "bg-success"
           )}
           style={{ width: `${p.percent}%` }}
         />
