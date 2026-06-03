@@ -494,7 +494,7 @@ export default function CompanyDetail() {
         <div className="lg:col-span-2 space-y-3">
           <h2 className="font-semibold text-lg">⚙ Workflow Steps</h2>
           {STEP_DEFS.map(def => {
-            const s = steps[def.key];
+            const s = steps[def.key] ?? { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
             return (
               <Card key={def.key} className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
