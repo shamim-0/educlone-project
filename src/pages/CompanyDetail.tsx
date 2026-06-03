@@ -47,10 +47,19 @@ interface Shareholder {
 interface CompanyDoc { id: string; category: string; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
 
 const DOC_CATEGORIES = [
-  { key: "bangladesh", label: "Bangladesh Papers", flag: "BD", color: "border-accent/30" },
-  { key: "uk", label: "UK Papers", flag: "GB", color: "border-primary/30" },
-  { key: "usa", label: "USA Papers", flag: "US", color: "border-destructive/30" },
-  { key: "other", label: "Other Documents", flag: "📁", color: "border-border" },
+  { key: "mother_plain", label: "Mother Company Documents (Without Apostille & Translation)", flag: "MC", color: "border-accent/30" },
+  { key: "mother_apostille", label: "Mother Company Documents (With Apostille & Certified Translation)", flag: "MA", color: "border-accent/30" },
+  { key: "canada", label: "Canadian Company Documents", flag: "CA", color: "border-primary/30" },
+  { key: "usa", label: "USA Company Documents", flag: "US", color: "border-destructive/30" },
+  { key: "misa", label: "Investment License (MISA License)", flag: "MI", color: "border-primary/30" },
+  { key: "cr", label: "Commercial Registration (CR)", flag: "CR", color: "border-primary/30" },
+  { key: "aoa", label: "Articles of Association (AoA) / Nizam Al Asas", flag: "AO", color: "border-primary/30" },
+  { key: "cr_extract", label: "CR Extract (Mustakhrij CR)", flag: "CX", color: "border-primary/30" },
+  { key: "vat", label: "VAT Registration Certificate", flag: "VT", color: "border-primary/30" },
+  { key: "spl", label: "National Address Certificate (SPL)", flag: "SP", color: "border-primary/30" },
+  { key: "gosi", label: "GOSI Certificate", flag: "GO", color: "border-primary/30" },
+  { key: "chamber", label: "Chamber of Commerce Certificate", flag: "CH", color: "border-primary/30" },
+  { key: "other", label: "Any Other Supporting Documents", flag: "📁", color: "border-border" },
 ] as const;
 
 export default function CompanyDetail() {
