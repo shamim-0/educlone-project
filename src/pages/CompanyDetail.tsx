@@ -618,11 +618,11 @@ export default function CompanyDetail() {
             )}
           </Card>
 
-          {/* CR Activities */}
+          {/* Company Activities */}
           <Card className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold flex items-center gap-2">
-                <span className="text-accent">✅</span> CR Activities
+                <span className="text-accent">✅</span> Company Activities
               </h2>
               {canEdit && (
                 <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setActivityOpen(true)}>
@@ -846,7 +846,7 @@ export default function CompanyDetail() {
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add CR Activity</DialogTitle>
+            <DialogTitle>Add Company Activity</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
