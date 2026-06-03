@@ -47,19 +47,19 @@ interface Shareholder {
 interface CompanyDoc { id: string; category: string; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
 
 const DOC_CATEGORIES = [
-  { key: "mother_plain", label: "Mother Company Documents (Without Apostille & Translation)", flag: "MC", color: "border-accent/30" },
-  { key: "mother_apostille", label: "Mother Company Documents (With Apostille & Certified Translation)", flag: "MA", color: "border-accent/30" },
-  { key: "canada", label: "Canadian Company Documents", flag: "CA", color: "border-primary/30" },
-  { key: "usa", label: "USA Company Documents", flag: "US", color: "border-destructive/30" },
-  { key: "misa", label: "Investment License (MISA License)", flag: "MI", color: "border-primary/30" },
-  { key: "cr", label: "Commercial Registration (CR)", flag: "CR", color: "border-primary/30" },
-  { key: "aoa", label: "Articles of Association (AoA) / Nizam Al Asas", flag: "AO", color: "border-primary/30" },
-  { key: "cr_extract", label: "CR Extract (Mustakhrij CR)", flag: "CX", color: "border-primary/30" },
-  { key: "vat", label: "VAT Registration Certificate", flag: "VT", color: "border-primary/30" },
-  { key: "spl", label: "National Address Certificate (SPL)", flag: "SP", color: "border-primary/30" },
-  { key: "gosi", label: "GOSI Certificate", flag: "GO", color: "border-primary/30" },
-  { key: "chamber", label: "Chamber of Commerce Certificate", flag: "CH", color: "border-primary/30" },
-  { key: "other", label: "Any Other Supporting Documents", flag: "📁", color: "border-border" },
+  { key: "mother_plain", title: "Mother Company Documents", subtitle: "Without Apostille & Translation", flag: "MC", color: "border-accent/30" },
+  { key: "mother_apostille", title: "Mother Company Documents", subtitle: "With Apostille & Certified Translation", flag: "MA", color: "border-accent/30" },
+  { key: "canada", title: "Canadian Company Documents", subtitle: "", flag: "CA", color: "border-primary/30" },
+  { key: "usa", title: "USA Company Documents", subtitle: "", flag: "US", color: "border-destructive/30" },
+  { key: "misa", title: "Investment License (MISA License)", subtitle: "", flag: "MI", color: "border-primary/30" },
+  { key: "cr", title: "Commercial Registration (CR)", subtitle: "", flag: "CR", color: "border-primary/30" },
+  { key: "aoa", title: "Articles of Association (AoA) / Nizam Al Asas", subtitle: "", flag: "AO", color: "border-primary/30" },
+  { key: "cr_extract", title: "CR Extract (Mustakhrij CR)", subtitle: "", flag: "CX", color: "border-primary/30" },
+  { key: "vat", title: "VAT Registration Certificate", subtitle: "", flag: "VT", color: "border-primary/30" },
+  { key: "spl", title: "National Address Certificate (SPL)", subtitle: "", flag: "SP", color: "border-primary/30" },
+  { key: "gosi", title: "GOSI Certificate", subtitle: "", flag: "GO", color: "border-primary/30" },
+  { key: "chamber", title: "Chamber of Commerce Certificate", subtitle: "", flag: "CH", color: "border-primary/30" },
+  { key: "other", title: "Any Other Supporting Documents", subtitle: "", flag: "📁", color: "border-border" },
 ] as const;
 
 export default function CompanyDetail() {
@@ -618,11 +618,11 @@ export default function CompanyDetail() {
             )}
           </Card>
 
-          {/* CR Activities */}
+          {/* Company Activities */}
           <Card className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold flex items-center gap-2">
-                <span className="text-accent">✅</span> CR Activities
+                <span className="text-accent">✅</span> Company Activities
               </h2>
               {canEdit && (
                 <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setActivityOpen(true)}>
@@ -779,11 +779,16 @@ export default function CompanyDetail() {
                 return (
                   <Card key={cat.key} className={cn("p-3 space-y-2 bg-muted/20", cat.color)}>
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{cat.flag}</span>
-                        <span className="font-medium text-sm truncate">{cat.label}</span>
-                        <span className="text-[10px] text-muted-foreground">({files.length})</span>
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{cat.flag}</span>
+                          <span className="font-medium text-sm">{cat.title}</span>
+                        </div>
+                        {cat.subtitle && (
+                          <span className="text-[11px] text-muted-foreground ml-[calc(1.5rem+0.5rem)]">{cat.subtitle}</span>
+                        )}
                       </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0">({files.length})</span>
                       <input
                         ref={(el) => { fileInputs.current[cat.key] = el; }}
                         type="file"
@@ -841,7 +846,7 @@ export default function CompanyDetail() {
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add CR Activity</DialogTitle>
+            <DialogTitle>Add Company Activity</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
