@@ -779,11 +779,16 @@ export default function CompanyDetail() {
                 return (
                   <Card key={cat.key} className={cn("p-3 space-y-2 bg-muted/20", cat.color)}>
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{cat.flag}</span>
-                        <span className="font-medium text-sm truncate">{cat.label}</span>
-                        <span className="text-[10px] text-muted-foreground">({files.length})</span>
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{cat.flag}</span>
+                          <span className="font-medium text-sm">{cat.title}</span>
+                        </div>
+                        {cat.subtitle && (
+                          <span className="text-[11px] text-muted-foreground ml-[calc(1.5rem+0.5rem)]">{cat.subtitle}</span>
+                        )}
                       </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0">({files.length})</span>
                       <input
                         ref={(el) => { fileInputs.current[cat.key] = el; }}
                         type="file"
