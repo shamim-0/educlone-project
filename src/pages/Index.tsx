@@ -101,7 +101,7 @@ function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: nu
       </div>
 
       <div className="mt-2 flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{p.done}/{TOTAL_STEPS} steps completed</span>
+        <span className="text-muted-foreground">{p.done}/{p.total} steps completed</span>
         <span className={cn("font-semibold", p.overdue ? "text-destructive" : "text-primary")}>
           {p.percent}%
         </span>
