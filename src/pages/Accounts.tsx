@@ -383,6 +383,9 @@ export default function AccountsPage() {
               {name} <span className="opacity-70">({count})</span>
             </button>
           ))}
+        </div>
+
+
 
         <div className="rounded-xl border overflow-hidden">
           <Table>
