@@ -25,6 +25,8 @@ export default function PendingPage() {
   const [loading, setLoading] = useState(true);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("default");
 
   useEffect(() => {
     document.title = "Pending Services | ISBI Tracker";
