@@ -159,11 +159,11 @@ export default function UsersPage() {
                     <Select value={roles[p.id] ?? "viewer"} onValueChange={(v) => changeRole(p.id, v as AppRole)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                        {ROLES.map((r) => <SelectItem key={r} value={r} >{roleLabel(r)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="secondary" className="capitalize">{roles[p.id] ?? "viewer"}</Badge>
+                    <Badge variant="secondary" >{roleLabel(roles[p.id] ?? "viewer")</Badge>
                   )}
                 </TableCell>
                 <TableCell>
@@ -217,7 +217,7 @@ export default function UsersPage() {
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as AppRole })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                  {ROLES.map((r) => <SelectItem key={r} value={r} >{roleLabel(r)}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
