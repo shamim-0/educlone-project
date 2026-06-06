@@ -403,7 +403,9 @@ export default function Index() {
               c={c}
               done={stepCounts[c.id]?.done ?? 0}
               processing={stepCounts[c.id]?.processing ?? 0}
+              totalSteps={TOTAL_STEPS}
             />
+
           ))}
         </div>
       )}
