@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ interface Company {
 interface Step {
   id?: string; step_key: string; status: string;
   note: string | null; username: string | null; password: string | null;
+  subtasks_done?: string[] | null;
 }
 interface CrActivity { id: string; code: string; label: string }
 interface Manager { id: string; name: string; manager_type: string; iqama: string | null; birthdate: string | null }
@@ -195,6 +197,7 @@ export default function CompanyDetail() {
       note: s.note,
       username: s.username,
       password: s.password,
+      subtasks_done: s.subtasks_done ?? [],
       updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
@@ -503,7 +506,8 @@ export default function CompanyDetail() {
         <div className="lg:col-span-2 space-y-3">
           <h2 className="font-semibold text-lg">⚙ Workflow Steps</h2>
           {STEP_DEFS.map(def => {
-            const s = steps[def.key] ?? { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
+            const s = steps[def.key] ?? { step_key: def.key, status: "not_started", note: "", username: "", password: "", subtasks_done: [] };
+            const subDone = s.subtasks_done ?? [];
             return (
               <Card key={def.key} className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -541,6 +545,29 @@ export default function CompanyDetail() {
                       <Label className="text-xs text-muted-foreground">Password</Label>
                       <Input value={s.password ?? ""} onChange={(e) => updateStep(def.key, { password: e.target.value })} disabled={!canEdit} />
                     </div>
+                  </div>
+                )}
+
+                {def.subtasks && def.subtasks.length > 0 && (
+                  <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                    {def.subtasks.map((label) => {
+                      const checked = subDone.includes(label);
+                      return (
+                        <label key={label} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={checked}
+                            disabled={!canEdit}
+                            onCheckedChange={(v) => {
+                              const next = v
+                                ? Array.from(new Set([...subDone, label]))
+                                : subDone.filter((x) => x !== label);
+                              updateStep(def.key, { subtasks_done: next });
+                            }}
+                          />
+                          <span className={cn(checked && "line-through text-muted-foreground")}>{label}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
 
