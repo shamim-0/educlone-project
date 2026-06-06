@@ -139,6 +139,8 @@ function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: nu
 
 export default function Index() {
   const { role, branchId } = useAuth();
+  const serviceDefs = useServiceDefs();
+  const TOTAL_STEPS = serviceDefs.length || 1;
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
   const [loading, setLoading] = useState(true);
@@ -157,23 +159,44 @@ export default function Index() {
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
       }
-      const [cRes, sRes] = await Promise.all([
-        q,
-        supabase.from("company_steps").select("company_id, status"),
-      ]);
+      // Paginate company_steps to bypass the 1000-row default cap
+      const fetchAllSteps = async () => {
+        const pageSize = 1000;
+        let from = 0;
+        const all: { company_id: string; step_key: string; status: string }[] = [];
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data, error } = await supabase
+            .from("company_steps")
+            .select("company_id, step_key, status")
+            .range(from, from + pageSize - 1);
+          if (error || !data) break;
+          all.push(...(data as any));
+          if (data.length < pageSize) break;
+          from += pageSize;
+        }
+        return all;
+      };
+      const [cRes, sRows] = await Promise.all([q, fetchAllSteps()]);
       if (!cRes.error) setCompanies((cRes.data as Company[]) ?? []);
-      const counts: Record<string, { done: number; processing: number }> = {};
-      (sRes.data ?? []).forEach((r: any) => {
-        const c = counts[r.company_id] ?? { done: 0, processing: 0 };
-        if (r.status === "done") c.done++;
+      const validKeys = new Set(serviceDefs.map((d) => d.key));
+      const counts: Record<string, { done: number; processing: number; seen: Set<string> }> = {};
+      sRows.forEach((r) => {
+        if (!validKeys.has(r.step_key)) return;
+        const c = counts[r.company_id] ?? { done: 0, processing: 0, seen: new Set() };
+        if (c.seen.has(r.step_key)) return;
+        c.seen.add(r.step_key);
+        if (r.status === "done" || r.status === "no_need") c.done++;
         else if (r.status === "processing") c.processing++;
         counts[r.company_id] = c;
       });
-      setStepCounts(counts);
+      const stripped: Record<string, { done: number; processing: number }> = {};
+      Object.entries(counts).forEach(([k, v]) => { stripped[k] = { done: v.done, processing: v.processing }; });
+      setStepCounts(stripped);
       setLoading(false);
     };
-    if (role !== null) load();
-  }, [role, branchId]);
+    if (role !== null && serviceDefs.length > 0) load();
+  }, [role, branchId, serviceDefs]);
 
   const extractCode = (name: string) => {
     const m = name.match(/ISBI[A-Z]*(\d+)/i);
@@ -185,17 +208,18 @@ export default function Index() {
     const service = companies.filter((c) => c.type === "services").length;
     const trading = companies.filter((c) => c.type === "trading").length;
     const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
-    const completed = companies.filter((c) => (stepCounts[c.id]?.done ?? 0) === TOTAL_STEPS).length;
+    const completed = companies.filter((c) => (stepCounts[c.id]?.done ?? 0) >= TOTAL_STEPS).length;
     const takeAction = companies.filter((c) => c.take_action).length;
     const emergency = companies.filter((c) => c.emergency).length;
     const avgProgress =
       total > 0
         ? Math.round(
-            companies.reduce((sum, c) => sum + ((stepCounts[c.id]?.done ?? 0) / TOTAL_STEPS) * 100, 0) / total
+            companies.reduce((sum, c) => sum + (Math.min(stepCounts[c.id]?.done ?? 0, TOTAL_STEPS) / TOTAL_STEPS) * 100, 0) / total
           )
         : 0;
     return { total, service, trading, entrepreneur, completed, takeAction, emergency, avgProgress };
-  }, [companies, stepCounts]);
+  }, [companies, stepCounts, TOTAL_STEPS]);
+
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
