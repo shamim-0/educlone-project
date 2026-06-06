@@ -81,7 +81,7 @@ function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: nu
 
       {/* Step dots — green=done, blue=processing, muted=not started */}
       <div className="mt-5 flex items-center gap-1.5">
-        {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+        {Array.from({ length: p.total }).map((_, i) => {
           let cls = "bg-muted";
           if (i < p.done) cls = "bg-success";
           else if (i < p.done + p.processing) cls = "bg-primary";
