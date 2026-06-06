@@ -66,7 +66,7 @@ function AnimatedProgress({
 export default function AccountsPage() {
   const { role, accountsAccess } = useAuth();
   // Admin always writes. Editor writes only if accounts access is granted. Viewer is read-only.
-  const canWrite = role === "admin" || (role === "editor" && accountsAccess);
+  const canWrite = role === "admin" || ((role === "editor" || role === "sub_admin") && accountsAccess);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [loading, setLoading] = useState(true);

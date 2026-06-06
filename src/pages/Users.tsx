@@ -18,7 +18,8 @@ interface Profile { id: string; username: string; email: string | null; branch_i
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
-const ROLES: AppRole[] = ["admin", "editor", "viewer"];
+const ROLES: AppRole[] = ["admin", "sub_admin", "editor", "viewer"];
+const roleLabel = (r: AppRole) => r === "sub_admin" ? "Sub Admin" : r.charAt(0).toUpperCase() + r.slice(1);
 
 export default function UsersPage() {
   const { role: myRole, user: me } = useAuth();
@@ -45,7 +46,7 @@ export default function UsersPage() {
     const map: Record<string, AppRole> = {};
     (r as RoleRow[] | null)?.forEach((row) => {
       const cur = map[row.user_id];
-      const order: Record<AppRole, number> = { admin: 1, editor: 2, viewer: 3 };
+      const order: Record<AppRole, number> = { admin: 1, sub_admin: 2, editor: 3, viewer: 4 };
       if (!cur || order[row.role] < order[cur]) map[row.user_id] = row.role;
     });
     setRoles(map);
@@ -158,11 +159,11 @@ export default function UsersPage() {
                     <Select value={roles[p.id] ?? "viewer"} onValueChange={(v) => changeRole(p.id, v as AppRole)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                        {ROLES.map((r) => <SelectItem key={r} value={r} >{roleLabel(r)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="secondary" className="capitalize">{roles[p.id] ?? "viewer"}</Badge>
+                    <Badge variant="secondary">{roleLabel(roles[p.id] ?? "viewer")}</Badge>
                   )}
                 </TableCell>
                 <TableCell>
@@ -216,7 +217,7 @@ export default function UsersPage() {
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as AppRole })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                  {ROLES.map((r) => <SelectItem key={r} value={r} >{roleLabel(r)}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
