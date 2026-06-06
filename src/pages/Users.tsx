@@ -45,7 +45,7 @@ export default function UsersPage() {
     const map: Record<string, AppRole> = {};
     (r as RoleRow[] | null)?.forEach((row) => {
       const cur = map[row.user_id];
-      const order: Record<AppRole, number> = { admin: 1, editor: 2, viewer: 3 };
+      const order: Record<AppRole, number> = { admin: 1, sub_admin: 2, editor: 3, viewer: 4 };
       if (!cur || order[row.role] < order[cur]) map[row.user_id] = row.role;
     });
     setRoles(map);
