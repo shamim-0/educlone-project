@@ -23,18 +23,20 @@ interface Company {
 }
 
 const TARGET_DAYS = 45;
-const TOTAL_STEPS = 17;
 
-function deriveProgress(createdAt: string, done: number, processing: number) {
+function deriveProgress(createdAt: string, done: number, processing: number, total: number) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
   const remaining = TARGET_DAYS - days;
-  const percent = Math.round((done / TOTAL_STEPS) * 100);
+  const safeTotal = Math.max(1, total);
+  const cappedDone = Math.min(done, safeTotal);
+  const percent = Math.round((cappedDone / safeTotal) * 100);
   const overdue = remaining < 0;
-  return { days, remaining, done, processing, percent, overdue };
+  return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal };
 }
 
-function CompanyCard({ c, done, processing }: { c: Company; done: number; processing: number }) {
-  const p = deriveProgress(c.created_at, done, processing);
+function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: number; processing: number; totalSteps: number }) {
+  const p = deriveProgress(c.created_at, done, processing, totalSteps);
+
   const branchName = c.branches?.name ?? "—";
   const isEmergency = !!c.emergency;
   const isTakeAction = !!c.take_action;
