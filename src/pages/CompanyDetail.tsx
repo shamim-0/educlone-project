@@ -36,6 +36,7 @@ interface Company {
 interface Step {
   id?: string; step_key: string; status: string;
   note: string | null; username: string | null; password: string | null;
+  subtasks_done?: string[] | null;
 }
 interface CrActivity { id: string; code: string; label: string }
 interface Manager { id: string; name: string; manager_type: string; iqama: string | null; birthdate: string | null }
