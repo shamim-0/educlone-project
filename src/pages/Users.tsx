@@ -18,7 +18,7 @@ interface Profile { id: string; username: string; email: string | null; branch_i
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
-const ROLES: AppRole[] = ["admin", "editor", "viewer"];
+const ROLES: AppRole[] = ["admin", "sub_admin", "editor", "viewer"];
 
 export default function UsersPage() {
   const { role: myRole, user: me } = useAuth();
