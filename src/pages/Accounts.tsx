@@ -119,11 +119,45 @@ export default function AccountsPage() {
     return { deal, discount, received, net, due: net - received };
   }, [companies, receivedByCompany]);
 
+  const branchTabs = useMemo(() => {
+    const map = new Map<string, number>();
+    companies.forEach((c) => {
+      const name = c.branches?.name ?? "—";
+      map.set(name, (map.get(name) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [companies]);
+
+  const extractCode = (name: string) => {
+    const m = name.match(/ISBI[A-Z]*(\d+)/i);
+    return m ? parseInt(m[1], 10) : -1;
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return companies;
-    return companies.filter((c) => c.name.toLowerCase().includes(q));
-  }, [companies, search]);
+    let arr = companies;
+    if (branchFilter !== "all") arr = arr.filter((c) => (c.branches?.name ?? "—") === branchFilter);
+    if (q) arr = arr.filter((c) => c.name.toLowerCase().includes(q));
+    const sorted = [...arr];
+    switch (sortBy) {
+      case "name_asc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case "name_desc": return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      case "due_desc": return sorted.sort((a, b) => {
+        const ad = (Number(a.total_deal||0) - Number(a.discount||0)) - (receivedByCompany[a.id] ?? 0);
+        const bd = (Number(b.total_deal||0) - Number(b.discount||0)) - (receivedByCompany[b.id] ?? 0);
+        return bd - ad;
+      });
+      case "received_desc": return sorted.sort((a, b) => (receivedByCompany[b.id] ?? 0) - (receivedByCompany[a.id] ?? 0));
+      case "deal_desc": return sorted.sort((a, b) => Number(b.total_deal||0) - Number(a.total_deal||0));
+      default:
+        return sorted.sort((a, b) => {
+          const ac = extractCode(a.name);
+          const bc = extractCode(b.name);
+          if (ac !== bc) return bc - ac;
+          return b.name.localeCompare(a.name);
+        });
+    }
+  }, [companies, search, branchFilter, sortBy, receivedByCompany]);
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
