@@ -156,16 +156,57 @@ export default function PendingPage() {
             </div>
           </div>
         </div>
-        <div className="mt-4 relative max-w-md">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search services..."
-            className="pl-9 bg-background/80"
-          />
+        <div className="mt-4 flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search services..."
+              className="pl-9 bg-background/80"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="md:w-56 bg-background/80"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default order</SelectItem>
+              <SelectItem value="count_desc">📊 Most pending</SelectItem>
+              <SelectItem value="count_asc">✅ Least pending</SelectItem>
+              <SelectItem value="name_asc">A–Z</SelectItem>
+              <SelectItem value="name_desc">Z–A</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </Card>
+
+      {/* Branch tabs */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setBranchFilter("all")}
+          className={cn(
+            "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+            branchFilter === "all"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card text-foreground border-border hover:bg-muted"
+          )}
+        >
+          All <span className="opacity-70">({companies.length})</span>
+        </button>
+        {branchTabs.map(([name, count]) => (
+          <button
+            key={name}
+            onClick={() => setBranchFilter(name)}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+              branchFilter === name
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-foreground border-border hover:bg-muted"
+            )}
+          >
+            {name} <span className="opacity-70">({count})</span>
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <p className="text-muted-foreground">Loading…</p>
