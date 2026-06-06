@@ -520,7 +520,7 @@ export default function CompanyDetail() {
                         <span key={t} className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground">{t}</span>
                       ))}
                       <span className={cn("text-[10px] px-2 py-0.5 rounded border capitalize", statusBadgeClass(s.status))}>
-                        {s.status.replace("_", " ")}
+                        {(s.status ?? "not_started").replace("_", " ")}
                       </span>
                     </div>
                   </div>
