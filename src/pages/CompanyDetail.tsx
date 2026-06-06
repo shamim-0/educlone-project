@@ -564,7 +564,7 @@ export default function CompanyDetail() {
                               updateStep(def.key, { subtasks_done: next });
                             }}
                           />
-                          <span className={cn(checked && "line-through text-muted-foreground")}>{label}</span>
+                          <span className={cn(checked && "text-muted-foreground")}>{label}</span>
                         </label>
                       );
                     })}
