@@ -19,6 +19,7 @@ interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
 const ROLES: AppRole[] = ["admin", "sub_admin", "editor", "viewer"];
+const roleLabel = (r: AppRole) => r === "sub_admin" ? "Sub Admin" : r.charAt(0).toUpperCase() + r.slice(1);
 
 export default function UsersPage() {
   const { role: myRole, user: me } = useAuth();
