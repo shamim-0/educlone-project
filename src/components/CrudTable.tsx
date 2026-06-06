@@ -33,7 +33,7 @@ export function CrudTable<T extends { id: string }>({
   showIndex?: boolean;
 }) {
   const { role } = useAuth();
-  const canWrite = role === "admin" || role === "editor";
+  const canWrite = role === "admin" || role === "sub_admin" || role === "editor";
   const canDelete = role === "admin";
 
   return (
