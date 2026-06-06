@@ -342,7 +342,8 @@ export default function PendingPage() {
                             </div>
                           </div>
                         );
-                      })
+                        });
+                      })()
                     )}
                   </div>
                 )}
