@@ -12,9 +12,13 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Wallet, TrendingUp, AlertCircle, Search, Pencil, Plus, Trash2, Save,
   Calendar, Receipt, Percent, Building2, ArrowDownRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -67,6 +71,8 @@ export default function AccountsPage() {
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("default");
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
   const [editingDeal, setEditingDeal] = useState(false);
