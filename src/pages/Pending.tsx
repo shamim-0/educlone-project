@@ -271,13 +271,47 @@ export default function PendingPage() {
 
                 {isOpen && (
                   <div className="border-t bg-muted/20 px-4 py-3 space-y-2 max-h-[420px] overflow-y-auto">
+                    <div className="sticky top-0 z-10 -mx-4 -mt-3 mb-2 px-4 pt-3 pb-2 bg-muted/40 backdrop-blur border-b flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">{count} pending</span>
+                      <Select value={companySortBy} onValueChange={setCompanySortBy}>
+                        <SelectTrigger className="h-8 w-44 text-xs bg-background"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">🚨 Priority (default)</SelectItem>
+                          <SelectItem value="name_asc">A–Z</SelectItem>
+                          <SelectItem value="name_desc">Z–A</SelectItem>
+                          <SelectItem value="recent">🕐 Recent</SelectItem>
+                          <SelectItem value="oldest">⏳ Oldest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {count === 0 ? (
                       <div className="py-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
                         <Building2 className="h-6 w-6 opacity-50" />
                         All companies completed this service.
                       </div>
                     ) : (
-                      list.map(co => {
+                      (() => {
+                        const extractCode = (name: string) => {
+                          const m = name.match(/ISBI[A-Z]*(\d+)/i);
+                          return m ? parseInt(m[1], 10) : -1;
+                        };
+                        const sortedList = [...list];
+                        switch (companySortBy) {
+                          case "name_asc": sortedList.sort((a, b) => a.name.localeCompare(b.name)); break;
+                          case "name_desc": sortedList.sort((a, b) => b.name.localeCompare(a.name)); break;
+                          case "recent": sortedList.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()); break;
+                          case "oldest": sortedList.sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime()); break;
+                          default: sortedList.sort((a, b) => {
+                            const ae = a.emergency ? 0 : 1; const be = b.emergency ? 0 : 1;
+                            if (ae !== be) return ae - be;
+                            const at = a.take_action ? 0 : 1; const bt = b.take_action ? 0 : 1;
+                            if (at !== bt) return at - bt;
+                            const ac = extractCode(a.name); const bc = extractCode(b.name);
+                            if (ac !== bc) return bc - ac;
+                            return b.name.localeCompare(a.name);
+                          });
+                        }
+                        return sortedList.map(co => {
                         const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
                         return (
                           <div
