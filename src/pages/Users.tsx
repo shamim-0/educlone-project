@@ -163,7 +163,7 @@ export default function UsersPage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="secondary" >{roleLabel(roles[p.id] ?? "viewer")</Badge>
+                    <Badge variant="secondary">{roleLabel(roles[p.id] ?? "viewer")}</Badge>
                   )}
                 </TableCell>
                 <TableCell>
