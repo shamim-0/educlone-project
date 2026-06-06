@@ -526,9 +526,13 @@ export default function CompanyDetail() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <Select value={s.status} onValueChange={(v) => updateStep(def.key, { status: v })} disabled={!canEdit}>
-                      <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className={cn("w-[140px] h-8 text-xs font-medium border", statusBadgeClass(s.status))}><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {STATUS_OPTS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        {STATUS_OPTS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>
+                            <span className={cn("inline-block px-2 py-0.5 rounded border text-xs", statusBadgeClass(o.value))}>{o.label}</span>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {canEdit && <Button size="sm" onClick={() => saveStep(def.key)}>Save</Button>}
