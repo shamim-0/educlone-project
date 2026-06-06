@@ -196,6 +196,7 @@ export default function CompanyDetail() {
       note: s.note,
       username: s.username,
       password: s.password,
+      subtasks_done: s.subtasks_done ?? [],
       updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
