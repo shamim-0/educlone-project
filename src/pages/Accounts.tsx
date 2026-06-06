@@ -332,16 +332,57 @@ export default function AccountsPage() {
               <p className="text-xs text-muted-foreground">{filtered.length} of {companies.length} shown</p>
             </div>
           </div>
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search company by name…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search company by name…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">🚨 Priority (default)</SelectItem>
+                <SelectItem value="name_asc">A–Z</SelectItem>
+                <SelectItem value="name_desc">Z–A</SelectItem>
+                <SelectItem value="due_desc">💰 Highest Due</SelectItem>
+                <SelectItem value="received_desc">✅ Most Received</SelectItem>
+                <SelectItem value="deal_desc">📊 Biggest Deal</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
+
+        {/* Branch tabs */}
+        <div className="mb-5 flex flex-wrap gap-2">
+          <button
+            onClick={() => setBranchFilter("all")}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+              branchFilter === "all"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-foreground border-border hover:bg-muted"
+            )}
+          >
+            All <span className="opacity-70">({companies.length})</span>
+          </button>
+          {branchTabs.map(([name, count]) => (
+            <button
+              key={name}
+              onClick={() => setBranchFilter(name)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+                branchFilter === name
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-foreground border-border hover:bg-muted"
+              )}
+            >
+              {name} <span className="opacity-70">({count})</span>
+            </button>
+          ))}
 
         <div className="rounded-xl border overflow-hidden">
           <Table>
