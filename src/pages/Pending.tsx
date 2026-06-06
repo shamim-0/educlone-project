@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronUp, Search, ListChecks, Clock, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,8 @@ export default function PendingPage() {
   const [loading, setLoading] = useState(true);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("default");
 
   useEffect(() => {
     document.title = "Pending Services | ISBI Tracker";
@@ -75,12 +78,18 @@ export default function PendingPage() {
     return m;
   }, [steps]);
 
+  // Apply branch filter to companies first
+  const branchScopedCompanies = useMemo(() => {
+    if (branchFilter === "all") return companies;
+    return companies.filter(co => branchName(co.branch_id) === branchFilter);
+  }, [companies, branchFilter, branches]);
+
   // For each service, list companies where status !== done/no_need
   // AND all earlier services in STEP_DEFS order are done/no_need (sequential gating).
   const pendingByService = useMemo(() => {
     const out: Record<string, Company[]> = {};
     STEP_DEFS.forEach((def, idx) => {
-      out[def.key] = companies.filter(co => {
+      out[def.key] = branchScopedCompanies.filter(co => {
         const cMap = stepMap.get(co.id);
         for (let i = 0; i < idx; i++) {
           const prev = cMap?.get(STEP_DEFS[i].key) ?? "not_started";
@@ -91,11 +100,34 @@ export default function PendingPage() {
       });
     });
     return out;
-  }, [companies, stepMap, STEP_DEFS]);
+  }, [branchScopedCompanies, stepMap, STEP_DEFS]);
 
-  const filteredDefs = STEP_DEFS.filter(d =>
-    d.label.toLowerCase().includes(search.toLowerCase())
-  );
+  const branchTabs = useMemo(() => {
+    const map = new Map<string, number>();
+    companies.forEach((c) => {
+      const name = branchName(c.branch_id);
+      map.set(name, (map.get(name) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [companies, branches]);
+
+  const filteredDefs = useMemo(() => {
+    const arr = STEP_DEFS.filter(d =>
+      d.label.toLowerCase().includes(search.toLowerCase())
+    );
+    switch (sortBy) {
+      case "count_desc":
+        return [...arr].sort((a, b) => (pendingByService[b.key]?.length ?? 0) - (pendingByService[a.key]?.length ?? 0));
+      case "count_asc":
+        return [...arr].sort((a, b) => (pendingByService[a.key]?.length ?? 0) - (pendingByService[b.key]?.length ?? 0));
+      case "name_asc":
+        return [...arr].sort((a, b) => a.label.localeCompare(b.label));
+      case "name_desc":
+        return [...arr].sort((a, b) => b.label.localeCompare(a.label));
+      default:
+        return arr;
+    }
+  }, [STEP_DEFS, search, sortBy, pendingByService]);
 
   const totalPending = Object.values(pendingByService).reduce((a, b) => a + b.length, 0);
 
@@ -124,16 +156,57 @@ export default function PendingPage() {
             </div>
           </div>
         </div>
-        <div className="mt-4 relative max-w-md">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search services..."
-            className="pl-9 bg-background/80"
-          />
+        <div className="mt-4 flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search services..."
+              className="pl-9 bg-background/80"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="md:w-56 bg-background/80"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default order</SelectItem>
+              <SelectItem value="count_desc">📊 Most pending</SelectItem>
+              <SelectItem value="count_asc">✅ Least pending</SelectItem>
+              <SelectItem value="name_asc">A–Z</SelectItem>
+              <SelectItem value="name_desc">Z–A</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </Card>
+
+      {/* Branch tabs */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setBranchFilter("all")}
+          className={cn(
+            "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+            branchFilter === "all"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card text-foreground border-border hover:bg-muted"
+          )}
+        >
+          All <span className="opacity-70">({companies.length})</span>
+        </button>
+        {branchTabs.map(([name, count]) => (
+          <button
+            key={name}
+            onClick={() => setBranchFilter(name)}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+              branchFilter === name
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-foreground border-border hover:bg-muted"
+            )}
+          >
+            {name} <span className="opacity-70">({count})</span>
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <p className="text-muted-foreground">Loading…</p>
