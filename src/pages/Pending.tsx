@@ -78,12 +78,18 @@ export default function PendingPage() {
     return m;
   }, [steps]);
 
+  // Apply branch filter to companies first
+  const branchScopedCompanies = useMemo(() => {
+    if (branchFilter === "all") return companies;
+    return companies.filter(co => branchName(co.branch_id) === branchFilter);
+  }, [companies, branchFilter, branches]);
+
   // For each service, list companies where status !== done/no_need
   // AND all earlier services in STEP_DEFS order are done/no_need (sequential gating).
   const pendingByService = useMemo(() => {
     const out: Record<string, Company[]> = {};
     STEP_DEFS.forEach((def, idx) => {
-      out[def.key] = companies.filter(co => {
+      out[def.key] = branchScopedCompanies.filter(co => {
         const cMap = stepMap.get(co.id);
         for (let i = 0; i < idx; i++) {
           const prev = cMap?.get(STEP_DEFS[i].key) ?? "not_started";
@@ -94,11 +100,34 @@ export default function PendingPage() {
       });
     });
     return out;
-  }, [companies, stepMap, STEP_DEFS]);
+  }, [branchScopedCompanies, stepMap, STEP_DEFS]);
 
-  const filteredDefs = STEP_DEFS.filter(d =>
-    d.label.toLowerCase().includes(search.toLowerCase())
-  );
+  const branchTabs = useMemo(() => {
+    const map = new Map<string, number>();
+    companies.forEach((c) => {
+      const name = branchName(c.branch_id);
+      map.set(name, (map.get(name) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [companies, branches]);
+
+  const filteredDefs = useMemo(() => {
+    const arr = STEP_DEFS.filter(d =>
+      d.label.toLowerCase().includes(search.toLowerCase())
+    );
+    switch (sortBy) {
+      case "count_desc":
+        return [...arr].sort((a, b) => (pendingByService[b.key]?.length ?? 0) - (pendingByService[a.key]?.length ?? 0));
+      case "count_asc":
+        return [...arr].sort((a, b) => (pendingByService[a.key]?.length ?? 0) - (pendingByService[b.key]?.length ?? 0));
+      case "name_asc":
+        return [...arr].sort((a, b) => a.label.localeCompare(b.label));
+      case "name_desc":
+        return [...arr].sort((a, b) => b.label.localeCompare(a.label));
+      default:
+        return arr;
+    }
+  }, [STEP_DEFS, search, sortBy, pendingByService]);
 
   const totalPending = Object.values(pendingByService).reduce((a, b) => a + b.length, 0);
 
