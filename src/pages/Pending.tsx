@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
 
-interface Company { id: string; name: string; type: string; branch_id: string | null; }
+interface Company { id: string; name: string; type: string; branch_id: string | null; created_at?: string; emergency?: boolean | null; take_action?: boolean | null; }
 interface Branch { id: string; name: string; }
 interface StepRow { company_id: string; step_key: string; status: string; }
 
