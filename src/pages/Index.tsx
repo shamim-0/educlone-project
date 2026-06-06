@@ -178,7 +178,7 @@ export default function Index() {
 
   const stats = useMemo(() => {
     const total = companies.length;
-    const service = companies.filter((c) => c.type === "service").length;
+    const service = companies.filter((c) => c.type === "services").length;
     const trading = companies.filter((c) => c.type === "trading").length;
     const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
     const completed = companies.filter((c) => (stepCounts[c.id]?.done ?? 0) === TOTAL_STEPS).length;
