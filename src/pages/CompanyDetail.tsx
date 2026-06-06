@@ -548,6 +548,29 @@ export default function CompanyDetail() {
                   </div>
                 )}
 
+                {def.subtasks && def.subtasks.length > 0 && (
+                  <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                    {def.subtasks.map((label) => {
+                      const checked = subDone.includes(label);
+                      return (
+                        <label key={label} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={checked}
+                            disabled={!canEdit}
+                            onCheckedChange={(v) => {
+                              const next = v
+                                ? Array.from(new Set([...subDone, label]))
+                                : subDone.filter((x) => x !== label);
+                              updateStep(def.key, { subtasks_done: next });
+                            }}
+                          />
+                          <span className={cn(checked && "line-through text-muted-foreground")}>{label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <div>
                   <Label className="text-xs text-muted-foreground">Note</Label>
                   <Textarea
