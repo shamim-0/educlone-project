@@ -359,6 +359,7 @@ export type Database = {
           password: string | null
           status: string
           step_key: string
+          subtasks_done: string[]
           update_status_by: string | null
           updated_at: string
           username: string | null
@@ -374,6 +375,7 @@ export type Database = {
           password?: string | null
           status?: string
           step_key: string
+          subtasks_done?: string[]
           update_status_by?: string | null
           updated_at?: string
           username?: string | null
@@ -389,6 +391,7 @@ export type Database = {
           password?: string | null
           status?: string
           step_key?: string
+          subtasks_done?: string[]
           update_status_by?: string | null
           updated_at?: string
           username?: string | null
@@ -508,6 +511,7 @@ export type Database = {
           key: string
           label: string
           sort_order: number
+          subtasks: string[]
           tags: string[]
           updated_at: string
         }
@@ -518,6 +522,7 @@ export type Database = {
           key: string
           label: string
           sort_order?: number
+          subtasks?: string[]
           tags?: string[]
           updated_at?: string
         }
@@ -528,6 +533,7 @@ export type Database = {
           key?: string
           label?: string
           sort_order?: number
+          subtasks?: string[]
           tags?: string[]
           updated_at?: string
         }
