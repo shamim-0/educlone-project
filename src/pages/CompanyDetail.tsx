@@ -166,7 +166,7 @@ export default function CompanyDetail() {
     return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days };
   }, [steps, company, applicableDefs]);
 
-  const currentlyWorking = STEP_DEFS.filter(d => steps[d.key]?.status === "processing");
+  const currentlyWorking = applicableDefs.filter(d => steps[d.key]?.status === "processing");
 
   async function saveProfile() {
     if (!company) return;
@@ -469,7 +469,7 @@ export default function CompanyDetail() {
         <div className="mt-5">
           <div className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">STEP OVERVIEW</div>
           <div className="flex gap-1.5 flex-wrap">
-            {STEP_DEFS.map(def => {
+            {applicableDefs.map(def => {
               const st = steps[def.key]?.status ?? "not_started";
               const clean = def.label.replace(/\s*\([^)]*\)/g, "").trim();
               const words = clean.split(/\s+/);
@@ -523,7 +523,7 @@ export default function CompanyDetail() {
         {/* Steps */}
         <div className="lg:col-span-2 space-y-3">
           <h2 className="font-semibold text-lg">⚙ Workflow Steps</h2>
-          {STEP_DEFS.map(def => {
+          {applicableDefs.map(def => {
             const s = steps[def.key] ?? { step_key: def.key, status: "not_started", note: "", username: "", password: "", subtasks_done: [] };
             const subDone = s.subtasks_done ?? [];
             return (
@@ -743,7 +743,7 @@ export default function CompanyDetail() {
               <span className="text-accent">🔑</span> All Credentials
             </h2>
             {(() => {
-              const creds = STEP_DEFS.filter(d => {
+              const creds = applicableDefs.filter(d => {
                 const s = steps[d.key];
                 return s && ((s.username && s.username.trim()) || (s.password && s.password.trim()));
               });
