@@ -64,7 +64,7 @@ function AnimatedProgress({
 }
 
 export default function AccountsPage() {
-  const { role, accountsAccess } = useAuth();
+  const { role, accountsAccess, branchId } = useAuth();
   // Admin always writes. Editor writes only if accounts access is granted. Viewer is read-only.
   const canWrite = role === "admin" || ((role === "editor" || role === "sub_admin") && accountsAccess);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -90,16 +90,23 @@ export default function AccountsPage() {
 
   const load = async () => {
     setLoading(true);
+    // Non-admin users assigned to a branch only see companies (and their installments) from that branch
+    const restrictToBranch = role !== "admin" && !!branchId;
+    let cq = supabase
+      .from("companies")
+      .select("id, name, type, total_deal, discount, branch_id, branches!companies_branch_id_fkey(name)")
+      .order("name");
+    if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
     const [c, i] = await Promise.all([
-      supabase
-        .from("companies")
-        .select("id, name, type, total_deal, discount, branch_id, branches!companies_branch_id_fkey(name)")
-        .order("name"),
+      cq,
       supabase.from("company_installments").select("*"),
     ]);
     if (c.error) toast.error(c.error.message);
-    setCompanies((c.data as Company[]) ?? []);
-    setInstallments((i.data as Installment[]) ?? []);
+    const cList = (c.data as Company[]) ?? [];
+    setCompanies(cList);
+    const allowedIds = new Set(cList.map((x) => x.id));
+    const instList = ((i.data as Installment[]) ?? []).filter((x) => !restrictToBranch || allowedIds.has(x.company_id));
+    setInstallments(instList);
     setLoading(false);
   };
 
