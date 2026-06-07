@@ -92,7 +92,7 @@ export default function CompanyPage() {
     if (selectedPkg) payload.total_deal = selectedPkg.price;
     if (!payload.name) { toast.error("Company name required"); return; }
     const { error } = editing
-      ? await supabase.from("companies").update(payload).eq("id", editing.id)
+      ? await supabase.from("companies").update(payload as any).eq("id", editing.id)
       : await supabase.from("companies").insert(payload as any);
     if (error) { toast.error(error.message); return; }
     toast.success(editing ? "Updated" : "Created");
