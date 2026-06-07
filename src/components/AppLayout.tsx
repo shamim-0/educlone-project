@@ -11,6 +11,7 @@ import {
   Sun,
   KeyRound,
   ListChecks,
+  Package,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
