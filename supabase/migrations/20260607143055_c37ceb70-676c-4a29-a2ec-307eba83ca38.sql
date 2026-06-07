@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ALTER COLUMN total_deal DROP NOT NULL;

@@ -101,7 +101,7 @@ export type Database = {
           phone: string | null
           slug: string | null
           take_action: boolean
-          total_deal: number
+          total_deal: number | null
           type: Database["public"]["Enums"]["company_type"]
           update_by: string | null
           updated_at: string
@@ -127,7 +127,7 @@ export type Database = {
           phone?: string | null
           slug?: string | null
           take_action?: boolean
-          total_deal?: number
+          total_deal?: number | null
           type?: Database["public"]["Enums"]["company_type"]
           update_by?: string | null
           updated_at?: string
@@ -153,7 +153,7 @@ export type Database = {
           phone?: string | null
           slug?: string | null
           take_action?: boolean
-          total_deal?: number
+          total_deal?: number | null
           type?: Database["public"]["Enums"]["company_type"]
           update_by?: string | null
           updated_at?: string
