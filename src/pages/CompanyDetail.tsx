@@ -69,7 +69,6 @@ export default function CompanyDetail() {
   const navigate = useNavigate();
   const { role, branchId: myBranchId } = useAuth();
   const STEP_DEFS = useServiceDefs();
-  const applicableDefs = useMemo(() => getApplicableServiceDefs(company?.type ?? "", STEP_DEFS), [company?.type, STEP_DEFS]);
   const [company, setCompany] = useState<Company | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
