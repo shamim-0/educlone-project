@@ -90,7 +90,11 @@ export default function CompanyPage() {
       branch_id: branchId2 || null,
       package_id: packageId || null,
     };
-    if (selectedPkg) payload.total_deal = selectedPkg.price;
+    if (selectedPkg) {
+      payload.total_deal = selectedPkg.price;
+    } else {
+      payload.total_deal = null;
+    }
     if (!payload.name) { toast.error("Company name required"); return; }
     const { error } = editing
       ? await supabase.from("companies").update(payload as any).eq("id", editing.id)
