@@ -24,6 +24,7 @@ interface Company {
   branches?: { name: string } | null;
 }
 interface Branch { id: string; name: string; }
+interface Pkg { id: string; name: string; price: number; }
 
 const TYPES: { value: CompanyType; label: string }[] = [
   { value: "entrepreneur", label: "Entrepreneur" },
