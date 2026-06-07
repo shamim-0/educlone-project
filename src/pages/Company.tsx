@@ -272,6 +272,23 @@ export default function CompanyPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Package (optional)</Label>
+              <Select value={packageId || "none"} onValueChange={(v) => setPackageId(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="No package" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No package</SelectItem>
+                  {packages.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name} — {p.price.toLocaleString()}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {packageId && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Deal amount will be set to {packages.find((p) => p.id === packageId)?.price.toLocaleString()}
+                </p>
+              )}
+            </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>
         </DialogContent>
