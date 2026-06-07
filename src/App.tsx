@@ -44,6 +44,7 @@ const App = () => (
               <Route path="/pending" element={<Pending />} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
               <Route path="/services" element={<ProtectedRoute requireRoles={["admin","sub_admin"]}><Services /></ProtectedRoute>} />
+              <Route path="/packages" element={<ProtectedRoute requireAdmin><Packages /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
