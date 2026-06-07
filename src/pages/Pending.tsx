@@ -90,11 +90,16 @@ export default function PendingPage() {
   // AND all earlier services in STEP_DEFS order are done/no_need (sequential gating).
   const pendingByService = useMemo(() => {
     const out: Record<string, Company[]> = {};
-    STEP_DEFS.forEach((def, idx) => {
+    STEP_DEFS.forEach((def) => {
       out[def.key] = branchScopedCompanies.filter(co => {
+        const applicable = getApplicableServiceDefs(co.type, STEP_DEFS);
+        const applicableKeys = new Set(applicable.map(d => d.key));
+        if (!applicableKeys.has(def.key)) return false;
         const cMap = stepMap.get(co.id);
-        for (let i = 0; i < idx; i++) {
-          const prev = cMap?.get(STEP_DEFS[i].key) ?? "not_started";
+        const defIndex = applicable.findIndex(d => d.key === def.key);
+        for (let i = 0; i < defIndex; i++) {
+          const prevKey = applicable[i].key;
+          const prev = cMap?.get(prevKey) ?? "not_started";
           if (prev !== "done" && prev !== "no_need") return false;
         }
         const st = cMap?.get(def.key) ?? "not_started";
