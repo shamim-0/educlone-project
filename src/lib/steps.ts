@@ -31,3 +31,10 @@ export function statusBadgeClass(s: string) {
   if (s === "no_need") return "bg-muted text-muted-foreground border-border line-through";
   return "bg-muted/80 text-muted-foreground border-border";
 }
+
+export function getApplicableServiceDefs<T extends { key: string }>(companyType: string, allDefs: T[]): T[] {
+  if (companyType === "services") {
+    return allDefs.filter(d => d.key !== "usa_company_formation" && d.key !== "canada_company_formation");
+  }
+  return allDefs;
+}
