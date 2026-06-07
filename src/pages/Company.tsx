@@ -18,12 +18,14 @@ interface Company {
   name: string;
   type: CompanyType;
   branch_id: string | null;
+  package_id?: string | null;
   created_at?: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
   branches?: { name: string } | null;
 }
 interface Branch { id: string; name: string; }
+interface Pkg { id: string; name: string; price: number; }
 
 const TYPES: { value: CompanyType; label: string }[] = [
   { value: "entrepreneur", label: "Entrepreneur" },
@@ -35,12 +37,14 @@ export default function CompanyPage() {
   const { role, branchId } = useAuth();
   const [rows, setRows] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [packages, setPackages] = useState<Pkg[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number }>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Company | null>(null);
   const [type, setType] = useState<CompanyType>("trading");
   const [branchId2, setBranchId] = useState<string>("");
+  const [packageId, setPackageId] = useState<string>("");
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -52,17 +56,19 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, type, branch_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
+      .select("id, name, type, branch_id, package_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
-    const [{ data: c, error }, { data: b }, { data: s }] = await Promise.all([
+    const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
       q,
       supabase.from("branches").select("id, name").order("name"),
       supabase.from("company_steps").select("company_id, status"),
+      supabase.from("packages").select("id, name, price").order("name"),
     ]);
     if (error) toast.error(error.message);
     setRows((c as Company[]) ?? []);
     setBranches(b ?? []);
+    setPackages((pk ?? []) as Pkg[]);
     const counts: Record<string, { done: number }> = {};
     (s ?? []).forEach((r: any) => {
       const x = counts[r.company_id] ?? { done: 0 };
@@ -77,15 +83,18 @@ export default function CompanyPage() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const payload = {
+    const selectedPkg = packages.find((p) => p.id === packageId);
+    const payload: Record<string, unknown> = {
       name: String(fd.get("name") ?? "").trim(),
       type,
       branch_id: branchId2 || null,
+      package_id: packageId || null,
     };
+    if (selectedPkg) payload.total_deal = selectedPkg.price;
     if (!payload.name) { toast.error("Company name required"); return; }
     const { error } = editing
-      ? await supabase.from("companies").update(payload).eq("id", editing.id)
-      : await supabase.from("companies").insert(payload);
+      ? await supabase.from("companies").update(payload as any).eq("id", editing.id)
+      : await supabase.from("companies").insert(payload as any);
     if (error) { toast.error(error.message); return; }
     toast.success(editing ? "Updated" : "Created");
     setOpen(false); setEditing(null); load();
@@ -97,8 +106,8 @@ export default function CompanyPage() {
     if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setOpen(true); };
-  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setOpen(true); };
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setOpen(true); };
+  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setOpen(true); };
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
@@ -262,6 +271,23 @@ export default function CompanyPage() {
                   {TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Package (optional)</Label>
+              <Select value={packageId || "none"} onValueChange={(v) => setPackageId(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="No package" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No package</SelectItem>
+                  {packages.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name} — {p.price.toLocaleString()}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {packageId && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Deal amount will be set to {packages.find((p) => p.id === packageId)?.price.toLocaleString()}
+                </p>
+              )}
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>

@@ -97,6 +97,7 @@ export type Database = {
           legacy_id: number | null
           name: string
           note: string | null
+          package_id: string | null
           phone: string | null
           slug: string | null
           take_action: boolean
@@ -122,6 +123,7 @@ export type Database = {
           legacy_id?: number | null
           name: string
           note?: string | null
+          package_id?: string | null
           phone?: string | null
           slug?: string | null
           take_action?: boolean
@@ -147,6 +149,7 @@ export type Database = {
           legacy_id?: number | null
           name?: string
           note?: string | null
+          package_id?: string | null
           phone?: string | null
           slug?: string | null
           take_action?: boolean
@@ -163,6 +166,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
         ]

@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS package_id uuid REFERENCES public.packages(id) ON DELETE SET NULL;
