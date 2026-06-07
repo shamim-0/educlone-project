@@ -58,14 +58,16 @@ export default function CompanyPage() {
       .select("id, name, type, branch_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
-    const [{ data: c, error }, { data: b }, { data: s }] = await Promise.all([
+    const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
       q,
       supabase.from("branches").select("id, name").order("name"),
       supabase.from("company_steps").select("company_id, status"),
+      supabase.from("packages").select("id, name, price").order("name"),
     ]);
     if (error) toast.error(error.message);
     setRows((c as Company[]) ?? []);
     setBranches(b ?? []);
+    setPackages((pk ?? []) as Pkg[]);
     const counts: Record<string, { done: number }> = {};
     (s ?? []).forEach((r: any) => {
       const x = counts[r.company_id] ?? { done: 0 };
