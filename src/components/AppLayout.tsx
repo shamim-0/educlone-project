@@ -21,12 +21,12 @@ import { cn } from "@/lib/utils";
 
 const menu = [
   { to: "/", label: "Dashboard", icon: CheckSquare, end: true },
-  { to: "/company", label: "Company", icon: Building2, adminOnly: true },
+  { to: "/company", label: "Company", icon: Building2, roles: ["admin", "sub_admin"] as string[] },
   { to: "/branch", label: "Branch", icon: GitBranch, adminOnly: true },
   { to: "/accounts", label: "Accounts", icon: Wallet, requiresAccounts: true },
   { to: "/pending", label: "Pending", icon: ClipboardList },
   { to: "/users", label: "Users", icon: Users, adminOnly: true },
-  { to: "/services", label: "Services", icon: ListChecks, adminOnly: true },
+  { to: "/services", label: "Services", icon: ListChecks, roles: ["admin", "sub_admin"] as string[] },
 ];
 
 export default function AppLayout() {
@@ -34,8 +34,9 @@ export default function AppLayout() {
   const nav = useNavigate();
   const { theme, toggle } = useTheme();
   const [pwdOpen, setPwdOpen] = useState(false);
-  const visibleMenu = menu.filter((m) => {
+  const visibleMenu = menu.filter((m: any) => {
     if (m.adminOnly && role !== "admin") return false;
+    if (m.roles && !m.roles.includes(role ?? "")) return false;
     if (m.requiresAccounts && role !== "admin" && !accountsAccess) return false;
     return true;
   });
