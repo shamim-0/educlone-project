@@ -15,6 +15,7 @@ import Accounts from "./pages/Accounts";
 import Pending from "./pages/Pending";
 import Users from "./pages/Users";
 import Services from "./pages/Services";
+import Packages from "./pages/Packages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/pending" element={<Pending />} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
               <Route path="/services" element={<ProtectedRoute requireRoles={["admin","sub_admin"]}><Services /></ProtectedRoute>} />
+              <Route path="/packages" element={<ProtectedRoute requireAdmin><Packages /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
