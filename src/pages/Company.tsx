@@ -106,8 +106,8 @@ export default function CompanyPage() {
     if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setOpen(true); };
-  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setOpen(true); };
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setOpen(true); };
+  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setOpen(true); };
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
