@@ -69,6 +69,7 @@ export default function CompanyDetail() {
   const navigate = useNavigate();
   const { role, branchId: myBranchId } = useAuth();
   const STEP_DEFS = useServiceDefs();
+  const applicableDefs = useMemo(() => getApplicableServiceDefs(company?.type ?? "", STEP_DEFS), [company?.type, STEP_DEFS]);
   const [company, setCompany] = useState<Company | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
@@ -123,7 +124,7 @@ export default function CompanyDetail() {
       if (docs.data) setDocuments(docs.data as CompanyDoc[]);
       const map: Record<string, Step> = {};
       (s.data ?? []).forEach((row: any) => { map[row.step_key] = row; });
-      STEP_DEFS.forEach(def => {
+      applicableDefs.forEach(def => {
         if (!map[def.key]) {
           map[def.key] = { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
         }
@@ -137,13 +138,13 @@ export default function CompanyDetail() {
     if (company) document.title = `${company.name} | ISBI Tracker`;
   }, [company]);
 
-  // Ensure steps map has an entry for every current service def
+  // Ensure steps map has an entry for every current applicable service def
   useEffect(() => {
-    if (!STEP_DEFS.length) return;
+    if (!applicableDefs.length) return;
     setSteps(prev => {
       let changed = false;
       const next = { ...prev };
-      STEP_DEFS.forEach(def => {
+      applicableDefs.forEach(def => {
         if (!next[def.key]) {
           next[def.key] = { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
           changed = true;
@@ -151,10 +152,10 @@ export default function CompanyDetail() {
       });
       return changed ? next : prev;
     });
-  }, [STEP_DEFS]);
+  }, [applicableDefs]);
 
   const progress = useMemo(() => {
-    const applicable = STEP_DEFS.filter(d => steps[d.key]?.status !== "no_need");
+    const applicable = applicableDefs.filter(d => steps[d.key]?.status !== "no_need");
     const total = applicable.length;
     const done = applicable.filter(d => steps[d.key]?.status === "done").length;
     const days = company
@@ -163,7 +164,7 @@ export default function CompanyDetail() {
     const target = 45;
     const overdue = days > target;
     return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days };
-  }, [steps, company]);
+  }, [steps, company, applicableDefs]);
 
   const currentlyWorking = STEP_DEFS.filter(d => steps[d.key]?.status === "processing");
 
