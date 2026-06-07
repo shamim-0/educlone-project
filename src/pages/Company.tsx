@@ -36,12 +36,14 @@ export default function CompanyPage() {
   const { role, branchId } = useAuth();
   const [rows, setRows] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [packages, setPackages] = useState<Pkg[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number }>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Company | null>(null);
   const [type, setType] = useState<CompanyType>("trading");
   const [branchId2, setBranchId] = useState<string>("");
+  const [packageId, setPackageId] = useState<string>("");
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
