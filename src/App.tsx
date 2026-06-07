@@ -15,6 +15,7 @@ import Accounts from "./pages/Accounts";
 import Pending from "./pages/Pending";
 import Users from "./pages/Users";
 import Services from "./pages/Services";
+import Packages from "./pages/Packages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
