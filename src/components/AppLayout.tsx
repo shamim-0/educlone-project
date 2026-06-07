@@ -28,6 +28,7 @@ const menu = [
   { to: "/pending", label: "Pending", icon: ClipboardList },
   { to: "/users", label: "Users", icon: Users, adminOnly: true },
   { to: "/services", label: "Services", icon: ListChecks, roles: ["admin", "sub_admin"] as string[] },
+  { to: "/packages", label: "Packages", icon: Package, adminOnly: true },
 ];
 
 export default function AppLayout() {
