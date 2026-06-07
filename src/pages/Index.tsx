@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
+import { getApplicableServiceDefs } from "@/lib/steps";
 
 
 interface Company {
@@ -140,7 +141,6 @@ function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: nu
 export default function Index() {
   const { role, branchId } = useAuth();
   const serviceDefs = useServiceDefs();
-  const TOTAL_STEPS = serviceDefs.length || 1;
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
   const [loading, setLoading] = useState(true);
@@ -179,10 +179,13 @@ export default function Index() {
       };
       const [cRes, sRows] = await Promise.all([q, fetchAllSteps()]);
       if (!cRes.error) setCompanies((cRes.data as Company[]) ?? []);
-      const validKeys = new Set(serviceDefs.map((d) => d.key));
+      const companyMap = new Map((cRes.data ?? []).map((c: any) => [c.id, c]));
       const counts: Record<string, { done: number; processing: number; seen: Set<string> }> = {};
       sRows.forEach((r) => {
-        if (!validKeys.has(r.step_key)) return;
+        const co = companyMap.get(r.company_id);
+        const applicable = getApplicableServiceDefs(co?.type ?? "", serviceDefs);
+        const applicableKeys = new Set(applicable.map((d) => d.key));
+        if (!applicableKeys.has(r.step_key)) return;
         const c = counts[r.company_id] ?? { done: 0, processing: 0, seen: new Set() };
         if (c.seen.has(r.step_key)) return;
         c.seen.add(r.step_key);
@@ -208,17 +211,23 @@ export default function Index() {
     const service = companies.filter((c) => c.type === "services").length;
     const trading = companies.filter((c) => c.type === "trading").length;
     const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
-    const completed = companies.filter((c) => (stepCounts[c.id]?.done ?? 0) >= TOTAL_STEPS).length;
+    const completed = companies.filter((c) => {
+      const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
+      return (stepCounts[c.id]?.done ?? 0) >= applicableTotal;
+    }).length;
     const takeAction = companies.filter((c) => c.take_action).length;
     const emergency = companies.filter((c) => c.emergency).length;
     const avgProgress =
       total > 0
         ? Math.round(
-            companies.reduce((sum, c) => sum + (Math.min(stepCounts[c.id]?.done ?? 0, TOTAL_STEPS) / TOTAL_STEPS) * 100, 0) / total
+            companies.reduce((sum, c) => {
+              const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
+              return sum + (Math.min(stepCounts[c.id]?.done ?? 0, applicableTotal) / applicableTotal) * 100;
+            }, 0) / total
           )
         : 0;
     return { total, service, trading, entrepreneur, completed, takeAction, emergency, avgProgress };
-  }, [companies, stepCounts, TOTAL_STEPS]);
+  }, [companies, stepCounts, serviceDefs]);
 
 
   const branchTabs = useMemo(() => {
@@ -397,16 +406,18 @@ export default function Index() {
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sorted.map((c) => (
-            <CompanyCard
-              key={c.id}
-              c={c}
-              done={stepCounts[c.id]?.done ?? 0}
-              processing={stepCounts[c.id]?.processing ?? 0}
-              totalSteps={TOTAL_STEPS}
-            />
-
-          ))}
+          {sorted.map((c) => {
+            const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
+            return (
+              <CompanyCard
+                key={c.id}
+                c={c}
+                done={stepCounts[c.id]?.done ?? 0}
+                processing={stepCounts[c.id]?.processing ?? 0}
+                totalSteps={applicableTotal}
+              />
+            );
+          })}
         </div>
       )}
     </div>

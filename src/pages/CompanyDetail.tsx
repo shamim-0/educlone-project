@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
+import { STATUS_OPTS, statusBadgeClass, getApplicableServiceDefs } from "@/lib/steps";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -70,6 +70,7 @@ export default function CompanyDetail() {
   const { role, branchId: myBranchId } = useAuth();
   const STEP_DEFS = useServiceDefs();
   const [company, setCompany] = useState<Company | null>(null);
+  const applicableDefs = useMemo(() => getApplicableServiceDefs(company?.type ?? "", STEP_DEFS), [company?.type, STEP_DEFS]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<Record<string, Step>>({});
   const [activities, setActivities] = useState<CrActivity[]>([]);
@@ -123,7 +124,7 @@ export default function CompanyDetail() {
       if (docs.data) setDocuments(docs.data as CompanyDoc[]);
       const map: Record<string, Step> = {};
       (s.data ?? []).forEach((row: any) => { map[row.step_key] = row; });
-      STEP_DEFS.forEach(def => {
+      applicableDefs.forEach(def => {
         if (!map[def.key]) {
           map[def.key] = { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
         }
@@ -137,13 +138,13 @@ export default function CompanyDetail() {
     if (company) document.title = `${company.name} | ISBI Tracker`;
   }, [company]);
 
-  // Ensure steps map has an entry for every current service def
+  // Ensure steps map has an entry for every current applicable service def
   useEffect(() => {
-    if (!STEP_DEFS.length) return;
+    if (!applicableDefs.length) return;
     setSteps(prev => {
       let changed = false;
       const next = { ...prev };
-      STEP_DEFS.forEach(def => {
+      applicableDefs.forEach(def => {
         if (!next[def.key]) {
           next[def.key] = { step_key: def.key, status: "not_started", note: "", username: "", password: "" };
           changed = true;
@@ -151,10 +152,10 @@ export default function CompanyDetail() {
       });
       return changed ? next : prev;
     });
-  }, [STEP_DEFS]);
+  }, [applicableDefs]);
 
   const progress = useMemo(() => {
-    const applicable = STEP_DEFS.filter(d => steps[d.key]?.status !== "no_need");
+    const applicable = applicableDefs.filter(d => steps[d.key]?.status !== "no_need");
     const total = applicable.length;
     const done = applicable.filter(d => steps[d.key]?.status === "done").length;
     const days = company
@@ -163,9 +164,9 @@ export default function CompanyDetail() {
     const target = 45;
     const overdue = days > target;
     return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days };
-  }, [steps, company]);
+  }, [steps, company, applicableDefs]);
 
-  const currentlyWorking = STEP_DEFS.filter(d => steps[d.key]?.status === "processing");
+  const currentlyWorking = applicableDefs.filter(d => steps[d.key]?.status === "processing");
 
   async function saveProfile() {
     if (!company) return;
@@ -468,7 +469,7 @@ export default function CompanyDetail() {
         <div className="mt-5">
           <div className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">STEP OVERVIEW</div>
           <div className="flex gap-1.5 flex-wrap">
-            {STEP_DEFS.map(def => {
+            {applicableDefs.map(def => {
               const st = steps[def.key]?.status ?? "not_started";
               const clean = def.label.replace(/\s*\([^)]*\)/g, "").trim();
               const words = clean.split(/\s+/);
@@ -522,7 +523,7 @@ export default function CompanyDetail() {
         {/* Steps */}
         <div className="lg:col-span-2 space-y-3">
           <h2 className="font-semibold text-lg">⚙ Workflow Steps</h2>
-          {STEP_DEFS.map(def => {
+          {applicableDefs.map(def => {
             const s = steps[def.key] ?? { step_key: def.key, status: "not_started", note: "", username: "", password: "", subtasks_done: [] };
             const subDone = s.subtasks_done ?? [];
             return (
@@ -742,7 +743,7 @@ export default function CompanyDetail() {
               <span className="text-accent">🔑</span> All Credentials
             </h2>
             {(() => {
-              const creds = STEP_DEFS.filter(d => {
+              const creds = applicableDefs.filter(d => {
                 const s = steps[d.key];
                 return s && ((s.username && s.username.trim()) || (s.password && s.password.trim()));
               });
