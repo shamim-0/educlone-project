@@ -82,15 +82,18 @@ export default function CompanyPage() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const payload = {
+    const selectedPkg = packages.find((p) => p.id === packageId);
+    const payload: Record<string, unknown> = {
       name: String(fd.get("name") ?? "").trim(),
       type,
       branch_id: branchId2 || null,
+      package_id: packageId || null,
     };
+    if (selectedPkg) payload.total_deal = selectedPkg.price;
     if (!payload.name) { toast.error("Company name required"); return; }
     const { error } = editing
       ? await supabase.from("companies").update(payload).eq("id", editing.id)
-      : await supabase.from("companies").insert(payload);
+      : await supabase.from("companies").insert(payload as any);
     if (error) { toast.error(error.message); return; }
     toast.success(editing ? "Updated" : "Created");
     setOpen(false); setEditing(null); load();
