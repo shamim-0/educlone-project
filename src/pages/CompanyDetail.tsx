@@ -470,11 +470,28 @@ export default function CompanyDetail() {
           <div className="flex gap-1.5 flex-wrap">
             {STEP_DEFS.map(def => {
               const st = steps[def.key]?.status ?? "not_started";
+              const clean = def.label.replace(/\s*\([^)]*\)/g, "").trim();
+              const words = clean.split(/\s+/);
+              const short = words.length <= 2 ? clean : words.slice(0, 2).join(" ");
+              const cls =
+                st === "done"
+                  ? "bg-success text-success-foreground border-success"
+                  : st === "processing"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : st === "no_need"
+                  ? "bg-white text-black border-border"
+                  : "bg-destructive text-destructive-foreground border-destructive";
               return (
-                <span key={def.key} className={cn(
-                  "h-2.5 w-2.5 rounded-full",
-                  st === "done" ? "bg-success" : st === "processing" ? "bg-primary" : "bg-muted"
-                )} title={`${def.label}: ${st}`} />
+                <span
+                  key={def.key}
+                  className={cn(
+                    "text-[10px] font-medium px-2 py-0.5 rounded-md border whitespace-nowrap",
+                    cls
+                  )}
+                  title={`${def.label}: ${st}`}
+                >
+                  {short}
+                </span>
               );
             })}
           </div>
