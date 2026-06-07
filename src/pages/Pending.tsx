@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
+import { getApplicableServiceDefs } from "@/lib/steps";
 
 interface Company { id: string; name: string; type: string; branch_id: string | null; created_at?: string; emergency?: boolean | null; take_action?: boolean | null; }
 interface Branch { id: string; name: string; }
