@@ -54,7 +54,8 @@ export default function ServicesPage() {
     setLoading(false);
   }
 
-  if (role && role !== "admin") return <Navigate to="/" replace />;
+  if (role && role !== "admin" && role !== "sub_admin") return <Navigate to="/" replace />;
+  const canDelete = role === "admin";
 
   function onDragStart(key: string) {
     setDragKey(key);
@@ -265,9 +266,11 @@ export default function ServicesPage() {
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => removeService(r.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {canDelete && (
+                      <Button size="sm" variant="ghost" onClick={() => removeService(r.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
