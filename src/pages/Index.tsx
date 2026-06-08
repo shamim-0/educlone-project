@@ -80,15 +80,33 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         </Badge>
       </div>
 
-      {/* Step dots — green=done, blue=processing, muted=not started */}
-      <div className="mt-5 flex items-center gap-1.5">
-        {Array.from({ length: p.total }).map((_, i) => {
-          let cls = "bg-muted";
-          if (i < p.done) cls = "bg-success";
-          else if (i < p.done + p.processing) cls = "bg-primary";
-          return <span key={i} className={cn("h-2 w-2 rounded-full", cls)} />;
+      {/* Step name chips — green=done, blue=processing, white=no_need, red=not_started */}
+      <div className="mt-5 flex flex-wrap gap-1">
+        {applicableDefs.map((def) => {
+          const st = stepStatuses[def.key] ?? "not_started";
+          const clean = def.label.replace(/\s*\([^)]*\)/g, "").trim();
+          const words = clean.split(/\s+/);
+          const short = words.length <= 2 ? clean : words.slice(0, 2).join(" ");
+          const cls =
+            st === "done"
+              ? "bg-success text-success-foreground border-success"
+              : st === "processing"
+              ? "bg-primary text-primary-foreground border-primary"
+              : st === "no_need"
+              ? "bg-white text-black border-border"
+              : "bg-destructive text-destructive-foreground border-destructive";
+          return (
+            <span
+              key={def.key}
+              className={cn("text-[9px] font-medium px-1.5 py-0.5 rounded border whitespace-nowrap", cls)}
+              title={`${def.label}: ${st}`}
+            >
+              {short}
+            </span>
+          );
         })}
       </div>
+
 
       {/* Progress bar */}
       <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
