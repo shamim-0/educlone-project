@@ -35,7 +35,7 @@ function deriveProgress(createdAt: string, done: number, processing: number, tot
   return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal };
 }
 
-function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: number; processing: number; totalSteps: number }) {
+function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string> }) {
   const p = deriveProgress(c.created_at, done, processing, totalSteps);
 
   const branchName = c.branches?.name ?? "—";
