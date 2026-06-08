@@ -161,6 +161,8 @@ export default function Index() {
   const serviceDefs = useServiceDefs();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
+  const [stepStatuses, setStepStatuses] = useState<Record<string, Record<string, string>>>({});
+
   const [loading, setLoading] = useState(true);
   const [branchFilter, setBranchFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
