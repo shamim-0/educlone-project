@@ -99,6 +99,11 @@ export default function CompanyDetail() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [emergency, setEmergency] = useState(false);
   const [takeAction, setTakeAction] = useState(false);
+  const [packages, setPackages] = useState<{ id: string; name: string; price: number }[]>([]);
+  const [packageOpen, setPackageOpen] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState<string>("none");
+  const [savingPackage, setSavingPackage] = useState(false);
+
 
   useEffect(() => {
     if (!id) return;
