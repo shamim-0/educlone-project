@@ -607,12 +607,22 @@ export default function AccountsPage() {
                               </div>
                             </div>
                           </div>
-                          {canWrite && (
-                            <div className="flex gap-1">
-                              <Button size="icon" variant="ghost" onClick={() => openEditInst(x)}><Pencil className="h-4 w-4" /></Button>
-                              <Button size="icon" variant="ghost" onClick={() => deleteInst(x)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            </div>
-                          )}
+                          <div className="flex gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              title="Generate Invoice"
+                              onClick={() => openInvoice(x.company_id, x.id).catch((e) => toast.error(e.message))}
+                            >
+                              <FileText className="h-4 w-4 text-primary" />
+                            </Button>
+                            {canWrite && (
+                              <>
+                                <Button size="icon" variant="ghost" onClick={() => openEditInst(x)}><Pencil className="h-4 w-4" /></Button>
+                                <Button size="icon" variant="ghost" onClick={() => deleteInst(x)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       ))}
                   </div>
