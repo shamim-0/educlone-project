@@ -432,7 +432,8 @@ export default function Index() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sorted.map((c) => {
-            const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
+            const applicable = getApplicableServiceDefs(c.type, serviceDefs);
+            const applicableTotal = applicable.length || 1;
             return (
               <CompanyCard
                 key={c.id}
@@ -440,9 +441,12 @@ export default function Index() {
                 done={stepCounts[c.id]?.done ?? 0}
                 processing={stepCounts[c.id]?.processing ?? 0}
                 totalSteps={applicableTotal}
+                applicableDefs={applicable}
+                stepStatuses={stepStatuses[c.id] ?? {}}
               />
             );
           })}
+
         </div>
       )}
     </div>
