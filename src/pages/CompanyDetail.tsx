@@ -468,8 +468,61 @@ export default function CompanyDetail() {
               <Trash2 className="h-4 w-4 mr-1" /> Delete
             </Button>
           )}
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const { data } = await supabase.from("packages").select("id,name,price").order("name");
+                setPackages((data as any) ?? []);
+                setSelectedPackageId(((company as any).package_id as string) ?? "none");
+                setPackageOpen(true);
+              }}
+            >
+              <PackageIcon className="h-4 w-4 mr-1" /> Update Package
+            </Button>
+          )}
         </div>
         )}
+
+        <Dialog open={packageOpen} onOpenChange={setPackageOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Update Package</DialogTitle></DialogHeader>
+            <div className="space-y-2">
+              <Label>Package</Label>
+              <Select value={selectedPackageId} onValueChange={setSelectedPackageId}>
+                <SelectTrigger><SelectValue placeholder="Select package" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Package</SelectItem>
+                  {packages.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name} — {p.price}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Selecting a package will set the Deal amount automatically. Choosing "No Package" will clear it.</p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPackageOpen(false)}>Cancel</Button>
+              <Button
+                disabled={savingPackage}
+                onClick={async () => {
+                  setSavingPackage(true);
+                  const pkg = packages.find((p) => p.id === selectedPackageId);
+                  const payload: any = pkg
+                    ? { package_id: pkg.id, total_deal: pkg.price }
+                    : { package_id: null, total_deal: null };
+                  const { error } = await supabase.from("companies").update(payload).eq("id", company.id);
+                  setSavingPackage(false);
+                  if (error) return toast.error(error.message);
+                  setCompany({ ...(company as any), ...payload });
+                  setPackageOpen(false);
+                  toast.success("Package updated");
+                }}
+              >Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
 
         <div className="mt-5">
           <div className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">STEP OVERVIEW</div>
