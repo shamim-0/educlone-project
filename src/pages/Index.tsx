@@ -201,6 +201,7 @@ export default function Index() {
       if (!cRes.error) setCompanies((cRes.data as Company[]) ?? []);
       const companyMap = new Map((cRes.data ?? []).map((c: any) => [c.id, c]));
       const counts: Record<string, { done: number; processing: number; seen: Set<string> }> = {};
+      const statuses: Record<string, Record<string, string>> = {};
       sRows.forEach((r) => {
         const co = companyMap.get(r.company_id);
         const applicable = getApplicableServiceDefs(co?.type ?? "", serviceDefs);
@@ -212,12 +213,16 @@ export default function Index() {
         if (r.status === "done" || r.status === "no_need") c.done++;
         else if (r.status === "processing") c.processing++;
         counts[r.company_id] = c;
+        statuses[r.company_id] = statuses[r.company_id] ?? {};
+        statuses[r.company_id][r.step_key] = r.status;
       });
       const stripped: Record<string, { done: number; processing: number }> = {};
       Object.entries(counts).forEach(([k, v]) => { stripped[k] = { done: v.done, processing: v.processing }; });
       setStepCounts(stripped);
+      setStepStatuses(statuses);
       setLoading(false);
     };
+
     if (role !== null && serviceDefs.length > 0) load();
   }, [role, branchId, serviceDefs]);
 
