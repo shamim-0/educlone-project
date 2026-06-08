@@ -35,7 +35,7 @@ function deriveProgress(createdAt: string, done: number, processing: number, tot
   return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal };
 }
 
-function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: number; processing: number; totalSteps: number }) {
+function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string> }) {
   const p = deriveProgress(c.created_at, done, processing, totalSteps);
 
   const branchName = c.branches?.name ?? "—";
@@ -80,15 +80,33 @@ function CompanyCard({ c, done, processing, totalSteps }: { c: Company; done: nu
         </Badge>
       </div>
 
-      {/* Step dots — green=done, blue=processing, muted=not started */}
-      <div className="mt-5 flex items-center gap-1.5">
-        {Array.from({ length: p.total }).map((_, i) => {
-          let cls = "bg-muted";
-          if (i < p.done) cls = "bg-success";
-          else if (i < p.done + p.processing) cls = "bg-primary";
-          return <span key={i} className={cn("h-2 w-2 rounded-full", cls)} />;
+      {/* Step name chips — green=done, blue=processing, white=no_need, red=not_started */}
+      <div className="mt-5 flex flex-wrap gap-1">
+        {applicableDefs.map((def) => {
+          const st = stepStatuses[def.key] ?? "not_started";
+          const clean = def.label.replace(/\s*\([^)]*\)/g, "").trim();
+          const words = clean.split(/\s+/);
+          const short = words.length <= 2 ? clean : words.slice(0, 2).join(" ");
+          const cls =
+            st === "done"
+              ? "bg-success text-success-foreground border-success"
+              : st === "processing"
+              ? "bg-primary text-primary-foreground border-primary"
+              : st === "no_need"
+              ? "bg-white text-black border-border"
+              : "bg-destructive text-destructive-foreground border-destructive";
+          return (
+            <span
+              key={def.key}
+              className={cn("text-[9px] font-medium px-1.5 py-0.5 rounded border whitespace-nowrap", cls)}
+              title={`${def.label}: ${st}`}
+            >
+              {short}
+            </span>
+          );
         })}
       </div>
+
 
       {/* Progress bar */}
       <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -143,6 +161,8 @@ export default function Index() {
   const serviceDefs = useServiceDefs();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
+  const [stepStatuses, setStepStatuses] = useState<Record<string, Record<string, string>>>({});
+
   const [loading, setLoading] = useState(true);
   const [branchFilter, setBranchFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -181,6 +201,7 @@ export default function Index() {
       if (!cRes.error) setCompanies((cRes.data as Company[]) ?? []);
       const companyMap = new Map((cRes.data ?? []).map((c: any) => [c.id, c]));
       const counts: Record<string, { done: number; processing: number; seen: Set<string> }> = {};
+      const statuses: Record<string, Record<string, string>> = {};
       sRows.forEach((r) => {
         const co = companyMap.get(r.company_id);
         const applicable = getApplicableServiceDefs(co?.type ?? "", serviceDefs);
@@ -192,12 +213,16 @@ export default function Index() {
         if (r.status === "done" || r.status === "no_need") c.done++;
         else if (r.status === "processing") c.processing++;
         counts[r.company_id] = c;
+        statuses[r.company_id] = statuses[r.company_id] ?? {};
+        statuses[r.company_id][r.step_key] = r.status;
       });
       const stripped: Record<string, { done: number; processing: number }> = {};
       Object.entries(counts).forEach(([k, v]) => { stripped[k] = { done: v.done, processing: v.processing }; });
       setStepCounts(stripped);
+      setStepStatuses(statuses);
       setLoading(false);
     };
+
     if (role !== null && serviceDefs.length > 0) load();
   }, [role, branchId, serviceDefs]);
 
@@ -407,7 +432,8 @@ export default function Index() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sorted.map((c) => {
-            const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
+            const applicable = getApplicableServiceDefs(c.type, serviceDefs);
+            const applicableTotal = applicable.length || 1;
             return (
               <CompanyCard
                 key={c.id}
@@ -415,9 +441,12 @@ export default function Index() {
                 done={stepCounts[c.id]?.done ?? 0}
                 processing={stepCounts[c.id]?.processing ?? 0}
                 totalSteps={applicableTotal}
+                applicableDefs={applicable}
+                stepStatuses={stepStatuses[c.id] ?? {}}
               />
             );
           })}
+
         </div>
       )}
     </div>
