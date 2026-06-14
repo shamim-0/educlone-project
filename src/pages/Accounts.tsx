@@ -39,6 +39,13 @@ interface Installment {
   payment_date: string | null;
   note: string | null;
 }
+interface ExtraDeal {
+  id: string;
+  company_id: string;
+  note: string;
+  amount: number;
+  created_at?: string;
+}
 
 const fmt = (n: number) =>
   `${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SR`;
