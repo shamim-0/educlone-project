@@ -105,16 +105,16 @@ export default function AccountsPage() {
 
   const load = async () => {
     setLoading(true);
-    // Non-admin users assigned to a branch only see companies (and their installments) from that branch
     const restrictToBranch = role !== "admin" && !!branchId;
     let cq = supabase
       .from("companies")
       .select("id, name, type, total_deal, discount, branch_id, branches!companies_branch_id_fkey(name)")
       .order("name");
     if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
-    const [c, i] = await Promise.all([
+    const [c, i, e] = await Promise.all([
       cq,
       supabase.from("company_installments").select("*"),
+      supabase.from("company_extra_deals").select("*").order("created_at", { ascending: false }),
     ]);
     if (c.error) toast.error(c.error.message);
     const cList = (c.data as Company[]) ?? [];
@@ -122,6 +122,8 @@ export default function AccountsPage() {
     const allowedIds = new Set(cList.map((x) => x.id));
     const instList = ((i.data as Installment[]) ?? []).filter((x) => !restrictToBranch || allowedIds.has(x.company_id));
     setInstallments(instList);
+    const extraList = ((e.data as ExtraDeal[]) ?? []).filter((x) => !restrictToBranch || allowedIds.has(x.company_id));
+    setExtraDeals(extraList);
     setLoading(false);
   };
 
