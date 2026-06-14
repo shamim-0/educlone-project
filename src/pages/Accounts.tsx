@@ -597,92 +597,110 @@ export default function AccountsPage() {
                 </div>
               </Card>
 
-              {/* Edit deal + discount */}
+              {/* Company setup deal */}
               <div className="rounded-xl border p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Pencil className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold">Deal & Discount</h3>
+                    <Wallet className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold">Company setup deal</h3>
                   </div>
-                  {canWrite && !editingDeal && (
-                    <Button size="sm" variant="outline" onClick={() => setEditingDeal(true)}>Edit</Button>
+                  {canWrite && !editingSetup && (
+                    <Button size="sm" variant="outline" onClick={() => setEditingSetup(true)}>Edit</Button>
                   )}
                 </div>
-                {editingDeal ? (
+                {editingSetup ? (
                   <div className="mt-3 space-y-3">
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="dealAmt" className="text-xs">Total Deal (SR)</Label>
-                        <Input id="dealAmt" type="number" step="0.01" min="0" value={dealAmount} onChange={(e) => setDealAmount(e.target.value)} />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <Label htmlFor="discAmt" className="text-xs flex items-center gap-1">
-                            <Percent className="h-3 w-3" /> Discount ({discountMode === "pct" ? "%" : "SR"})
-                          </Label>
-                          <div className="inline-flex rounded-md border bg-muted/40 p-0.5 text-[11px] font-medium">
-                            <button
-                              type="button"
-                              onClick={() => setDiscountMode("sr")}
-                              className={`px-2 py-0.5 rounded-sm transition-colors ${discountMode === "sr" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
-                            >SR</button>
-                            <button
-                              type="button"
-                              onClick={() => setDiscountMode("pct")}
-                              className={`px-2 py-0.5 rounded-sm transition-colors ${discountMode === "pct" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
-                            >%</button>
-                          </div>
-                        </div>
-                        <Input
-                          id="discAmt"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max={discountMode === "pct" ? "100" : undefined}
-                          value={discountAmount}
-                          onChange={(e) => setDiscountAmount(e.target.value)}
-                          placeholder={discountMode === "pct" ? "e.g. 10" : "e.g. 500"}
-                        />
-                        {discountMode === "pct" && Number(dealAmount) > 0 && Number(discountAmount) > 0 && (
-                          <p className="text-[11px] text-muted-foreground mt-1">
-                            = {fmt(Number(dealAmount) * Number(discountAmount) / 100)}
-                          </p>
-                        )}
-                        {discountMode === "sr" && Number(dealAmount) > 0 && Number(discountAmount) > 0 && (
-                          <p className="text-[11px] text-muted-foreground mt-1">
-                            = {((Number(discountAmount) / Number(dealAmount)) * 100).toFixed(2)}%
-                          </p>
-                        )}
-                      </div>
+                    <div>
+                      <Label htmlFor="dealAmt" className="text-xs">Setup Deal (SR)</Label>
+                      <Input id="dealAmt" type="number" step="0.01" min="0" value={dealAmount} onChange={(e) => setDealAmount(e.target.value)} />
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" onClick={() => {
-                        setEditingDeal(false);
+                        setEditingSetup(false);
                         setDealAmount(String(openCompany.total_deal ?? 0));
-                        setDiscountAmount(String(openCompany.discount ?? 0));
                       }}>Cancel</Button>
-                      <Button onClick={saveDeal} disabled={savingDeal} className="gap-1">
+                      <Button onClick={saveSetup} disabled={savingDeal} className="gap-1">
                         <Save className="h-4 w-4" /> Save
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-3 grid sm:grid-cols-3 gap-3 text-sm">
-                    <InfoRow
-                      label="Deal"
-                      value={fmt(oDeal)}
-                      icon={oExtras > 0 ? <Plus className="h-3 w-3 text-primary" /> : undefined}
-                    />
-                    <InfoRow label="Discount" value={fmt(oDisc)} icon={<ArrowDownRight className="h-3 w-3 text-amber-500" />} />
-                    <InfoRow label="Net Payable" value={fmt(oNet)} bold />
+                  <div className="mt-3 text-sm">
+                    <InfoRow label="Setup Deal" value={fmt(oBaseDeal)} bold />
                   </div>
                 )}
-                {oExtras > 0 && (
-                  <p className="text-[11px] text-muted-foreground mt-2">
-                    Base {fmt(oBaseDeal)} + Extra {fmt(oExtras)} = {fmt(oDeal)}
-                  </p>
+              </div>
+
+              {/* Discount */}
+              <div className="rounded-xl border p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Percent className="h-4 w-4 text-amber-500" />
+                    <h3 className="font-semibold">Discount</h3>
+                  </div>
+                  {canWrite && !editingDiscount && (
+                    <Button size="sm" variant="outline" onClick={() => setEditingDiscount(true)}>Edit</Button>
+                  )}
+                </div>
+                {editingDiscount ? (
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <Label htmlFor="discAmt" className="text-xs flex items-center gap-1">
+                          <Percent className="h-3 w-3" /> Discount ({discountMode === "pct" ? "%" : "SR"})
+                        </Label>
+                        <div className="inline-flex rounded-md border bg-muted/40 p-0.5 text-[11px] font-medium">
+                          <button
+                            type="button"
+                            onClick={() => setDiscountMode("sr")}
+                            className={`px-2 py-0.5 rounded-sm transition-colors ${discountMode === "sr" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                          >SR</button>
+                          <button
+                            type="button"
+                            onClick={() => setDiscountMode("pct")}
+                            className={`px-2 py-0.5 rounded-sm transition-colors ${discountMode === "pct" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                          >%</button>
+                        </div>
+                      </div>
+                      <Input
+                        id="discAmt"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max={discountMode === "pct" ? "100" : undefined}
+                        value={discountAmount}
+                        onChange={(e) => setDiscountAmount(e.target.value)}
+                        placeholder={discountMode === "pct" ? "e.g. 10" : "e.g. 500"}
+                      />
+                      {discountMode === "pct" && Number(openCompany.total_deal || 0) > 0 && Number(discountAmount) > 0 && (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          = {fmt(Number(openCompany.total_deal || 0) * Number(discountAmount) / 100)}
+                        </p>
+                      )}
+                      {discountMode === "sr" && Number(openCompany.total_deal || 0) > 0 && Number(discountAmount) > 0 && (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          = {((Number(discountAmount) / Number(openCompany.total_deal || 0)) * 100).toFixed(2)}%
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" onClick={() => {
+                        setEditingDiscount(false);
+                        setDiscountAmount(String(openCompany.discount ?? 0));
+                        setDiscountMode("sr");
+                      }}>Cancel</Button>
+                      <Button onClick={saveDiscount} disabled={savingDeal} className="gap-1">
+                        <Save className="h-4 w-4" /> Save
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm">
+                    <InfoRow label="Discount" value={fmt(oDisc)} icon={<ArrowDownRight className="h-3 w-3 text-amber-500" />} bold />
+                  </div>
                 )}
               </div>
+
 
               {/* Extra Deals */}
               <div className="rounded-xl border p-4">
