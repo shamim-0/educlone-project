@@ -220,14 +220,33 @@ export default function AccountsPage() {
     setDealAmount(String(c.total_deal ?? 0));
     setDiscountAmount(String(c.discount ?? 0));
     setDiscountMode("sr");
-    setEditingDeal(false);
+    setEditingSetup(false);
+    setEditingDiscount(false);
   }
 
-  async function saveDeal() {
+  async function saveSetup() {
     if (!openCompany) return;
     const v = Number(dealAmount);
-    const d = Number(discountAmount);
     if (Number.isNaN(v) || v < 0) { toast.error("Invalid deal amount"); return; }
+    const disc = Number(openCompany.discount || 0);
+    if (disc > v) { toast.error("Discount currently exceeds the new deal amount"); return; }
+    setSavingDeal(true);
+    const { error } = await supabase
+      .from("companies")
+      .update({ total_deal: v })
+      .eq("id", openCompany.id);
+    setSavingDeal(false);
+    if (error) return toast.error(error.message);
+    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v } : c));
+    setOpenCompany({ ...openCompany, total_deal: v });
+    setEditingSetup(false);
+    toast.success("Company setup deal updated");
+  }
+
+  async function saveDiscount() {
+    if (!openCompany) return;
+    const v = Number(openCompany.total_deal || 0);
+    const d = Number(discountAmount);
     if (Number.isNaN(d) || d < 0) { toast.error("Invalid discount"); return; }
     let discSr = d;
     if (discountMode === "pct") {
@@ -238,16 +257,16 @@ export default function AccountsPage() {
     setSavingDeal(true);
     const { error } = await supabase
       .from("companies")
-      .update({ total_deal: v, discount: discSr })
+      .update({ discount: discSr })
       .eq("id", openCompany.id);
     setSavingDeal(false);
     if (error) return toast.error(error.message);
-    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v, discount: discSr } : c));
-    setOpenCompany({ ...openCompany, total_deal: v, discount: discSr });
+    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, discount: discSr } : c));
+    setOpenCompany({ ...openCompany, discount: discSr });
     setDiscountAmount(String(discSr));
     setDiscountMode("sr");
-    setEditingDeal(false);
-    toast.success("Deal updated");
+    setEditingDiscount(false);
+    toast.success("Discount updated");
   }
 
   function openAddInst() {
