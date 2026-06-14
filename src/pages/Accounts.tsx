@@ -798,6 +798,32 @@ export default function AccountsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Extra Deal dialog */}
+      <Dialog open={extraOpen} onOpenChange={setExtraOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingExtra ? "Edit Extra Deal" : "Add Extra Deal"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="eNote">Note</Label>
+              <Input id="eNote" value={extraNote} onChange={(e) => setExtraNote(e.target.value)} placeholder="Describe the extra work" />
+            </div>
+            <div>
+              <Label htmlFor="eAmt">Amount (SR)</Label>
+              <Input id="eAmt" type="number" step="0.01" min="0" value={extraAmount} onChange={(e) => setExtraAmount(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This amount will be added on top of the total deal.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExtraOpen(false)}>Cancel</Button>
+            <Button onClick={saveExtra} disabled={savingExtra}>{editingExtra ? "Save" : "Add"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
