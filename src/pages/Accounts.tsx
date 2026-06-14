@@ -301,6 +301,49 @@ export default function AccountsPage() {
     toast.success("Deleted");
   }
 
+  function openAddExtra() {
+    setEditingExtra(null);
+    setExtraAmount("");
+    setExtraNote("");
+    setExtraOpen(true);
+  }
+  function openEditExtra(x: ExtraDeal) {
+    setEditingExtra(x);
+    setExtraAmount(String(x.amount));
+    setExtraNote(x.note ?? "");
+    setExtraOpen(true);
+  }
+  async function saveExtra() {
+    if (!openCompany) return;
+    const v = Number(extraAmount);
+    if (Number.isNaN(v) || v <= 0) { toast.error("Enter amount"); return; }
+    if (!extraNote.trim()) { toast.error("Enter note"); return; }
+    setSavingExtra(true);
+    const payload = { company_id: openCompany.id, amount: v, note: extraNote.trim() };
+    if (editingExtra) {
+      const { data, error } = await supabase
+        .from("company_extra_deals").update(payload).eq("id", editingExtra.id).select().single();
+      setSavingExtra(false);
+      if (error) return toast.error(error.message);
+      setExtraDeals((prev) => prev.map((x) => x.id === editingExtra.id ? (data as ExtraDeal) : x));
+    } else {
+      const { data, error } = await supabase
+        .from("company_extra_deals").insert(payload).select().single();
+      setSavingExtra(false);
+      if (error) return toast.error(error.message);
+      setExtraDeals((prev) => [data as ExtraDeal, ...prev]);
+    }
+    setExtraOpen(false);
+    toast.success("Saved");
+  }
+  async function deleteExtra(x: ExtraDeal) {
+    if (!confirm("Delete this extra deal?")) return;
+    const { error } = await supabase.from("company_extra_deals").delete().eq("id", x.id);
+    if (error) return toast.error(error.message);
+    setExtraDeals((prev) => prev.filter((i) => i.id !== x.id));
+    toast.success("Deleted");
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Hero header */}
