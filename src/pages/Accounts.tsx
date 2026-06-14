@@ -39,6 +39,13 @@ interface Installment {
   payment_date: string | null;
   note: string | null;
 }
+interface ExtraDeal {
+  id: string;
+  company_id: string;
+  note: string;
+  amount: number;
+  created_at?: string;
+}
 
 const fmt = (n: number) =>
   `${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SR`;
@@ -70,6 +77,7 @@ export default function AccountsPage() {
   const canWrite = role === "admin" || ((role === "editor" || role === "sub_admin") && accountsAccess);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [installments, setInstallments] = useState<Installment[]>([]);
+  const [extraDeals, setExtraDeals] = useState<ExtraDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -89,18 +97,24 @@ export default function AccountsPage() {
   const [instNote, setInstNote] = useState("");
   const [savingInst, setSavingInst] = useState(false);
 
+  const [extraOpen, setExtraOpen] = useState(false);
+  const [editingExtra, setEditingExtra] = useState<ExtraDeal | null>(null);
+  const [extraAmount, setExtraAmount] = useState("");
+  const [extraNote, setExtraNote] = useState("");
+  const [savingExtra, setSavingExtra] = useState(false);
+
   const load = async () => {
     setLoading(true);
-    // Non-admin users assigned to a branch only see companies (and their installments) from that branch
     const restrictToBranch = role !== "admin" && !!branchId;
     let cq = supabase
       .from("companies")
       .select("id, name, type, total_deal, discount, branch_id, branches!companies_branch_id_fkey(name)")
       .order("name");
     if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
-    const [c, i] = await Promise.all([
+    const [c, i, e] = await Promise.all([
       cq,
       supabase.from("company_installments").select("*"),
+      supabase.from("company_extra_deals").select("*").order("created_at", { ascending: false }),
     ]);
     if (c.error) toast.error(c.error.message);
     const cList = (c.data as Company[]) ?? [];
@@ -108,6 +122,8 @@ export default function AccountsPage() {
     const allowedIds = new Set(cList.map((x) => x.id));
     const instList = ((i.data as Installment[]) ?? []).filter((x) => !restrictToBranch || allowedIds.has(x.company_id));
     setInstallments(instList);
+    const extraList = ((e.data as ExtraDeal[]) ?? []).filter((x) => !restrictToBranch || allowedIds.has(x.company_id));
+    setExtraDeals(extraList);
     setLoading(false);
   };
 
@@ -119,13 +135,23 @@ export default function AccountsPage() {
     return map;
   }, [installments]);
 
+  const extrasByCompany = useMemo(() => {
+    const map: Record<string, number> = {};
+    extraDeals.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
+    return map;
+  }, [extraDeals]);
+
+  const dealOf = (c: Company) => Number(c.total_deal || 0) + (extrasByCompany[c.id] ?? 0);
+
   const totals = useMemo(() => {
-    const deal = companies.reduce((s, c) => s + Number(c.total_deal || 0), 0);
+    const baseDeal = companies.reduce((s, c) => s + Number(c.total_deal || 0), 0);
+    const extras = companies.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
+    const deal = baseDeal + extras;
     const discount = companies.reduce((s, c) => s + Number(c.discount || 0), 0);
     const received = Object.values(receivedByCompany).reduce((s, v) => s + v, 0);
     const net = deal - discount;
-    return { deal, discount, received, net, due: net - received };
-  }, [companies, receivedByCompany]);
+    return { deal, discount, received, net, due: net - received, extras };
+  }, [companies, receivedByCompany, extrasByCompany]);
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
@@ -151,12 +177,12 @@ export default function AccountsPage() {
       case "name_asc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case "name_desc": return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case "due_desc": return sorted.sort((a, b) => {
-        const ad = (Number(a.total_deal||0) - Number(a.discount||0)) - (receivedByCompany[a.id] ?? 0);
-        const bd = (Number(b.total_deal||0) - Number(b.discount||0)) - (receivedByCompany[b.id] ?? 0);
+        const ad = (dealOf(a) - Number(a.discount||0)) - (receivedByCompany[a.id] ?? 0);
+        const bd = (dealOf(b) - Number(b.discount||0)) - (receivedByCompany[b.id] ?? 0);
         return bd - ad;
       });
       case "received_desc": return sorted.sort((a, b) => (receivedByCompany[b.id] ?? 0) - (receivedByCompany[a.id] ?? 0));
-      case "deal_desc": return sorted.sort((a, b) => Number(b.total_deal||0) - Number(a.total_deal||0));
+      case "deal_desc": return sorted.sort((a, b) => dealOf(b) - dealOf(a));
       default:
         return sorted.sort((a, b) => {
           const ac = extractCode(a.name);
@@ -165,14 +191,21 @@ export default function AccountsPage() {
           return b.name.localeCompare(a.name);
         });
     }
-  }, [companies, search, branchFilter, sortBy, receivedByCompany]);
+  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany]);
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
     [installments, openCompany],
   );
 
-  const oDeal = Number(openCompany?.total_deal || 0);
+  const companyExtras = useMemo(
+    () => (openCompany ? extraDeals.filter((x) => x.company_id === openCompany.id) : []),
+    [extraDeals, openCompany],
+  );
+
+  const oBaseDeal = Number(openCompany?.total_deal || 0);
+  const oExtras = openCompany ? (extrasByCompany[openCompany.id] ?? 0) : 0;
+  const oDeal = oBaseDeal + oExtras;
   const oDisc = Number(openCompany?.discount || 0);
   const oNet = oDeal - oDisc;
   const oRecv = openCompany ? (receivedByCompany[openCompany.id] ?? 0) : 0;
@@ -265,6 +298,49 @@ export default function AccountsPage() {
     const { error } = await supabase.from("company_installments").delete().eq("id", x.id);
     if (error) return toast.error(error.message);
     setInstallments((prev) => prev.filter((i) => i.id !== x.id));
+    toast.success("Deleted");
+  }
+
+  function openAddExtra() {
+    setEditingExtra(null);
+    setExtraAmount("");
+    setExtraNote("");
+    setExtraOpen(true);
+  }
+  function openEditExtra(x: ExtraDeal) {
+    setEditingExtra(x);
+    setExtraAmount(String(x.amount));
+    setExtraNote(x.note ?? "");
+    setExtraOpen(true);
+  }
+  async function saveExtra() {
+    if (!openCompany) return;
+    const v = Number(extraAmount);
+    if (Number.isNaN(v) || v <= 0) { toast.error("Enter amount"); return; }
+    if (!extraNote.trim()) { toast.error("Enter note"); return; }
+    setSavingExtra(true);
+    const payload = { company_id: openCompany.id, amount: v, note: extraNote.trim() };
+    if (editingExtra) {
+      const { data, error } = await supabase
+        .from("company_extra_deals").update(payload).eq("id", editingExtra.id).select().single();
+      setSavingExtra(false);
+      if (error) return toast.error(error.message);
+      setExtraDeals((prev) => prev.map((x) => x.id === editingExtra.id ? (data as ExtraDeal) : x));
+    } else {
+      const { data, error } = await supabase
+        .from("company_extra_deals").insert(payload).select().single();
+      setSavingExtra(false);
+      if (error) return toast.error(error.message);
+      setExtraDeals((prev) => [data as ExtraDeal, ...prev]);
+    }
+    setExtraOpen(false);
+    toast.success("Saved");
+  }
+  async function deleteExtra(x: ExtraDeal) {
+    if (!confirm("Delete this extra deal?")) return;
+    const { error } = await supabase.from("company_extra_deals").delete().eq("id", x.id);
+    if (error) return toast.error(error.message);
+    setExtraDeals((prev) => prev.filter((i) => i.id !== x.id));
     toast.success("Deleted");
   }
 
@@ -416,7 +492,9 @@ export default function AccountsPage() {
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No companies found.</TableCell></TableRow>
               ) : filtered.map((c, idx) => {
-                const deal = Number(c.total_deal || 0);
+                const baseDeal = Number(c.total_deal || 0);
+                const extra = extrasByCompany[c.id] ?? 0;
+                const deal = baseDeal + extra;
                 const disc = Number(c.discount || 0);
                 const net = deal - disc;
                 const received = receivedByCompany[c.id] ?? 0;
@@ -430,7 +508,12 @@ export default function AccountsPage() {
                       <Badge variant="secondary" className="capitalize mt-1 text-[10px]">{c.type}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{c.branches?.name ?? "—"}</TableCell>
-                    <TableCell className="text-right font-semibold text-primary tabular-nums">{fmt(deal)}</TableCell>
+                    <TableCell className="text-right font-semibold text-primary tabular-nums">
+                      {fmt(deal)}
+                      {extra > 0 && (
+                        <div className="text-[10px] font-normal text-muted-foreground">+ {fmt(extra)} extra</div>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right font-medium text-amber-600 dark:text-amber-400 tabular-nums">
                       {disc > 0 ? `− ${fmt(disc)}` : "—"}
                     </TableCell>
@@ -565,9 +648,65 @@ export default function AccountsPage() {
                   </div>
                 ) : (
                   <div className="mt-3 grid sm:grid-cols-3 gap-3 text-sm">
-                    <InfoRow label="Deal" value={fmt(oDeal)} />
+                    <InfoRow
+                      label="Deal"
+                      value={fmt(oDeal)}
+                      icon={oExtras > 0 ? <Plus className="h-3 w-3 text-primary" /> : undefined}
+                    />
                     <InfoRow label="Discount" value={fmt(oDisc)} icon={<ArrowDownRight className="h-3 w-3 text-amber-500" />} />
                     <InfoRow label="Net Payable" value={fmt(oNet)} bold />
+                  </div>
+                )}
+                {oExtras > 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    Base {fmt(oBaseDeal)} + Extra {fmt(oExtras)} = {fmt(oDeal)}
+                  </p>
+                )}
+              </div>
+
+              {/* Extra Deals */}
+              <div className="rounded-xl border p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold">Extra Deals</h3>
+                    <Badge variant="secondary" className="text-[10px]">{companyExtras.length}</Badge>
+                    {oExtras > 0 && (
+                      <span className="text-[11px] font-semibold text-primary tabular-nums">+ {fmt(oExtras)}</span>
+                    )}
+                  </div>
+                  {canWrite && (
+                    <Button size="sm" variant="outline" onClick={openAddExtra} className="gap-1">
+                      <Plus className="h-4 w-4" /> Add
+                    </Button>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground -mt-2 mb-3">
+                  Additional charges for extra work — automatically added to the total deal.
+                </p>
+                {companyExtras.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">No extra deals added</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-auto pr-1">
+                    {companyExtras.map((x) => (
+                      <div key={x.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <Plus className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-primary tabular-nums">+ {fmt(Number(x.amount))}</div>
+                            <div className="text-xs text-muted-foreground truncate">{x.note}</div>
+                          </div>
+                        </div>
+                        {canWrite && (
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" onClick={() => openEditExtra(x)}><Pencil className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => deleteExtra(x)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -656,6 +795,32 @@ export default function AccountsPage() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setInstOpen(false)}>Cancel</Button>
             <Button onClick={saveInst} disabled={savingInst}>{editingInst ? "Save" : "Add"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Extra Deal dialog */}
+      <Dialog open={extraOpen} onOpenChange={setExtraOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingExtra ? "Edit Extra Deal" : "Add Extra Deal"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="eNote">Note</Label>
+              <Input id="eNote" value={extraNote} onChange={(e) => setExtraNote(e.target.value)} placeholder="Describe the extra work" />
+            </div>
+            <div>
+              <Label htmlFor="eAmt">Amount (SR)</Label>
+              <Input id="eAmt" type="number" step="0.01" min="0" value={extraAmount} onChange={(e) => setExtraAmount(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This amount will be added on top of the total deal.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExtraOpen(false)}>Cancel</Button>
+            <Button onClick={saveExtra} disabled={savingExtra}>{editingExtra ? "Save" : "Add"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
