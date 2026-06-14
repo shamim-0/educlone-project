@@ -77,6 +77,7 @@ export default function AccountsPage() {
   const canWrite = role === "admin" || ((role === "editor" || role === "sub_admin") && accountsAccess);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [installments, setInstallments] = useState<Installment[]>([]);
+  const [extraDeals, setExtraDeals] = useState<ExtraDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -95,6 +96,12 @@ export default function AccountsPage() {
   const [instDate, setInstDate] = useState("");
   const [instNote, setInstNote] = useState("");
   const [savingInst, setSavingInst] = useState(false);
+
+  const [extraOpen, setExtraOpen] = useState(false);
+  const [editingExtra, setEditingExtra] = useState<ExtraDeal | null>(null);
+  const [extraAmount, setExtraAmount] = useState("");
+  const [extraNote, setExtraNote] = useState("");
+  const [savingExtra, setSavingExtra] = useState(false);
 
   const load = async () => {
     setLoading(true);
