@@ -177,12 +177,12 @@ export default function AccountsPage() {
       case "name_asc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case "name_desc": return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case "due_desc": return sorted.sort((a, b) => {
-        const ad = (Number(a.total_deal||0) - Number(a.discount||0)) - (receivedByCompany[a.id] ?? 0);
-        const bd = (Number(b.total_deal||0) - Number(b.discount||0)) - (receivedByCompany[b.id] ?? 0);
+        const ad = (dealOf(a) - Number(a.discount||0)) - (receivedByCompany[a.id] ?? 0);
+        const bd = (dealOf(b) - Number(b.discount||0)) - (receivedByCompany[b.id] ?? 0);
         return bd - ad;
       });
       case "received_desc": return sorted.sort((a, b) => (receivedByCompany[b.id] ?? 0) - (receivedByCompany[a.id] ?? 0));
-      case "deal_desc": return sorted.sort((a, b) => Number(b.total_deal||0) - Number(a.total_deal||0));
+      case "deal_desc": return sorted.sort((a, b) => dealOf(b) - dealOf(a));
       default:
         return sorted.sort((a, b) => {
           const ac = extractCode(a.name);
@@ -191,14 +191,21 @@ export default function AccountsPage() {
           return b.name.localeCompare(a.name);
         });
     }
-  }, [companies, search, branchFilter, sortBy, receivedByCompany]);
+  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany]);
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
     [installments, openCompany],
   );
 
-  const oDeal = Number(openCompany?.total_deal || 0);
+  const companyExtras = useMemo(
+    () => (openCompany ? extraDeals.filter((x) => x.company_id === openCompany.id) : []),
+    [extraDeals, openCompany],
+  );
+
+  const oBaseDeal = Number(openCompany?.total_deal || 0);
+  const oExtras = openCompany ? (extrasByCompany[openCompany.id] ?? 0) : 0;
+  const oDeal = oBaseDeal + oExtras;
   const oDisc = Number(openCompany?.discount || 0);
   const oNet = oDeal - oDisc;
   const oRecv = openCompany ? (receivedByCompany[openCompany.id] ?? 0) : 0;
