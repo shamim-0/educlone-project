@@ -135,13 +135,23 @@ export default function AccountsPage() {
     return map;
   }, [installments]);
 
+  const extrasByCompany = useMemo(() => {
+    const map: Record<string, number> = {};
+    extraDeals.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
+    return map;
+  }, [extraDeals]);
+
+  const dealOf = (c: Company) => Number(c.total_deal || 0) + (extrasByCompany[c.id] ?? 0);
+
   const totals = useMemo(() => {
-    const deal = companies.reduce((s, c) => s + Number(c.total_deal || 0), 0);
+    const baseDeal = companies.reduce((s, c) => s + Number(c.total_deal || 0), 0);
+    const extras = companies.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
+    const deal = baseDeal + extras;
     const discount = companies.reduce((s, c) => s + Number(c.discount || 0), 0);
     const received = Object.values(receivedByCompany).reduce((s, v) => s + v, 0);
     const net = deal - discount;
-    return { deal, discount, received, net, due: net - received };
-  }, [companies, receivedByCompany]);
+    return { deal, discount, received, net, due: net - received, extras };
+  }, [companies, receivedByCompany, extrasByCompany]);
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
