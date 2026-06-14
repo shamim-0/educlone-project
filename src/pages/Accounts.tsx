@@ -84,7 +84,8 @@ export default function AccountsPage() {
   const [sortBy, setSortBy] = useState<string>("default");
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
-  const [editingDeal, setEditingDeal] = useState(false);
+  const [editingSetup, setEditingSetup] = useState(false);
+  const [editingDiscount, setEditingDiscount] = useState(false);
   const [dealAmount, setDealAmount] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
   const [discountMode, setDiscountMode] = useState<"sr" | "pct">("sr");
