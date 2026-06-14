@@ -648,9 +648,65 @@ export default function AccountsPage() {
                   </div>
                 ) : (
                   <div className="mt-3 grid sm:grid-cols-3 gap-3 text-sm">
-                    <InfoRow label="Deal" value={fmt(oDeal)} />
+                    <InfoRow
+                      label="Deal"
+                      value={fmt(oDeal)}
+                      icon={oExtras > 0 ? <Plus className="h-3 w-3 text-primary" /> : undefined}
+                    />
                     <InfoRow label="Discount" value={fmt(oDisc)} icon={<ArrowDownRight className="h-3 w-3 text-amber-500" />} />
                     <InfoRow label="Net Payable" value={fmt(oNet)} bold />
+                  </div>
+                )}
+                {oExtras > 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    Base {fmt(oBaseDeal)} + Extra {fmt(oExtras)} = {fmt(oDeal)}
+                  </p>
+                )}
+              </div>
+
+              {/* Extra Deals */}
+              <div className="rounded-xl border p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold">Extra Deals</h3>
+                    <Badge variant="secondary" className="text-[10px]">{companyExtras.length}</Badge>
+                    {oExtras > 0 && (
+                      <span className="text-[11px] font-semibold text-primary tabular-nums">+ {fmt(oExtras)}</span>
+                    )}
+                  </div>
+                  {canWrite && (
+                    <Button size="sm" variant="outline" onClick={openAddExtra} className="gap-1">
+                      <Plus className="h-4 w-4" /> Add
+                    </Button>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground -mt-2 mb-3">
+                  Additional charges for extra work — automatically added to the total deal.
+                </p>
+                {companyExtras.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">No extra deals added</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-auto pr-1">
+                    {companyExtras.map((x) => (
+                      <div key={x.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <Plus className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-primary tabular-nums">+ {fmt(Number(x.amount))}</div>
+                            <div className="text-xs text-muted-foreground truncate">{x.note}</div>
+                          </div>
+                        </div>
+                        {canWrite && (
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" onClick={() => openEditExtra(x)}><Pencil className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => deleteExtra(x)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
