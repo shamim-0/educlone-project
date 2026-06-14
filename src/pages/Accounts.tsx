@@ -492,7 +492,9 @@ export default function AccountsPage() {
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No companies found.</TableCell></TableRow>
               ) : filtered.map((c, idx) => {
-                const deal = Number(c.total_deal || 0);
+                const baseDeal = Number(c.total_deal || 0);
+                const extra = extrasByCompany[c.id] ?? 0;
+                const deal = baseDeal + extra;
                 const disc = Number(c.discount || 0);
                 const net = deal - disc;
                 const received = receivedByCompany[c.id] ?? 0;
@@ -506,7 +508,12 @@ export default function AccountsPage() {
                       <Badge variant="secondary" className="capitalize mt-1 text-[10px]">{c.type}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{c.branches?.name ?? "—"}</TableCell>
-                    <TableCell className="text-right font-semibold text-primary tabular-nums">{fmt(deal)}</TableCell>
+                    <TableCell className="text-right font-semibold text-primary tabular-nums">
+                      {fmt(deal)}
+                      {extra > 0 && (
+                        <div className="text-[10px] font-normal text-muted-foreground">+ {fmt(extra)} extra</div>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right font-medium text-amber-600 dark:text-amber-400 tabular-nums">
                       {disc > 0 ? `− ${fmt(disc)}` : "—"}
                     </TableCell>
