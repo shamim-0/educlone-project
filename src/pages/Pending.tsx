@@ -6,7 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronDown, ChevronUp, Search, ListChecks, Clock, Building2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, ListChecks, Clock, Building2, Download, FileText, FileSpreadsheet } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
@@ -138,6 +142,46 @@ export default function PendingPage() {
 
   const totalPending = Object.values(pendingByService).reduce((a, b) => a + b.length, 0);
 
+  const exportRows = (def: typeof STEP_DEFS[number]) => {
+    const list = pendingByService[def.key] ?? [];
+    return list.map((co, i) => {
+      const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
+      return {
+        "#": i + 1,
+        "Company": co.name,
+        "Type": co.type,
+        "Branch": branchName(co.branch_id),
+        "Status": st === "processing" ? "Processing" : "Not Started",
+      };
+    });
+  };
+
+  const exportExcel = (def: typeof STEP_DEFS[number]) => {
+    const rows = exportRows(def);
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pending");
+    XLSX.writeFile(wb, `Pending - ${def.label}.xlsx`);
+  };
+
+  const exportPDF = (def: typeof STEP_DEFS[number]) => {
+    const rows = exportRows(def);
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`Pending: ${def.label}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Total: ${rows.length}`, 14, 22);
+    autoTable(doc, {
+      startY: 28,
+      head: [["#", "Company", "Type", "Branch", "Status"]],
+      body: rows.map(r => [r["#"], r.Company, r.Type, r.Branch, r.Status]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [99, 102, 241] },
+    });
+    doc.save(`Pending - ${def.label}.pdf`);
+  };
+
+
   return (
     <div className="space-y-6">
       {/* Hero */}
@@ -228,7 +272,7 @@ export default function PendingPage() {
               <Card
                 key={def.key}
                 className={cn(
-                  "overflow-hidden border bg-card transition-all",
+                  "overflow-hidden border bg-card transition-all relative",
                   isOpen && "ring-2 ring-primary/40"
                 )}
               >
@@ -274,6 +318,24 @@ export default function PendingPage() {
                     {isOpen ? "Hide" : "Click to view"} {count} pending company{count === 1 ? "" : "(ies)"}
                   </div>
                 </button>
+
+                <div className="absolute bottom-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" disabled={count === 0}>
+                        <Download className="h-3 w-3" /> Export
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => exportPDF(def)}>
+                        <FileText className="h-4 w-4 mr-2" /> Export PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportExcel(def)}>
+                        <FileSpreadsheet className="h-4 w-4 mr-2" /> Export Excel
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
                 {isOpen && (
                   <div className="border-t bg-muted/20 px-4 py-3 space-y-2 max-h-[420px] overflow-y-auto">
