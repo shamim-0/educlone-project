@@ -319,7 +319,7 @@ export default function PendingPage() {
                   </div>
                 </button>
 
-                <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute bottom-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" disabled={count === 0}>
