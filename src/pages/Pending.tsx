@@ -319,6 +319,24 @@ export default function PendingPage() {
                   </div>
                 </button>
 
+                <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" disabled={count === 0}>
+                        <Download className="h-3 w-3" /> Export
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => exportPDF(def)}>
+                        <FileText className="h-4 w-4 mr-2" /> Export PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportExcel(def)}>
+                        <FileSpreadsheet className="h-4 w-4 mr-2" /> Export Excel
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
                 {isOpen && (
                   <div className="border-t bg-muted/20 px-4 py-3 space-y-2 max-h-[420px] overflow-y-auto">
                     <div className="sticky top-0 z-10 -mx-4 -mt-3 mb-2 px-4 pt-3 pb-2 bg-muted/40 backdrop-blur border-b flex items-center justify-between gap-2">
