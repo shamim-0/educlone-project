@@ -272,7 +272,7 @@ export default function PendingPage() {
               <Card
                 key={def.key}
                 className={cn(
-                  "overflow-hidden border bg-card transition-all",
+                  "overflow-hidden border bg-card transition-all relative",
                   isOpen && "ring-2 ring-primary/40"
                 )}
               >
