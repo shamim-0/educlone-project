@@ -142,6 +142,46 @@ export default function PendingPage() {
 
   const totalPending = Object.values(pendingByService).reduce((a, b) => a + b.length, 0);
 
+  const exportRows = (def: typeof STEP_DEFS[number]) => {
+    const list = pendingByService[def.key] ?? [];
+    return list.map((co, i) => {
+      const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
+      return {
+        "#": i + 1,
+        "Company": co.name,
+        "Type": co.type,
+        "Branch": branchName(co.branch_id),
+        "Status": st === "processing" ? "Processing" : "Not Started",
+      };
+    });
+  };
+
+  const exportExcel = (def: typeof STEP_DEFS[number]) => {
+    const rows = exportRows(def);
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pending");
+    XLSX.writeFile(wb, `Pending - ${def.label}.xlsx`);
+  };
+
+  const exportPDF = (def: typeof STEP_DEFS[number]) => {
+    const rows = exportRows(def);
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`Pending: ${def.label}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Total: ${rows.length}`, 14, 22);
+    autoTable(doc, {
+      startY: 28,
+      head: [["#", "Company", "Type", "Branch", "Status"]],
+      body: rows.map(r => [r["#"], r.Company, r.Type, r.Branch, r.Status]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [99, 102, 241] },
+    });
+    doc.save(`Pending - ${def.label}.pdf`);
+  };
+
+
   return (
     <div className="space-y-6">
       {/* Hero */}
