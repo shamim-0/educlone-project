@@ -37,7 +37,7 @@ const App = () => (
               }
             >
               <Route path="/" element={<Index />} />
-              <Route path="/company" element={<ProtectedRoute requireRoles={["admin","sub_admin"]}><Company /></ProtectedRoute>} />
+              <Route path="/company" element={<Company />} />
               <Route path="/company/:id" element={<CompanyDetail />} />
               <Route path="/branch" element={<ProtectedRoute requireAdmin><Branch /></ProtectedRoute>} />
               <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
