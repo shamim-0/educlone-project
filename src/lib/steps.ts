@@ -21,13 +21,38 @@ export const STEP_DEFS: { key: string; label: string; tags: string[]; hasCreds?:
 export const STATUS_OPTS = [
   { value: "not_started", label: "Not Started" },
   { value: "processing", label: "Processing" },
+  { value: "applied", label: "Applied" },
   { value: "done", label: "Done" },
   { value: "no_need", label: "No Need" },
 ];
 
+// Service labels (case-insensitive) that support the "Applied" status
+const APPLIED_SUPPORTED_LABELS = [
+  "mother company formation (bangladesh)",
+  "saudi company structure planning",
+  "usa company formation (if applicable)",
+  "canada company formation (if applicable)",
+  "investment license (misa license)",
+  "commercial registration (cr)",
+  "chamber of commerce registration",
+  "efaa registration",
+  "trademark registration",
+];
+
+export function supportsApplied(label?: string) {
+  if (!label) return false;
+  return APPLIED_SUPPORTED_LABELS.includes(label.trim().toLowerCase());
+}
+
+export function getStatusOptsFor(label?: string) {
+  if (supportsApplied(label)) return STATUS_OPTS;
+  return STATUS_OPTS.filter(o => o.value !== "applied");
+}
+
 export function statusBadgeClass(s: string) {
   if (s === "done") return "bg-success/30 text-success border-success/60";
   if (s === "processing") return "bg-accent/25 text-accent border-accent/60";
+  if (s === "applied") return "bg-primary/20 text-primary border-primary/60";
   if (s === "no_need") return "bg-muted text-muted-foreground border-border line-through";
   return "bg-muted/80 text-muted-foreground border-border";
 }
