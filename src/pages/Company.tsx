@@ -241,9 +241,9 @@ export default function CompanyPage() {
           { key: "branch", header: "Branch", render: (r) => r.branches?.name ?? "—" },
           { key: "type", header: "Type", render: (r) => <Badge variant="secondary" className="capitalize">{r.type}</Badge> },
         ]}
-        onAdd={openAdd}
-        onEdit={openEdit}
-        onDelete={onDelete}
+        onAdd={role === "admin" || role === "sub_admin" ? openAdd : undefined}
+        onEdit={role === "admin" || role === "sub_admin" ? openEdit : undefined}
+        onDelete={role === "admin" ? onDelete : undefined}
       />
 
       <Dialog open={open} onOpenChange={setOpen}>

@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 const menu = [
   { to: "/", label: "Dashboard", icon: CheckSquare, end: true },
-  { to: "/company", label: "Company", icon: Building2, roles: ["admin", "sub_admin"] as string[] },
+  { to: "/company", label: "Company", icon: Building2 },
   { to: "/branch", label: "Branch", icon: GitBranch, adminOnly: true },
   { to: "/accounts", label: "Accounts", icon: Wallet, requiresAccounts: true },
   { to: "/pending", label: "Pending", icon: ClipboardList },
