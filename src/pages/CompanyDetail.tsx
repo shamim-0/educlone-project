@@ -163,13 +163,14 @@ export default function CompanyDetail() {
     const applicable = applicableDefs.filter(d => steps[d.key]?.status !== "no_need");
     const total = applicable.length;
     const done = applicable.filter(d => steps[d.key]?.status === "done").length;
-    const days = company
-      ? Math.floor((Date.now() - new Date(company.created_at).getTime()) / 86400000)
-      : 0;
     const target = 45;
-    const overdue = days > target;
-    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days };
-  }, [steps, company, applicableDefs]);
+    const allPapers = steps["all_papers_recieved"] as any;
+    const startAt = allPapers && allPapers.status === "done" && allPapers.updated_at ? new Date(allPapers.updated_at) : null;
+    const started = !!startAt;
+    const days = started ? Math.floor((Date.now() - startAt!.getTime()) / 86400000) : 0;
+    const overdue = started && days > target;
+    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days, started };
+  }, [steps, applicableDefs]);
 
   const currentlyWorking = applicableDefs.filter(d => steps[d.key]?.status === "processing");
 
