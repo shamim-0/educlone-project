@@ -189,12 +189,12 @@ export default function Index() {
       const fetchAllSteps = async () => {
         const pageSize = 1000;
         let from = 0;
-        const all: { company_id: string; step_key: string; status: string }[] = [];
+        const all: { company_id: string; step_key: string; status: string; updated_at: string }[] = [];
         // eslint-disable-next-line no-constant-condition
         while (true) {
           const { data, error } = await supabase
             .from("company_steps")
-            .select("company_id, step_key, status")
+            .select("company_id, step_key, status, updated_at")
             .range(from, from + pageSize - 1);
           if (error || !data) break;
           all.push(...(data as any));
@@ -208,7 +208,11 @@ export default function Index() {
       const companyMap = new Map((cRes.data ?? []).map((c: any) => [c.id, c]));
       const counts: Record<string, { done: number; processing: number; seen: Set<string> }> = {};
       const statuses: Record<string, Record<string, string>> = {};
+      const papersAt: Record<string, string | null> = {};
       sRows.forEach((r) => {
+        if (r.step_key === "all_papers_recieved" && r.status === "done") {
+          papersAt[r.company_id] = r.updated_at;
+        }
         const co = companyMap.get(r.company_id);
         const applicable = getApplicableServiceDefs(co?.type ?? "", serviceDefs);
         const applicableKeys = new Set(applicable.map((d) => d.key));
@@ -226,6 +230,7 @@ export default function Index() {
       Object.entries(counts).forEach(([k, v]) => { stripped[k] = { done: v.done, processing: v.processing }; });
       setStepCounts(stripped);
       setStepStatuses(statuses);
+      setAllPapersAt(papersAt);
       setLoading(false);
     };
 
