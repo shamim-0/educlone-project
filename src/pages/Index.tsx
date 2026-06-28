@@ -454,6 +454,7 @@ export default function Index() {
                 totalSteps={applicableTotal}
                 applicableDefs={applicable}
                 stepStatuses={stepStatuses[c.id] ?? {}}
+                startAt={allPapersAt[c.id] ?? null}
               />
             );
           })}
