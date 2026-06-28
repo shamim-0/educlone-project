@@ -568,7 +568,7 @@ export default function CompanyDetail() {
             />
           </div>
           <div className="mt-2 text-xs text-muted-foreground">
-            {progress.done}/{progress.total} steps · {progress.days} days since creation
+            {progress.done}/{progress.total} steps · {progress.started ? `${progress.days} days since All Papers Recieved` : "কাউন্টডাউন শুরু হয়নি"}
           </div>
         </div>
 
