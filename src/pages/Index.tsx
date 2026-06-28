@@ -25,14 +25,15 @@ interface Company {
 
 const TARGET_DAYS = 45;
 
-function deriveProgress(createdAt: string, done: number, processing: number, total: number) {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+function deriveProgress(startAt: string | null, done: number, processing: number, total: number) {
+  const started = !!startAt;
+  const days = started ? Math.max(0, Math.floor((Date.now() - new Date(startAt!).getTime()) / 86400000)) : 0;
   const remaining = TARGET_DAYS - days;
   const safeTotal = Math.max(1, total);
   const cappedDone = Math.min(done, safeTotal);
   const percent = Math.round((cappedDone / safeTotal) * 100);
-  const overdue = remaining < 0;
-  return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal };
+  const overdue = started && remaining < 0;
+  return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal, started };
 }
 
 function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string> }) {
