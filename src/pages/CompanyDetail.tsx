@@ -412,22 +412,28 @@ export default function CompanyDetail() {
           )}
         </div>
 
-        {/* Day status banner — always visible */}
+        {/* Day status banner — starts counting when "All Papers Recieved" is marked done */}
         <div className={cn(
           "mt-4 p-3 rounded-md border text-sm flex items-center gap-2",
-          progress.overdue
+          !progress.started
+            ? "bg-muted/40 border-border text-muted-foreground"
+            : progress.overdue
             ? "bg-destructive/10 border-destructive/30 text-destructive"
             : "bg-accent/10 border-accent/30 text-foreground"
         )}>
-          <span className={cn("h-2.5 w-2.5 rounded-full", progress.overdue ? "bg-destructive" : "bg-accent")} />
-          {progress.overdue ? (
+          <span className={cn("h-2.5 w-2.5 rounded-full", !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
+          {!progress.started ? (
+            <span>
+              <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — "All Papers Recieved" status Done হলে 45 দিনের কাউন্ট শুরু হবে
+            </span>
+          ) : progress.overdue ? (
             <span>
               <span className="font-semibold">{progress.days} দিন হয়ে গেছে</span> — {Math.abs(progress.remaining)} দিন অতিরিক্ত
             </span>
           ) : (
             <span>
               <span className="font-semibold">{progress.days} দিন</span> — {progress.remaining} দিন বাকি আছে
-              <span className="ml-2 text-xs text-muted-foreground">Day {progress.days} since creation</span>
+              <span className="ml-2 text-xs text-muted-foreground">Day {progress.days} since All Papers Recieved</span>
             </span>
           )}
         </div>
