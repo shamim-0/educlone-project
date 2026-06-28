@@ -133,10 +133,14 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         <span
           className={cn(
             "h-2 w-2 rounded-full",
-            p.overdue ? "bg-destructive" : "bg-accent"
+            !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
           )}
         />
-        {p.overdue ? (
+        {!p.started ? (
+          <span className="text-muted-foreground">
+            <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
+          </span>
+        ) : p.overdue ? (
           <span className="text-foreground">
             <span className="font-semibold text-destructive">{p.days} দিন হয়ে গেছে</span>
             {" "}— <span className="text-destructive">{Math.abs(p.remaining)} দিন অতিরিক্ত</span>
@@ -150,7 +154,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
       </div>
 
       {p.overdue && (
-        <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন</p>
+        <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন All Papers Recieved এর পর</p>
       )}
     </Card>
     </Link>
