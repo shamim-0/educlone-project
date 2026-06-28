@@ -163,13 +163,14 @@ export default function CompanyDetail() {
     const applicable = applicableDefs.filter(d => steps[d.key]?.status !== "no_need");
     const total = applicable.length;
     const done = applicable.filter(d => steps[d.key]?.status === "done").length;
-    const days = company
-      ? Math.floor((Date.now() - new Date(company.created_at).getTime()) / 86400000)
-      : 0;
     const target = 45;
-    const overdue = days > target;
-    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days };
-  }, [steps, company, applicableDefs]);
+    const allPapers = steps["all_papers_recieved"] as any;
+    const startAt = allPapers && allPapers.status === "done" && allPapers.updated_at ? new Date(allPapers.updated_at) : null;
+    const started = !!startAt;
+    const days = started ? Math.floor((Date.now() - startAt!.getTime()) / 86400000) : 0;
+    const overdue = started && days > target;
+    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days, started };
+  }, [steps, applicableDefs]);
 
   const currentlyWorking = applicableDefs.filter(d => steps[d.key]?.status === "processing");
 
@@ -411,22 +412,28 @@ export default function CompanyDetail() {
           )}
         </div>
 
-        {/* Day status banner — always visible */}
+        {/* Day status banner — starts counting when "All Papers Recieved" is marked done */}
         <div className={cn(
           "mt-4 p-3 rounded-md border text-sm flex items-center gap-2",
-          progress.overdue
+          !progress.started
+            ? "bg-muted/40 border-border text-muted-foreground"
+            : progress.overdue
             ? "bg-destructive/10 border-destructive/30 text-destructive"
             : "bg-accent/10 border-accent/30 text-foreground"
         )}>
-          <span className={cn("h-2.5 w-2.5 rounded-full", progress.overdue ? "bg-destructive" : "bg-accent")} />
-          {progress.overdue ? (
+          <span className={cn("h-2.5 w-2.5 rounded-full", !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
+          {!progress.started ? (
+            <span>
+              <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — "All Papers Recieved" status Done হলে 45 দিনের কাউন্ট শুরু হবে
+            </span>
+          ) : progress.overdue ? (
             <span>
               <span className="font-semibold">{progress.days} দিন হয়ে গেছে</span> — {Math.abs(progress.remaining)} দিন অতিরিক্ত
             </span>
           ) : (
             <span>
               <span className="font-semibold">{progress.days} দিন</span> — {progress.remaining} দিন বাকি আছে
-              <span className="ml-2 text-xs text-muted-foreground">Day {progress.days} since creation</span>
+              <span className="ml-2 text-xs text-muted-foreground">Day {progress.days} since All Papers Recieved</span>
             </span>
           )}
         </div>
@@ -561,7 +568,7 @@ export default function CompanyDetail() {
             />
           </div>
           <div className="mt-2 text-xs text-muted-foreground">
-            {progress.done}/{progress.total} steps · {progress.days} days since creation
+            {progress.done}/{progress.total} steps · {progress.started ? `${progress.days} days since All Papers Recieved` : "কাউন্টডাউন শুরু হয়নি"}
           </div>
         </div>
 

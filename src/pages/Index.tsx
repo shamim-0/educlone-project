@@ -25,18 +25,19 @@ interface Company {
 
 const TARGET_DAYS = 45;
 
-function deriveProgress(createdAt: string, done: number, processing: number, total: number) {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+function deriveProgress(startAt: string | null, done: number, processing: number, total: number) {
+  const started = !!startAt;
+  const days = started ? Math.max(0, Math.floor((Date.now() - new Date(startAt!).getTime()) / 86400000)) : 0;
   const remaining = TARGET_DAYS - days;
   const safeTotal = Math.max(1, total);
   const cappedDone = Math.min(done, safeTotal);
   const percent = Math.round((cappedDone / safeTotal) * 100);
-  const overdue = remaining < 0;
-  return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal };
+  const overdue = started && remaining < 0;
+  return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal, started };
 }
 
-function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string> }) {
-  const p = deriveProgress(c.created_at, done, processing, totalSteps);
+function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses, startAt }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string>; startAt: string | null }) {
+  const p = deriveProgress(startAt, done, processing, totalSteps);
 
   const branchName = c.branches?.name ?? "—";
   const isEmergency = !!c.emergency;
@@ -132,10 +133,14 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         <span
           className={cn(
             "h-2 w-2 rounded-full",
-            p.overdue ? "bg-destructive" : "bg-accent"
+            !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
           )}
         />
-        {p.overdue ? (
+        {!p.started ? (
+          <span className="text-muted-foreground">
+            <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
+          </span>
+        ) : p.overdue ? (
           <span className="text-foreground">
             <span className="font-semibold text-destructive">{p.days} দিন হয়ে গেছে</span>
             {" "}— <span className="text-destructive">{Math.abs(p.remaining)} দিন অতিরিক্ত</span>
@@ -149,7 +154,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
       </div>
 
       {p.overdue && (
-        <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন</p>
+        <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন All Papers Recieved এর পর</p>
       )}
     </Card>
     </Link>
@@ -162,6 +167,7 @@ export default function Index() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
   const [stepStatuses, setStepStatuses] = useState<Record<string, Record<string, string>>>({});
+  const [allPapersAt, setAllPapersAt] = useState<Record<string, string | null>>({});
 
   const [loading, setLoading] = useState(true);
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -183,12 +189,12 @@ export default function Index() {
       const fetchAllSteps = async () => {
         const pageSize = 1000;
         let from = 0;
-        const all: { company_id: string; step_key: string; status: string }[] = [];
+        const all: { company_id: string; step_key: string; status: string; updated_at: string }[] = [];
         // eslint-disable-next-line no-constant-condition
         while (true) {
           const { data, error } = await supabase
             .from("company_steps")
-            .select("company_id, step_key, status")
+            .select("company_id, step_key, status, updated_at")
             .range(from, from + pageSize - 1);
           if (error || !data) break;
           all.push(...(data as any));
@@ -202,7 +208,11 @@ export default function Index() {
       const companyMap = new Map((cRes.data ?? []).map((c: any) => [c.id, c]));
       const counts: Record<string, { done: number; processing: number; seen: Set<string> }> = {};
       const statuses: Record<string, Record<string, string>> = {};
+      const papersAt: Record<string, string | null> = {};
       sRows.forEach((r) => {
+        if (r.step_key === "all_papers_recieved" && r.status === "done") {
+          papersAt[r.company_id] = r.updated_at;
+        }
         const co = companyMap.get(r.company_id);
         const applicable = getApplicableServiceDefs(co?.type ?? "", serviceDefs);
         const applicableKeys = new Set(applicable.map((d) => d.key));
@@ -220,6 +230,7 @@ export default function Index() {
       Object.entries(counts).forEach(([k, v]) => { stripped[k] = { done: v.done, processing: v.processing }; });
       setStepCounts(stripped);
       setStepStatuses(statuses);
+      setAllPapersAt(papersAt);
       setLoading(false);
     };
 
@@ -443,6 +454,7 @@ export default function Index() {
                 totalSteps={applicableTotal}
                 applicableDefs={applicable}
                 stepStatuses={stepStatuses[c.id] ?? {}}
+                startAt={allPapersAt[c.id] ?? null}
               />
             );
           })}
