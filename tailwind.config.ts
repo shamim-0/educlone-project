@@ -88,6 +88,10 @@ export default {
           "0%, 100%": { boxShadow: "0 0 0 0 rgba(249,115,22,0.7), 0 0 0 0 rgba(249,115,22,0.4)", borderColor: "rgb(249,115,22)" },
           "50%": { boxShadow: "0 0 0 6px rgba(249,115,22,0), 0 0 18px 2px rgba(249,115,22,0.6)", borderColor: "rgb(249,115,22)" },
         },
+        "shimmer": {
+          "0%": { transform: "translateX(-100%) skewX(12deg)" },
+          "100%": { transform: "translateX(400%) skewX(12deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -96,6 +100,7 @@ export default {
         "float": "float 6s ease-in-out infinite",
         "border-pulse-red": "border-pulse-red 1.6s ease-in-out infinite",
         "border-pulse-orange": "border-pulse-orange 1.6s ease-in-out infinite",
+        "shimmer": "shimmer 3.5s ease-in-out infinite",
       },
     },
   },
