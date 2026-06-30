@@ -693,7 +693,7 @@ export default function CompanyDetail() {
                       tone === "danger" && "animate-pulse",
                     )}>
                       {/* shimmer sweep */}
-                      <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-[shimmer_3.5s_ease-in-out_infinite]" />
+                      <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-shimmer" />
                       <div className="relative flex items-center justify-between gap-3 px-4 py-2.5">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={cn("relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/70", toneText)}>
