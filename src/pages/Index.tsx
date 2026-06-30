@@ -93,6 +93,8 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
               ? "bg-success text-success-foreground border-success"
               : st === "processing"
               ? "bg-primary text-primary-foreground border-primary"
+              : st === "applied"
+              ? "bg-blue-700 text-white border-blue-700"
               : st === "no_need"
               ? "bg-white text-black border-border"
               : "bg-destructive text-destructive-foreground border-destructive";
