@@ -593,8 +593,50 @@ export default function CompanyDetail() {
           {applicableDefs.map(def => {
             const s = steps[def.key] ?? { step_key: def.key, status: "not_started", note: "", username: "", password: "", subtasks_done: [] };
             const subDone = s.subtasks_done ?? [];
+            // 10 working-day (Fri/Sat off) countdown for Mother Company Formation (BD)
+            let mcfBanner: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
+            if (def.key === "mother_company_formation_bd") {
+              const ap = steps["all_papers_recieved"] as any;
+              if (ap?.status === "done" && ap?.updated_at) {
+                const start = new Date(ap.updated_at);
+                // count working days elapsed (skipping Fri=5, Sat=6)
+                const now = new Date();
+                let workingElapsed = 0;
+                const cursor = new Date(start);
+                cursor.setHours(0, 0, 0, 0);
+                const today = new Date(now);
+                today.setHours(0, 0, 0, 0);
+                while (cursor < today) {
+                  cursor.setDate(cursor.getDate() + 1);
+                  const d = cursor.getDay();
+                  if (d !== 5 && d !== 6) workingElapsed++;
+                }
+                const target = 10;
+                const remaining = target - workingElapsed;
+                if (s.status === "done") {
+                  mcfBanner = { tone: "success", text: `✓ Completed (took ~${workingElapsed} working day${workingElapsed === 1 ? "" : "s"})` };
+                } else if (remaining > 0) {
+                  mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `⏳ ${remaining} working day${remaining === 1 ? "" : "s"} left (Fri/Sat off) — Day ${workingElapsed}/10` };
+                } else {
+                  mcfBanner = { tone: "danger", text: `🚨 Overdue by ${Math.abs(remaining)} working day${Math.abs(remaining) === 1 ? "" : "s"} — should have been done within 10 working days` };
+                }
+              } else {
+                mcfBanner = { tone: "info", text: `ℹ "All Required Papers Received" done হলে 10 working days এর কাউন্টডাউন শুরু হবে (Fri/Sat off)` };
+              }
+            }
             return (
               <Card key={def.key} className="p-4 space-y-3">
+                {mcfBanner && (
+                  <div className={cn(
+                    "rounded-md border px-3 py-2 text-xs font-medium",
+                    mcfBanner.tone === "success" && "bg-success/15 text-success border-success/40",
+                    mcfBanner.tone === "info" && "bg-accent/10 text-accent border-accent/30",
+                    mcfBanner.tone === "warn" && "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/40",
+                    mcfBanner.tone === "danger" && "bg-destructive/15 text-destructive border-destructive/40 animate-pulse",
+                  )}>
+                    {mcfBanner.text}
+                  </div>
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-medium">
