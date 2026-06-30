@@ -144,16 +144,6 @@ export default function AccountsPage() {
 
   const dealOf = (c: Company) => Number(c.total_deal || 0) + (extrasByCompany[c.id] ?? 0);
 
-  const totals = useMemo(() => {
-    const baseDeal = filtered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
-    const extras = filtered.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
-    const deal = baseDeal + extras;
-    const discount = filtered.reduce((s, c) => s + Number(c.discount || 0), 0);
-    const received = filtered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
-    const net = deal - discount;
-    return { deal, discount, received, net, due: net - received, extras };
-  }, [filtered, receivedByCompany, extrasByCompany]);
-
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
     companies.forEach((c) => {
@@ -193,6 +183,16 @@ export default function AccountsPage() {
         });
     }
   }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany]);
+
+  const totals = useMemo(() => {
+    const baseDeal = filtered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
+    const extras = filtered.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
+    const deal = baseDeal + extras;
+    const discount = filtered.reduce((s, c) => s + Number(c.discount || 0), 0);
+    const received = filtered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
+    const net = deal - discount;
+    return { deal, discount, received, net, due: net - received, extras };
+  }, [filtered, receivedByCompany, extrasByCompany]);
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
