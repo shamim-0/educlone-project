@@ -15,7 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Zap, Save, Plus, Trash2, Upload, FileText, Download, Folder, FileDown, AlertTriangle, Pencil, Package as PackageIcon } from "lucide-react";
+import { ArrowLeft, Zap, Save, Plus, Trash2, Upload, FileText, Download, Folder, FileDown, AlertTriangle, Pencil, Package as PackageIcon, CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -595,6 +597,7 @@ export default function CompanyDetail() {
             const subDone = s.subtasks_done ?? [];
             // 10 working-day (Fri/Sat off) countdown for Mother Company Formation (BD)
             let mcfBanner: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
+            let mcfDates: null | { start: Date; target: Date; remaining: number; passed: number } = null;
             if (def.key === "mother_company_formation_bd") {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && ap?.updated_at) {
@@ -627,6 +630,16 @@ export default function CompanyDetail() {
                     if (d !== 5 && d !== 6) remaining--;
                   }
                 }
+                // working days passed since start
+                let passed = 0;
+                const cap = today < targetDate ? today : targetDate;
+                const cur2 = new Date(start);
+                while (cur2 < cap) {
+                  cur2.setDate(cur2.getDate() + 1);
+                  const d = cur2.getDay();
+                  if (d !== 5 && d !== 6) passed++;
+                }
+                mcfDates = { start, target: targetDate, remaining, passed };
                 const dd = String(targetDate.getDate()).padStart(2, "0");
                 const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
                 const yyyy = targetDate.getFullYear();
@@ -646,13 +659,71 @@ export default function CompanyDetail() {
               <Card key={def.key} className="p-4 space-y-3">
                 {mcfBanner && (
                   <div className={cn(
-                    "rounded-md border px-3 py-2 text-xs font-medium",
+                    "rounded-md border px-3 py-2 text-xs font-medium flex items-center justify-between gap-2",
                     mcfBanner.tone === "success" && "bg-success/15 text-success border-success/40",
                     mcfBanner.tone === "info" && "bg-accent/10 text-accent border-accent/30",
                     mcfBanner.tone === "warn" && "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/40",
                     mcfBanner.tone === "danger" && "bg-destructive/15 text-destructive border-destructive/40 animate-pulse",
                   )}>
-                    {mcfBanner.text}
+                    <span className="min-w-0">{mcfBanner.text}</span>
+                    {mcfDates && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md border border-current/30 bg-background/40 hover:bg-background/70 transition-colors"
+                            title="ক্যালেন্ডার দেখুন"
+                          >
+                            <CalendarIcon className="h-3.5 w-3.5" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                          <div className="p-3 border-b text-xs space-y-1">
+                            <div className="flex justify-between gap-4">
+                              <span className="text-muted-foreground">শুরু:</span>
+                              <span className="font-medium">{mcfDates.start.toLocaleDateString("en-GB")}</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-muted-foreground">শেষ তারিখ:</span>
+                              <span className="font-medium">{mcfDates.target.toLocaleDateString("en-GB")}</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-muted-foreground">পার হয়েছে:</span>
+                              <span className="font-medium text-primary">{mcfDates.passed} working day</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-muted-foreground">বাকি আছে:</span>
+                              <span className={cn("font-medium", mcfDates.remaining < 0 ? "text-destructive" : "text-success")}>
+                                {mcfDates.remaining < 0 ? `${Math.abs(mcfDates.remaining)} দিন overdue` : `${mcfDates.remaining} working day`}
+                              </span>
+                            </div>
+                            <div className="pt-2 flex flex-wrap gap-2 text-[10px]">
+                              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> শুরু</span>
+                              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-destructive" /> শেষ তারিখ</span>
+                              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500/60" /> ছুটি (শুক্র/শনি)</span>
+                            </div>
+                          </div>
+                          <Calendar
+                            mode="single"
+                            defaultMonth={mcfDates.target}
+                            selected={mcfDates.target}
+                            modifiers={{
+                              startDay: mcfDates.start,
+                              targetDay: mcfDates.target,
+                              weekendOff: (d: Date) => d.getDay() === 5 || d.getDay() === 6,
+                              inRange: (d: Date) => d > mcfDates!.start && d < mcfDates!.target,
+                            }}
+                            modifiersClassNames={{
+                              startDay: "bg-primary text-primary-foreground rounded-md",
+                              targetDay: "bg-destructive text-destructive-foreground rounded-md",
+                              weekendOff: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
+                              inRange: "bg-accent/30",
+                            }}
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
                   </div>
                 )}
                 <div className="flex items-start justify-between gap-3">
