@@ -52,7 +52,7 @@ export function getStatusOptsFor(label?: string) {
 export function statusBadgeClass(s: string) {
   if (s === "done") return "bg-success/30 text-success border-success/60";
   if (s === "processing") return "bg-accent/25 text-accent border-accent/60";
-  if (s === "applied") return "bg-primary/20 text-primary border-primary/60";
+  if (s === "applied") return "bg-blue-700 text-white border-blue-700 hover:bg-blue-800";
   if (s === "no_need") return "bg-muted text-muted-foreground border-border line-through";
   return "bg-muted/80 text-muted-foreground border-border";
 }
