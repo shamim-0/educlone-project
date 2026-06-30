@@ -145,14 +145,14 @@ export default function AccountsPage() {
   const dealOf = (c: Company) => Number(c.total_deal || 0) + (extrasByCompany[c.id] ?? 0);
 
   const totals = useMemo(() => {
-    const baseDeal = companies.reduce((s, c) => s + Number(c.total_deal || 0), 0);
-    const extras = companies.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
+    const baseDeal = filtered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
+    const extras = filtered.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
     const deal = baseDeal + extras;
-    const discount = companies.reduce((s, c) => s + Number(c.discount || 0), 0);
-    const received = Object.values(receivedByCompany).reduce((s, v) => s + v, 0);
+    const discount = filtered.reduce((s, c) => s + Number(c.discount || 0), 0);
+    const received = filtered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
     const net = deal - discount;
     return { deal, discount, received, net, due: net - received, extras };
-  }, [companies, receivedByCompany, extrasByCompany]);
+  }, [filtered, receivedByCompany, extrasByCompany]);
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
