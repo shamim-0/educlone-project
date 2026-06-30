@@ -599,29 +599,47 @@ export default function CompanyDetail() {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && ap?.updated_at) {
                 const start = new Date(ap.updated_at);
-                // count working days elapsed (skipping Fri=5, Sat=6)
-                const now = new Date();
-                let workingElapsed = 0;
-                const cursor = new Date(start);
-                cursor.setHours(0, 0, 0, 0);
-                const today = new Date(now);
+                start.setHours(0, 0, 0, 0);
+                // target date = start + 10 working days (skipping Fri=5, Sat=6)
+                const targetDate = new Date(start);
+                let added = 0;
+                while (added < 10) {
+                  targetDate.setDate(targetDate.getDate() + 1);
+                  const d = targetDate.getDay();
+                  if (d !== 5 && d !== 6) added++;
+                }
+                const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                while (cursor < today) {
-                  cursor.setDate(cursor.getDate() + 1);
-                  const d = cursor.getDay();
-                  if (d !== 5 && d !== 6) workingElapsed++;
-                }
-                const target = 10;
-                const remaining = target - workingElapsed;
-                if (s.status === "done") {
-                  mcfBanner = { tone: "success", text: `✓ Completed (took ~${workingElapsed} working day${workingElapsed === 1 ? "" : "s"})` };
-                } else if (remaining > 0) {
-                  mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `⏳ ${remaining} working day${remaining === 1 ? "" : "s"} left (Fri/Sat off) — Day ${workingElapsed}/10` };
+                // working days remaining between today and targetDate
+                let remaining = 0;
+                if (today <= targetDate) {
+                  const cur = new Date(today);
+                  while (cur < targetDate) {
+                    cur.setDate(cur.getDate() + 1);
+                    const d = cur.getDay();
+                    if (d !== 5 && d !== 6) remaining++;
+                  }
                 } else {
-                  mcfBanner = { tone: "danger", text: `🚨 Overdue by ${Math.abs(remaining)} working day${Math.abs(remaining) === 1 ? "" : "s"} — should have been done within 10 working days` };
+                  const cur = new Date(targetDate);
+                  while (cur < today) {
+                    cur.setDate(cur.getDate() + 1);
+                    const d = cur.getDay();
+                    if (d !== 5 && d !== 6) remaining--;
+                  }
                 }
-              } else {
-                mcfBanner = { tone: "info", text: `ℹ "All Required Papers Received" done হলে 10 working days এর কাউন্টডাউন শুরু হবে (Fri/Sat off)` };
+                const dd = String(targetDate.getDate()).padStart(2, "0");
+                const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
+                const yyyy = targetDate.getFullYear();
+                const targetStr = `${dd}/${mm}/${yyyy}`;
+                if (s.status === "done") {
+                  mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
+                } else if (remaining > 0) {
+                  mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `${targetStr} তারিখের মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
+                } else if (remaining === 0) {
+                  mcfBanner = { tone: "warn", text: `${targetStr} তারিখের মধ্যে শেষ করতে হবে — আজই শেষ দিন` };
+                } else {
+                  mcfBanner = { tone: "danger", text: `${targetStr} তারিখের মধ্যে শেষ করার কথা ছিল — ${Math.abs(remaining)} দিন পার হয়ে গেছে` };
+                }
               }
             }
             return (
