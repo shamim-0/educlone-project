@@ -104,10 +104,10 @@ export default function PendingPage() {
         for (let i = 0; i < defIndex; i++) {
           const prevKey = applicable[i].key;
           const prev = cMap?.get(prevKey) ?? "not_started";
-          if (prev !== "done" && prev !== "no_need") return false;
+          if (prev !== "done" && prev !== "no_need" && prev !== "applied") return false;
         }
         const st = cMap?.get(def.key) ?? "not_started";
-        return st !== "done" && st !== "no_need";
+        return st !== "done" && st !== "no_need" && st !== "applied";
       });
     });
     return out;
