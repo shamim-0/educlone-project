@@ -714,7 +714,7 @@ export default function CompanyDetail() {
                               <span className="font-semibold tabular-nums tracking-tight">{dateStr}</span>
                               <span className="opacity-70"> তারিখের মধ্যে শেষ করতে হবে</span>
                               <span className="mx-2 text-border">•</span>
-                              <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-background/80 border border-border", toneText)}>
+                              <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-background border border-border shadow-sm", toneText)}>
                                 {mcfDates && mcfDates.remaining < 0
                                   ? `${Math.abs(mcfDates.remaining)} দিন overdue`
                                   : mcfDates && mcfDates.remaining === 0
