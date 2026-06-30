@@ -667,11 +667,11 @@ export default function CompanyDetail() {
                         ? Math.min(100, Math.round((mcfDates.passed / totalWd) * 100))
                         : 0
                     : 0;
-                  const toneRing = {
-                    success: "ring-success/20 from-success/10",
-                    info: "ring-accent/20 from-accent/10",
-                    warn: "ring-yellow-500/30 from-yellow-500/10",
-                    danger: "ring-destructive/30 from-destructive/15",
+                  const toneBg = {
+                    success: "bg-success/15 border-success/50",
+                    info: "bg-accent/15 border-accent/50",
+                    warn: "bg-yellow-500/15 border-yellow-500/50",
+                    danger: "bg-destructive/15 border-destructive/50",
                   }[tone];
                   const toneText = {
                     success: "text-success",
@@ -682,18 +682,18 @@ export default function CompanyDetail() {
                   const toneBar = {
                     success: "from-success to-success",
                     info: "from-accent to-primary",
-                    warn: "from-yellow-400 to-orange-500",
-                    danger: "from-destructive to-red-700",
+                    warn: "from-yellow-500 to-orange-600",
+                    danger: "from-destructive to-red-800",
                   }[tone];
                   const dateStr = mcfDates ? `${String(mcfDates.target.getDate()).padStart(2,"0")}/${String(mcfDates.target.getMonth()+1).padStart(2,"0")}/${mcfDates.target.getFullYear()}` : "";
                   return (
                     <div className={cn(
-                      "group relative overflow-hidden rounded-xl bg-card/60 backdrop-blur-md border border-border ring-1 shadow-sm bg-gradient-to-r to-transparent",
-                      toneRing,
+                      "group relative overflow-hidden rounded-xl border shadow-sm bg-gradient-to-r to-transparent",
+                      toneBg,
                       tone === "danger" && "animate-pulse",
                     )}>
                       {/* shimmer sweep */}
-                      <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-shimmer" />
+                      <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 animate-shimmer" />
                       <div className="relative flex items-center justify-between gap-3 px-4 py-2.5">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={cn("relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/70", toneText)}>
@@ -714,7 +714,7 @@ export default function CompanyDetail() {
                               <span className="font-semibold tabular-nums tracking-tight">{dateStr}</span>
                               <span className="opacity-70"> তারিখের মধ্যে শেষ করতে হবে</span>
                               <span className="mx-2 text-border">•</span>
-                              <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-background/80 border border-border", toneText)}>
+                              <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-background border border-border shadow-sm", toneText)}>
                                 {mcfDates && mcfDates.remaining < 0
                                   ? `${Math.abs(mcfDates.remaining)} দিন overdue`
                                   : mcfDates && mcfDates.remaining === 0
