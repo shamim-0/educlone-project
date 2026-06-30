@@ -710,7 +710,7 @@ export default function CompanyDetail() {
                             modifiers={{
                               startDay: mcfDates.start,
                               targetDay: mcfDates.target,
-                              weekendOff: (d: Date) => d.getDay() === 5 || d.getDay() === 6,
+                              weekendOff: (d: Date) => (d.getDay() === 5 || d.getDay() === 6) && d >= mcfDates!.start && d <= mcfDates!.target,
                               inRange: (d: Date) => d > mcfDates!.start && d < mcfDates!.target,
                             }}
                             modifiersClassNames={{
