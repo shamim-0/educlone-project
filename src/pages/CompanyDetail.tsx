@@ -657,75 +657,137 @@ export default function CompanyDetail() {
             }
             return (
               <Card key={def.key} className="p-4 space-y-3">
-                {mcfBanner && (
-                  <div className={cn(
-                    "rounded-md border px-3 py-2 text-xs font-medium flex items-center justify-between gap-2",
-                    mcfBanner.tone === "success" && "bg-success/15 text-success border-success/40",
-                    mcfBanner.tone === "info" && "bg-accent/10 text-accent border-accent/30",
-                    mcfBanner.tone === "warn" && "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/40",
-                    mcfBanner.tone === "danger" && "bg-destructive/15 text-destructive border-destructive/40 animate-pulse",
-                  )}>
-                    <span className="min-w-0">{mcfBanner.text}</span>
-                    {mcfDates && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md border border-current/30 bg-background/40 hover:bg-background/70 transition-colors"
-                            title="ক্যালেন্ডার দেখুন"
-                          >
-                            <CalendarIcon className="h-3.5 w-3.5" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                          <div className="p-3 border-b text-xs space-y-1">
-                            <div className="flex justify-between gap-4">
-                              <span className="text-muted-foreground">শুরু:</span>
-                              <span className="font-medium">{mcfDates.start.toLocaleDateString("en-GB")}</span>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-muted-foreground">শেষ তারিখ:</span>
-                              <span className="font-medium">{mcfDates.target.toLocaleDateString("en-GB")}</span>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-muted-foreground">পার হয়েছে:</span>
-                              <span className="font-medium text-primary">{mcfDates.passed} working day</span>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-muted-foreground">বাকি আছে:</span>
-                              <span className={cn("font-medium", mcfDates.remaining < 0 ? "text-destructive" : "text-success")}>
-                                {mcfDates.remaining < 0 ? `${Math.abs(mcfDates.remaining)} দিন overdue` : `${mcfDates.remaining} working day`}
-                              </span>
-                            </div>
-                            <div className="pt-2 flex flex-wrap gap-2 text-[10px]">
-                              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> শুরু</span>
-                              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-destructive" /> শেষ তারিখ</span>
-                              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500/60" /> ছুটি (শুক্র/শনি)</span>
-                            </div>
+                {mcfBanner && (() => {
+                  const tone = mcfBanner.tone;
+                  const totalWd = (mcfDates?.passed ?? 0) + Math.max(0, mcfDates?.remaining ?? 0);
+                  const pct = mcfDates
+                    ? mcfDates.remaining < 0
+                      ? 100
+                      : totalWd > 0
+                        ? Math.min(100, Math.round((mcfDates.passed / totalWd) * 100))
+                        : 0
+                    : 0;
+                  const toneRing = {
+                    success: "ring-success/20 from-success/10",
+                    info: "ring-accent/20 from-accent/10",
+                    warn: "ring-yellow-500/30 from-yellow-500/10",
+                    danger: "ring-destructive/30 from-destructive/15",
+                  }[tone];
+                  const toneText = {
+                    success: "text-success",
+                    info: "text-accent",
+                    warn: "text-yellow-700 dark:text-yellow-400",
+                    danger: "text-destructive",
+                  }[tone];
+                  const toneBar = {
+                    success: "from-success to-success",
+                    info: "from-accent to-primary",
+                    warn: "from-yellow-400 to-orange-500",
+                    danger: "from-destructive to-red-700",
+                  }[tone];
+                  const dateStr = mcfDates ? `${String(mcfDates.target.getDate()).padStart(2,"0")}/${String(mcfDates.target.getMonth()+1).padStart(2,"0")}/${mcfDates.target.getFullYear()}` : "";
+                  return (
+                    <div className={cn(
+                      "group relative overflow-hidden rounded-xl bg-card/60 backdrop-blur-md border border-border ring-1 shadow-sm bg-gradient-to-r to-transparent",
+                      toneRing,
+                      tone === "danger" && "animate-pulse",
+                    )}>
+                      {/* shimmer sweep */}
+                      <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-[shimmer_3.5s_ease-in-out_infinite]" />
+                      <div className="relative flex items-center justify-between gap-3 px-4 py-2.5">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={cn("relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/70", toneText)}>
+                            {tone !== "success" && (
+                              <span className={cn("absolute inset-0 rounded-full opacity-40 animate-ping",
+                                tone === "danger" ? "bg-destructive/40" : tone === "warn" ? "bg-yellow-400/40" : "bg-accent/40")} />
+                            )}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="relative h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                              {tone === "success"
+                                ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                : <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                            </svg>
                           </div>
-                          <Calendar
-                            mode="single"
-                            defaultMonth={mcfDates.target}
-                            selected={mcfDates.target}
-                            modifiers={{
-                              startDay: mcfDates.start,
-                              targetDay: mcfDates.target,
-                              weekendOff: (d: Date) => (d.getDay() === 5 || d.getDay() === 6) && d >= mcfDates!.start && d <= mcfDates!.target,
-                              inRange: (d: Date) => d > mcfDates!.start && d < mcfDates!.target,
-                            }}
-                            modifiersClassNames={{
-                              startDay: "bg-primary text-primary-foreground rounded-md",
-                              targetDay: "bg-destructive text-destructive-foreground rounded-md",
-                              weekendOff: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
-                              inRange: "bg-accent/30",
-                            }}
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                  </div>
-                )}
+                          {tone === "success" ? (
+                            <p className={cn("text-sm font-semibold", toneText)}>{mcfBanner.text}</p>
+                          ) : (
+                            <p className="text-sm text-foreground/85 truncate">
+                              <span className="font-semibold tabular-nums tracking-tight">{dateStr}</span>
+                              <span className="opacity-70"> তারিখের মধ্যে শেষ করতে হবে</span>
+                              <span className="mx-2 text-border">•</span>
+                              <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-background/80 border border-border", toneText)}>
+                                {mcfDates && mcfDates.remaining < 0
+                                  ? `${Math.abs(mcfDates.remaining)} দিন overdue`
+                                  : mcfDates && mcfDates.remaining === 0
+                                    ? "আজই শেষ দিন"
+                                    : <>বাকি <span className="tabular-nums">{mcfDates?.remaining}</span> দিন</>}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                        {mcfDates && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className={cn(
+                                  "shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-lg bg-background/80 border border-border shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95",
+                                  toneText,
+                                )}
+                                title="ক্যালেন্ডার দেখুন"
+                              >
+                                <CalendarIcon className="h-4 w-4 transition-transform group-hover:rotate-6" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                              <div className="p-3 border-b text-xs space-y-1">
+                                <div className="flex justify-between gap-4"><span className="text-muted-foreground">শুরু:</span><span className="font-medium tabular-nums">{mcfDates.start.toLocaleDateString("en-GB")}</span></div>
+                                <div className="flex justify-between gap-4"><span className="text-muted-foreground">শেষ তারিখ:</span><span className="font-medium tabular-nums">{mcfDates.target.toLocaleDateString("en-GB")}</span></div>
+                                <div className="flex justify-between gap-4"><span className="text-muted-foreground">পার হয়েছে:</span><span className="font-medium text-primary">{mcfDates.passed} working day</span></div>
+                                <div className="flex justify-between gap-4"><span className="text-muted-foreground">বাকি আছে:</span>
+                                  <span className={cn("font-medium", mcfDates.remaining < 0 ? "text-destructive" : "text-success")}>
+                                    {mcfDates.remaining < 0 ? `${Math.abs(mcfDates.remaining)} দিন overdue` : `${mcfDates.remaining} working day`}
+                                  </span>
+                                </div>
+                                <div className="pt-2 flex flex-wrap gap-2 text-[10px]">
+                                  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> শুরু</span>
+                                  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-destructive" /> শেষ তারিখ</span>
+                                  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500/60" /> ছুটি (শুক্র/শনি)</span>
+                                </div>
+                              </div>
+                              <Calendar
+                                mode="single"
+                                defaultMonth={mcfDates.target}
+                                selected={mcfDates.target}
+                                modifiers={{
+                                  startDay: mcfDates.start,
+                                  targetDay: mcfDates.target,
+                                  weekendOff: (d: Date) => (d.getDay() === 5 || d.getDay() === 6) && d >= mcfDates!.start && d <= mcfDates!.target,
+                                  inRange: (d: Date) => d > mcfDates!.start && d < mcfDates!.target,
+                                }}
+                                modifiersClassNames={{
+                                  startDay: "bg-primary text-primary-foreground rounded-md",
+                                  targetDay: "bg-destructive text-destructive-foreground rounded-md",
+                                  weekendOff: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
+                                  inRange: "bg-accent/30",
+                                }}
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </div>
+                      {/* progress bar */}
+                      <div className="relative h-[3px] bg-border/40">
+                        <div
+                          className={cn("h-full bg-gradient-to-r transition-all duration-700 relative", toneBar)}
+                          style={{ width: `${pct}%` }}
+                        >
+                          <div className="absolute inset-y-0 right-0 w-6 bg-white/40 blur-[2px]" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-medium">
