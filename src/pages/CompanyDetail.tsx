@@ -53,8 +53,8 @@ interface CompanyDoc { id: string; category: string; file_name: string; file_pat
 const DOC_CATEGORIES = [
   { key: "final_quotation", title: "Final quotation and agreement", subtitle: "", flag: "FQ", color: "border-primary/30" },
   { key: "client_required", title: "Client required document", subtitle: "", flag: "CD", color: "border-primary/30" },
-  { key: "mother_plain", title: "Mother Company Documents", subtitle: "Without Apostille & Translation", flag: "MC", color: "border-accent/30" },
-  { key: "mother_apostille", title: "Mother Company Documents", subtitle: "With Apostille & Certified Translation", flag: "MA", color: "border-accent/30" },
+  { key: "mother_apostille", title: "Mother Company Documents", subtitle: "Without Apostille & Certified Translation", flag: "MA", color: "border-accent/30" },
+  { key: "mother_plain", title: "Mother Company Documents", subtitle: "With Apostille & Translation", flag: "MC", color: "border-accent/30" },
   { key: "canada", title: "Canadian Company Documents", subtitle: "", flag: "CA", color: "border-primary/30" },
   { key: "usa", title: "USA Company Documents", subtitle: "", flag: "US", color: "border-destructive/30" },
   { key: "misa", title: "Investment License (MISA License)", subtitle: "", flag: "MI", color: "border-primary/30" },
