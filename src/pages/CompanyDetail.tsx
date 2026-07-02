@@ -702,7 +702,7 @@ export default function CompanyDetail() {
                 }
                 const wdLeft = Math.max(0, 10 - passed);
                 const done = s.status === "applied" || s.status === "done";
-                misaInfo = { target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done };
+                misaInfo = { target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done, passed };
               }
             }
             const misaRed = misaInfo?.overdue;
