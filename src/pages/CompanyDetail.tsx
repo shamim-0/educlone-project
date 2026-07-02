@@ -615,45 +615,42 @@ export default function CompanyDetail() {
                 }
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                // working days remaining between today and targetDate
-                let remaining = 0;
-                if (today <= targetDate) {
-                  const cur = new Date(today);
-                  while (cur < targetDate) {
+                const TOTAL_WD = 10;
+                // working days elapsed between start (exclusive) and today (inclusive)
+                let passed = 0;
+                {
+                  const cur = new Date(start);
+                  while (cur < today) {
                     cur.setDate(cur.getDate() + 1);
                     const d = cur.getDay();
-                    if (d !== 5 && d !== 6) remaining++;
+                    if (d !== 5 && d !== 6) passed++;
                   }
+                }
+                let remaining: number;
+                if (today <= targetDate) {
+                  remaining = TOTAL_WD - Math.min(passed, TOTAL_WD);
                 } else {
+                  // overdue: count working days strictly after target up to today
+                  let over = 0;
                   const cur = new Date(targetDate);
                   while (cur < today) {
                     cur.setDate(cur.getDate() + 1);
                     const d = cur.getDay();
-                    if (d !== 5 && d !== 6) remaining--;
+                    if (d !== 5 && d !== 6) over++;
                   }
+                  remaining = -over;
                 }
-                // working days passed since start
-                let passed = 0;
-                const cap = today < targetDate ? today : targetDate;
-                const cur2 = new Date(start);
-                while (cur2 < cap) {
-                  cur2.setDate(cur2.getDate() + 1);
-                  const d = cur2.getDay();
-                  if (d !== 5 && d !== 6) passed++;
-                }
-                mcfDates = { start, target: targetDate, remaining, passed };
-                const dd = String(targetDate.getDate()).padStart(2, "0");
-                const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
-                const yyyy = targetDate.getFullYear();
-                const targetStr = `${dd}/${mm}/${yyyy}`;
+                mcfDates = { start, target: targetDate, remaining, passed: Math.min(passed, TOTAL_WD) };
+                const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+                const rangeStr = `${fmt(start)} - ${fmt(targetDate)}`;
                 if (s.status === "done") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
-                  mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `${targetStr} তারিখের মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
+                  mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `${rangeStr} তারিখের মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
                 } else if (remaining === 0) {
-                  mcfBanner = { tone: "warn", text: `${targetStr} তারিখের মধ্যে শেষ করতে হবে — আজই শেষ দিন` };
+                  mcfBanner = { tone: "warn", text: `${rangeStr} তারিখের মধ্যে শেষ করতে হবে — আজই শেষ দিন` };
                 } else {
-                  mcfBanner = { tone: "danger", text: `${targetStr} তারিখের মধ্যে শেষ করার কথা ছিল — ${Math.abs(remaining)} দিন পার হয়ে গেছে` };
+                  mcfBanner = { tone: "danger", text: `${rangeStr} তারিখের মধ্যে শেষ করার কথা ছিল — ${Math.abs(remaining)} দিন পার হয়ে গেছে` };
                 }
               }
             }
@@ -687,7 +684,8 @@ export default function CompanyDetail() {
                     warn: "from-yellow-500 to-orange-600",
                     danger: "from-destructive to-red-800",
                   }[tone];
-                  const dateStr = mcfDates ? `${String(mcfDates.target.getDate()).padStart(2,"0")}/${String(mcfDates.target.getMonth()+1).padStart(2,"0")}/${mcfDates.target.getFullYear()}` : "";
+                  const fmtD = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+                  const dateStr = mcfDates ? `${fmtD(mcfDates.start)} - ${fmtD(mcfDates.target)}` : "";
                   return (
                     <div className={cn(
                       "group relative overflow-hidden rounded-xl border shadow-sm bg-gradient-to-r to-transparent",
