@@ -609,6 +609,7 @@ export default function CompanyDetail() {
             // windowWD = working days available inside this window to complete the service.
             let mcfBanner: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
             let mcfDates: null | { start: Date; target: Date; remaining: number; passed: number; windowWD: number } = null;
+            let simpleAlert: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
             const COUNTDOWN_CONFIG: Record<string, { offsetWD: number; windowWD: number }> = {
               mother_company_formation_bd: { offsetWD: 0, windowWD: 10 },
               usa_company_formation: { offsetWD: 0, windowWD: 10 },
@@ -753,6 +754,14 @@ export default function CompanyDetail() {
 
 
 
+
+            // Visa Wakala & Visa Issuance — alert banner when Saudization Quota Allocation is done (no time shown)
+            if ((def.key === "visa_wakala" || def.key === "visa_issuance") && s.status !== "done" && s.status !== "no_need") {
+              const sqa = steps["saudization_quota_allocation"] as any;
+              if (sqa?.status === "done") {
+                simpleAlert = { tone: "warn", text: "⚠ Saudization Quota Allocation সম্পন্ন হয়েছে — এটি এখন সম্পন্ন করতে হবে" };
+              }
+            }
 
             // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
             const isMisaCard = def.key === "misa_license" || def.key === "misa";
@@ -1094,6 +1103,38 @@ export default function CompanyDetail() {
                     </div>
                   );
                 })()}
+                {simpleAlert && (
+                  <div className={cn(
+                    "relative overflow-hidden rounded-xl border shadow-sm bg-gradient-to-r to-transparent",
+                    simpleAlert.tone === "warn" && "bg-yellow-500/10 border-yellow-500/40",
+                    simpleAlert.tone === "danger" && "bg-destructive/10 border-destructive/40 animate-pulse",
+                    simpleAlert.tone === "info" && "bg-primary/10 border-primary/40",
+                    simpleAlert.tone === "success" && "bg-success/10 border-success/40",
+                  )}>
+                    <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-shimmer" />
+                    <div className="relative flex items-center gap-3 px-4 py-3">
+                      <div className={cn(
+                        "relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/70",
+                        simpleAlert.tone === "warn" && "text-yellow-600 dark:text-yellow-400",
+                        simpleAlert.tone === "danger" && "text-destructive",
+                        simpleAlert.tone === "info" && "text-primary",
+                        simpleAlert.tone === "success" && "text-success",
+                      )}>
+                        <span className={cn("absolute inset-0 rounded-full opacity-40 animate-ping",
+                          simpleAlert.tone === "warn" ? "bg-yellow-400/40" : simpleAlert.tone === "danger" ? "bg-destructive/40" : "bg-primary/40")} />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="relative h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.054 0 1.646-1.196 1.024-2.03l-6.928-9.97a1.5 1.5 0 00-2.472 0l-6.928 9.97c-.622.834-.03 2.03 1.024 2.03z" />
+                        </svg>
+                      </div>
+                      <p className={cn("text-sm font-semibold",
+                        simpleAlert.tone === "warn" && "text-yellow-700 dark:text-yellow-400",
+                        simpleAlert.tone === "danger" && "text-destructive",
+                        simpleAlert.tone === "info" && "text-primary",
+                        simpleAlert.tone === "success" && "text-success",
+                      )}>{simpleAlert.text}</p>
+                    </div>
+                  </div>
+                )}
                 {def.key === "mother_company_formation_bd" && mcfDates && s.status !== "done" && (() => {
                   const thresholds = [3, 6, 9];
                   const passed = mcfDates.passed;
