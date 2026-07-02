@@ -784,9 +784,9 @@ export default function CompanyDetail() {
                             {done
                               ? "✓ Applied / সম্পন্ন"
                               : overdue
-                                ? `⚠ ${overdueHrs}ঘ ${overdueMin}মি overdue — Status অবশ্যই "Applied" দিতে হবে`
+                                ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "Applied" দিতে হবে`
                                 : inGrace
-                                  ? `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি`
+                                  ? `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`
                                   : `বাকি ${wdLeft} working day + ২৪ঘ grace`}
                           </p>
                         </div>
