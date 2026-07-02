@@ -778,18 +778,19 @@ export default function CompanyDetail() {
                           )}
                         </div>
 
-                        {/* countdown text */}
-                        <div className="flex items-center gap-2">
-                          <p className="text-lg font-extrabold tabular-nums tracking-tight drop-shadow-sm">
-                            {done
-                              ? "✓ Applied / সম্পন্ন"
-                              : overdue
-                                ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "Applied" দিতে হবে`
-                                : inGrace
-                                  ? `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`
-                                  : `বাকি ${wdLeft} working day + ২৪ঘ grace`}
-                          </p>
-                        </div>
+                        {/* countdown text — only show once first 10 WD are over */}
+                        {(done || overdue || inGrace) && (
+                          <div className="flex items-center gap-2">
+                            <p className="text-lg font-extrabold tabular-nums tracking-tight drop-shadow-sm">
+                              {done
+                                ? "✓ Applied / সম্পন্ন"
+                                : overdue
+                                  ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "Applied" দিতে হবে`
+                                  : `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`}
+                            </p>
+                          </div>
+                        )}
+
 
                         {/* progress bar */}
                         {!done && (
