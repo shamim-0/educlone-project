@@ -808,7 +808,10 @@ export default function CompanyDetail() {
                   const msgs = [0,1,2].map(i => fill((custom[i] && custom[i].trim()) ? custom[i] : defaults[i]));
                   return (
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-muted-foreground">WhatsApp Follow-up:</span>
+                      <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-success"><path d="M20.52 3.48A11.9 11.9 0 0012.06 0C5.5 0 .17 5.33.17 11.9c0 2.1.55 4.14 1.6 5.94L0 24l6.35-1.66a11.9 11.9 0 005.7 1.45h.01c6.56 0 11.89-5.33 11.89-11.9 0-3.18-1.24-6.17-3.43-8.41zM12.06 21.4h-.01a9.5 9.5 0 01-4.84-1.33l-.35-.2-3.77.99 1-3.67-.23-.38a9.5 9.5 0 01-1.46-5.02c0-5.25 4.27-9.52 9.52-9.52 2.54 0 4.93.99 6.73 2.79a9.44 9.44 0 012.78 6.73c0 5.25-4.27 9.51-9.37 9.61z"/></svg>
+                        WhatsApp Follow-up:
+                      </span>
                       {thresholds.map((t, i) => {
                         const isReached = reached[i];
                         const isActive = i === activeIdx;
