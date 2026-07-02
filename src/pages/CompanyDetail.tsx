@@ -790,14 +790,12 @@ export default function CompanyDetail() {
                     </div>
                   );
                 })()}
-                {def.key === "mother_company_formation_bd" && mcfDates && s.status !== "done" && company.whatsapp && (() => {
+                {def.key === "mother_company_formation_bd" && mcfDates && s.status !== "done" && (() => {
                   const thresholds = [3, 6, 9];
                   const passed = mcfDates.passed;
-                  const visibleIdx = thresholds.map((t, i) => passed >= t ? i : -1).filter(i => i >= 0);
-                  if (visibleIdx.length === 0) return null;
-                  const activeIdx = visibleIdx[visibleIdx.length - 1];
-                  const phone = (company.whatsapp || "").replace(/[^\d]/g, "");
-                  if (!phone) return null;
+                  const reached = thresholds.map(t => passed >= t);
+                  const activeIdx = reached.lastIndexOf(true);
+                  const phone = ((company as any).whatsapp || (company as any).phone || "").replace(/[^\d]/g, "");
                   const labels = ["1st Follow-up", "2nd Follow-up", "3rd Follow-up"];
                   const msgs = [
                     `Hello, this is a follow-up regarding Mother Company Formation (Bangladesh) for ${company.name}.`,
@@ -807,26 +805,36 @@ export default function CompanyDetail() {
                   return (
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs text-muted-foreground">WhatsApp Follow-up:</span>
-                      {visibleIdx.map(i => {
+                      {thresholds.map((t, i) => {
+                        const isReached = reached[i];
                         const isActive = i === activeIdx;
-                        const href = `https://wa.me/${phone}?text=${encodeURIComponent(msgs[i])}`;
-                        return (
-                          <a
-                            key={i}
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn(
-                              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border shadow-sm transition-all",
-                              isActive
-                                ? "bg-success text-success-foreground border-success hover:brightness-110"
-                                : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                            )}
-                            title={`${labels[i]} (after ${thresholds[i]} working days)`}
-                          >
+                        const daysLeft = Math.max(0, t - passed);
+                        const disabled = !isReached || !phone;
+                        const href = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msgs[i])}` : undefined;
+                        const cls = cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border shadow-sm transition-all",
+                          disabled
+                            ? "bg-muted/50 text-muted-foreground border-border cursor-not-allowed opacity-70"
+                            : isActive
+                              ? "bg-success text-success-foreground border-success hover:brightness-110"
+                              : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                        );
+                        const inner = (
+                          <>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5"><path d="M20.52 3.48A11.9 11.9 0 0012.06 0C5.5 0 .17 5.33.17 11.9c0 2.1.55 4.14 1.6 5.94L0 24l6.35-1.66a11.9 11.9 0 005.7 1.45h.01c6.56 0 11.89-5.33 11.89-11.9 0-3.18-1.24-6.17-3.43-8.41zM12.06 21.4h-.01a9.5 9.5 0 01-4.84-1.33l-.35-.2-3.77.99 1-3.67-.23-.38a9.5 9.5 0 01-1.46-5.02c0-5.25 4.27-9.52 9.52-9.52 2.54 0 4.93.99 6.73 2.79a9.44 9.44 0 012.78 6.73c0 5.25-4.27 9.51-9.37 9.61z"/></svg>
                             {labels[i]}
-                          </a>
+                            {!isReached && <span className="opacity-70">· {daysLeft}d</span>}
+                          </>
+                        );
+                        const title = !phone
+                          ? "No WhatsApp number set for this company"
+                          : !isReached
+                            ? `Unlocks after ${t} working days (${daysLeft} left)`
+                            : `${labels[i]} (after ${t} working days)`;
+                        return disabled ? (
+                          <span key={i} className={cls} title={title}>{inner}</span>
+                        ) : (
+                          <a key={i} href={href} target="_blank" rel="noopener noreferrer" className={cls} title={title}>{inner}</a>
                         );
                       })}
                     </div>
