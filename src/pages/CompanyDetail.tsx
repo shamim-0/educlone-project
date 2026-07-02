@@ -600,7 +600,14 @@ export default function CompanyDetail() {
             // 10 working-day (Fri/Sat off) countdown for Mother Company Formation (BD)
             let mcfBanner: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
             let mcfDates: null | { start: Date; target: Date; remaining: number; passed: number } = null;
-            if (def.key === "mother_company_formation_bd") {
+            const COUNTDOWN_KEYS = new Set([
+              "mother_company_formation_bd",
+              "usa_company_formation",
+              "canada_company_formation",
+              "saudi_company_structure_planning",
+              "corporate_email_setup",
+            ]);
+            if (COUNTDOWN_KEYS.has(def.key)) {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && ap?.updated_at) {
                 const start = new Date(ap.updated_at);
