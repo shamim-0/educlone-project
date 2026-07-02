@@ -613,6 +613,7 @@ export default function CompanyDetail() {
               "canada_company_formation",
               "saudi_company_structure_planning",
               "corporate_email_setup",
+              "saudi_company_name_reservation",
             ]);
             if (COUNTDOWN_KEYS.has(def.key)) {
               const ap = steps["all_papers_recieved"] as any;
