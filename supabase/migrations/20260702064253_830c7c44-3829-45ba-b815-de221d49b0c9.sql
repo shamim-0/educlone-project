@@ -1,0 +1,1 @@
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS followup_messages text[] NOT NULL DEFAULT ARRAY[]::text[];

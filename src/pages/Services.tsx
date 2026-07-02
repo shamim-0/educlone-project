@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { GripVertical, Save, Plus, Trash2, ListChecks, Pencil, X, Check } from "lucide-react";
+import { GripVertical, Save, Plus, Trash2, ListChecks, Pencil, X, Check, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { refreshServiceDefs, type ServiceDef } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +16,7 @@ import { Navigate } from "react-router-dom";
 interface Row extends ServiceDef {
   id: string;
   sort_order: number;
+  followupMessages?: string[];
 }
 
 export default function ServicesPage() {
@@ -25,6 +28,9 @@ export default function ServicesPage() {
   const [newLabel, setNewLabel] = useState("");
   const [savingOrder, setSavingOrder] = useState(false);
   const [dragKey, setDragKey] = useState<string | null>(null);
+  const [msgRow, setMsgRow] = useState<Row | null>(null);
+  const [msgs, setMsgs] = useState<string[]>(["", "", ""]);
+  const [savingMsgs, setSavingMsgs] = useState(false);
 
   useEffect(() => {
     document.title = "Services | ISBI Tracker";
@@ -35,7 +41,7 @@ export default function ServicesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("services")
-      .select("id,key,label,tags,has_creds,sort_order")
+      .select("id,key,label,tags,has_creds,sort_order,followup_messages")
       .order("sort_order", { ascending: true });
     if (error) {
       toast.error(error.message);
@@ -48,11 +54,37 @@ export default function ServicesPage() {
           tags: r.tags ?? [],
           hasCreds: !!r.has_creds,
           sort_order: r.sort_order,
+          followupMessages: r.followup_messages ?? [],
         }))
       );
     }
     setLoading(false);
   }
+
+  function openMsgs(r: Row) {
+    setMsgRow(r);
+    const cur = r.followupMessages ?? [];
+    setMsgs([cur[0] ?? "", cur[1] ?? "", cur[2] ?? ""]);
+  }
+
+  async function saveMsgs() {
+    if (!msgRow) return;
+    setSavingMsgs(true);
+    const { error } = await supabase
+      .from("services")
+      .update({ followup_messages: msgs } as any)
+      .eq("id", msgRow.id);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setRows((prev) => prev.map((r) => (r.id === msgRow.id ? { ...r, followupMessages: msgs } : r)));
+      toast.success("Follow-up messages saved");
+      await refreshServiceDefs();
+      setMsgRow(null);
+    }
+    setSavingMsgs(false);
+  }
+
 
   if (role && role !== "admin" && role !== "sub_admin") return <Navigate to="/" replace />;
   const canDelete = role === "admin";
@@ -256,6 +288,16 @@ export default function ServicesPage() {
 
                 {!editing && (
                   <div className="flex items-center gap-1 shrink-0">
+                    {r.key === "mother_company_formation_bd" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Set WhatsApp follow-up messages"
+                        onClick={() => openMsgs(r)}
+                      >
+                        <MessageSquare className="h-4 w-4 text-primary" />
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -278,6 +320,36 @@ export default function ServicesPage() {
           })}
         </div>
       )}
+
+      <Dialog open={!!msgRow} onOpenChange={(o) => !o && setMsgRow(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>WhatsApp Follow-up Messages</DialogTitle>
+            <DialogDescription>
+              Prefilled messages for {msgRow?.label}. Placeholders: <code>{"{company}"}</code>, <code>{"{cr}"}</code>, <code>{"{isbi}"}</code>. Leave blank to use default.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-1">
+                <label className="text-xs font-medium">{i + 1}{i === 0 ? "st" : i === 1 ? "nd" : "rd"} Follow-up (after {[3, 6, 9][i]} working days)</label>
+                <Textarea
+                  rows={3}
+                  value={msgs[i]}
+                  onChange={(e) => setMsgs((prev) => prev.map((m, idx) => (idx === i ? e.target.value : m)))}
+                  placeholder={`Hello, this is a follow-up regarding ${msgRow?.label} for {company}.`}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setMsgRow(null)}>Cancel</Button>
+            <Button onClick={saveMsgs} disabled={savingMsgs}>
+              {savingMsgs ? "Saving…" : "Save Messages"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
