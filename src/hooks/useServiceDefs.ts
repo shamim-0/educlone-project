@@ -10,6 +10,7 @@ export interface ServiceDef {
   hasCreds?: boolean;
   subtasks?: string[];
   sort_order?: number;
+  followupMessages?: string[];
 }
 
 let cache: ServiceDef[] | null = null;
@@ -18,7 +19,7 @@ const listeners = new Set<(d: ServiceDef[]) => void>();
 async function load() {
   const { data, error } = await supabase
     .from("services")
-    .select("id,key,label,tags,has_creds,subtasks,sort_order")
+    .select("id,key,label,tags,has_creds,subtasks,sort_order,followup_messages")
     .order("sort_order", { ascending: true });
   if (error || !data || data.length === 0) {
     cache = FALLBACK;
@@ -31,6 +32,7 @@ async function load() {
       hasCreds: !!r.has_creds,
       subtasks: r.subtasks ?? [],
       sort_order: r.sort_order,
+      followupMessages: r.followup_messages ?? [],
     }));
   }
   listeners.forEach((fn) => fn(cache!));
