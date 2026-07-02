@@ -672,7 +672,7 @@ export default function CompanyDetail() {
 
             // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
             const isMisaCard = def.key === "misa_license" || def.key === "misa";
-            let misaInfo: null | { target: Date; deadline: Date; msLeft: number; msToTarget: number; wdLeft: number; overdue: boolean; done: boolean } = null;
+            let misaInfo: null | { target: Date; deadline: Date; msLeft: number; msToTarget: number; wdLeft: number; overdue: boolean; done: boolean; passed: number } = null;
             if (isMisaCard) {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && ap?.updated_at) {
@@ -702,7 +702,7 @@ export default function CompanyDetail() {
                 }
                 const wdLeft = Math.max(0, 10 - passed);
                 const done = s.status === "applied" || s.status === "done";
-                misaInfo = { target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done };
+                misaInfo = { target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done, passed };
               }
             }
             const misaRed = misaInfo?.overdue;
@@ -727,22 +727,56 @@ export default function CompanyDetail() {
                   const overdueHrs = Math.floor(absMs / (60 * 60 * 1000));
                   const overdueMin = Math.floor((absMs % (60 * 60 * 1000)) / 60000);
                   return (
-                    <div className={cn("relative overflow-hidden rounded-xl border-2 shadow-sm px-4 py-2.5 flex items-center justify-between gap-3", toneClass)}>
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-background/70">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-400/40 shadow-lg shadow-emerald-500/10 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 text-white">
+                      {/* animated particles */}
+                      <div className="pointer-events-none absolute inset-0">
+                        <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl animate-pulse" />
+                        <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-emerald-300/15 blur-2xl" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 rounded-full bg-teal-300/10 blur-3xl" />
+                      </div>
+                      {/* shimmer sweep */}
+                      <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12 animate-shimmer" />
+
+                      <div className="relative flex flex-col gap-3 px-5 py-4">
+                        {/* top row: icon + title + badge */}
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 border border-white/20 shadow-inner">
+                              {!done && (
+                                <span className={cn("absolute inset-0 rounded-xl opacity-50 animate-ping",
+                                  overdue ? "bg-red-400/60" : inGrace ? "bg-amber-300/60" : "bg-emerald-300/60")} />
+                              )}
+                              <svg className="relative h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                {done
+                                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  : <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                              </svg>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-medium text-emerald-100/80 uppercase tracking-wider">MISA Applied Deadline</p>
+                              <p className="text-sm font-bold tabular-nums tracking-tight">{fmtDL}</p>
+                            </div>
+                          </div>
                           {!done && (
-                            <span className={cn("absolute inset-0 rounded-full opacity-40 animate-ping",
-                              overdue ? "bg-destructive/50" : inGrace ? "bg-orange-500/50" : "bg-primary/40")} />
+                            <span className={cn(
+                              "shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold border shadow-md backdrop-blur-sm",
+                              overdue ? "bg-red-500/90 border-red-300/50 text-white shadow-red-500/30" : inGrace ? "bg-amber-400/90 border-amber-200/50 text-amber-950 shadow-amber-500/30" : "bg-white/20 border-white/30 text-white shadow-emerald-500/20",
+                            )}>
+                              <span className={cn("h-1.5 w-1.5 rounded-full", overdue ? "bg-red-200 animate-ping" : inGrace ? "bg-amber-200 animate-ping" : "bg-emerald-200 animate-pulse")} />
+                              {overdue ? "OVERDUE" : inGrace ? "URGENT" : "LIVE"}
+                            </span>
                           )}
-                          <svg className="relative h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            {done
-                              ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              : <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                          </svg>
+                          {done && (
+                            <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold border bg-emerald-400/90 border-emerald-200/60 text-emerald-950 shadow-emerald-500/30">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-100" />
+                              COMPLETE
+                            </span>
+                          )}
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs opacity-80">MISA Applied Deadline • <span className="tabular-nums font-medium">{fmtDL}</span></p>
-                          <p className="text-sm font-bold tabular-nums">
+
+                        {/* countdown text */}
+                        <div className="flex items-center gap-2">
+                          <p className="text-lg font-extrabold tabular-nums tracking-tight drop-shadow-sm">
                             {done
                               ? "✓ Applied / সম্পন্ন"
                               : overdue
@@ -752,15 +786,22 @@ export default function CompanyDetail() {
                                   : `বাকি ${wdLeft} working day + ২৪ঘ grace`}
                           </p>
                         </div>
+
+                        {/* progress bar */}
+                        {!done && (
+                          <div className="relative h-2 w-full rounded-full bg-white/15 overflow-hidden">
+                            <div
+                              className={cn(
+                                "h-full rounded-full transition-all duration-1000 relative",
+                                overdue ? "bg-gradient-to-r from-red-400 to-red-600" : inGrace ? "bg-gradient-to-r from-amber-300 to-orange-500" : "bg-gradient-to-r from-emerald-300 via-teal-300 to-emerald-200"
+                              )}
+                              style={{ width: `${Math.min(100, Math.max(0, done ? 100 : overdue ? 100 : inGrace ? 85 + (msLeft / (24 * 60 * 60 * 1000)) * 15 : (misaInfo.passed / 10) * 100))}%` }}
+                            >
+                              <div className="absolute inset-y-0 right-0 w-8 bg-white/40 blur-[2px]" />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      {!done && (
-                        <span className={cn(
-                          "shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border bg-background/70",
-                          overdue ? "border-destructive text-destructive" : inGrace ? "border-orange-500 text-orange-600 dark:text-orange-400" : "border-primary/60 text-primary",
-                        )}>
-                          {overdue ? "OVERDUE" : inGrace ? "URGENT" : "LIVE"}
-                        </span>
-                      )}
                     </div>
                   );
                 })()}
