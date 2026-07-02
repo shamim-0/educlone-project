@@ -604,37 +604,53 @@ export default function CompanyDetail() {
           {applicableDefs.map(def => {
             const s = steps[def.key] ?? { step_key: def.key, status: "not_started", note: "", username: "", password: "", subtasks_done: [] };
             const subDone = s.subtasks_done ?? [];
-            // 10 working-day (Fri/Sat off) countdown for Mother Company Formation (BD)
+            // Working-day countdown banner for formation & registration services.
+            // offsetWD = working days after "All Papers Received" before this window starts.
+            // windowWD = working days available inside this window to complete the service.
             let mcfBanner: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
-            let mcfDates: null | { start: Date; target: Date; remaining: number; passed: number } = null;
-            const COUNTDOWN_KEYS = new Set([
-              "mother_company_formation_bd",
-              "usa_company_formation",
-              "canada_company_formation",
-              "saudi_company_structure_planning",
-              "corporate_email_setup",
-              "saudi_company_name_reservation",
-            ]);
-            if (COUNTDOWN_KEYS.has(def.key)) {
+            let mcfDates: null | { start: Date; target: Date; remaining: number; passed: number; windowWD: number } = null;
+            const COUNTDOWN_CONFIG: Record<string, { offsetWD: number; windowWD: number }> = {
+              mother_company_formation_bd: { offsetWD: 0, windowWD: 10 },
+              usa_company_formation: { offsetWD: 0, windowWD: 10 },
+              canada_company_formation: { offsetWD: 0, windowWD: 10 },
+              saudi_company_structure_planning: { offsetWD: 0, windowWD: 10 },
+              corporate_email_setup: { offsetWD: 0, windowWD: 10 },
+              saudi_company_name_reservation: { offsetWD: 0, windowWD: 10 },
+              // After 20 working days, 5 more working days to complete:
+              cr_commercial_registration: { offsetWD: 20, windowWD: 5 },
+              spl_national_address: { offsetWD: 20, windowWD: 5 },
+              qiwa_setup: { offsetWD: 20, windowWD: 5 },
+              gosi_registration: { offsetWD: 20, windowWD: 5 },
+              vat_zatca_registration: { offsetWD: 20, windowWD: 5 },
+              chamber_of_commerce_registration: { offsetWD: 20, windowWD: 5 },
+            };
+            const cdCfg = COUNTDOWN_CONFIG[def.key];
+            if (cdCfg) {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && ap?.updated_at) {
-                const start = new Date(ap.updated_at);
-                start.setHours(0, 0, 0, 0);
+                const apDay = new Date(ap.updated_at);
+                apDay.setHours(0, 0, 0, 0);
                 const isWorkingDay = (dt: Date) => {
                   const d = dt.getDay();
                   return d !== 5 && d !== 6;
                 };
-                // target date = start + 10 working days after the start date (skipping Fri=5, Sat=6)
+                // Window start = apDay advanced by offsetWD working days (0 offset ⇒ apDay itself).
+                const start = new Date(apDay);
+                let advanced = 0;
+                while (advanced < cdCfg.offsetWD) {
+                  start.setDate(start.getDate() + 1);
+                  if (isWorkingDay(start)) advanced++;
+                }
+                // Target = start + windowWD working days.
                 const targetDate = new Date(start);
                 let added = 0;
-                while (added < 10) {
+                while (added < cdCfg.windowWD) {
                   targetDate.setDate(targetDate.getDate() + 1);
                   if (isWorkingDay(targetDate)) added++;
                 }
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const TOTAL_WD = 10;
-                // working days elapsed from the start date through today (inclusive)
+                const TOTAL_WD = cdCfg.windowWD;
                 let passed = 0;
                 if (today >= start) {
                   const cur = new Date(start);
@@ -647,7 +663,6 @@ export default function CompanyDetail() {
                 if (today <= targetDate) {
                   remaining = TOTAL_WD - Math.min(passed, TOTAL_WD);
                 } else {
-                  // overdue: count working days strictly after target up to today
                   let over = 0;
                   const cur = new Date(targetDate);
                   while (cur < today) {
@@ -656,10 +671,14 @@ export default function CompanyDetail() {
                   }
                   remaining = -over;
                 }
-                mcfDates = { start, target: targetDate, remaining, passed: Math.min(passed, TOTAL_WD) };
+                mcfDates = { start, target: targetDate, remaining, passed: Math.min(passed, TOTAL_WD), windowWD: TOTAL_WD };
                 const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
                 const rangeStr = `${fmt(start)} - ${fmt(targetDate)}`;
-                if (s.status === "done") {
+                if (today < start) {
+                  // Window hasn't opened yet — hide banner (only relevant for offset > 0).
+                  mcfBanner = null;
+                  mcfDates = null;
+                } else if (s.status === "done") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
                   mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `${rangeStr} তারিখের মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
@@ -670,6 +689,7 @@ export default function CompanyDetail() {
                 }
               }
             }
+
 
             // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
             const isMisaCard = def.key === "misa_license" || def.key === "misa";
