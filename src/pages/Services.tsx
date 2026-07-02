@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { GripVertical, Save, Plus, Trash2, ListChecks, Pencil, X, Check } from "lucide-react";
+import { GripVertical, Save, Plus, Trash2, ListChecks, Pencil, X, Check, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { refreshServiceDefs, type ServiceDef } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +16,7 @@ import { Navigate } from "react-router-dom";
 interface Row extends ServiceDef {
   id: string;
   sort_order: number;
+  followupMessages?: string[];
 }
 
 export default function ServicesPage() {
