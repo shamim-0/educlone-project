@@ -155,6 +155,12 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         )}
       </div>
 
+      {!p.started && (
+        <div className="mt-1.5 text-[11px] text-muted-foreground pl-4">
+          Created at: {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+        </div>
+      )}
+
       {p.overdue && (
         <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন All Papers Recieved এর পর</p>
       )}
