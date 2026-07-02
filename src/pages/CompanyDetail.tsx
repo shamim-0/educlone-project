@@ -707,14 +707,13 @@ export default function CompanyDetail() {
             return (
               <Card key={def.key} className={cn("p-4 space-y-3", misaRed && "bg-destructive/15 border-destructive border-2 animate-pulse")}>
                 {misaInfo && (() => {
-                  const { msLeft, deadline, overdue, done } = misaInfo;
+                  const { msLeft, msToTarget, wdLeft, deadline, overdue, done } = misaInfo;
                   const absMs = Math.abs(msLeft);
                   const totalMin = Math.floor(absMs / 60_000);
-                  const days = Math.floor(totalMin / (60 * 24));
                   const hours = Math.floor((totalMin % (60 * 24)) / 60);
                   const mins = totalMin % 60;
-                  const within24 = msLeft > 0 && msLeft <= 24 * 60 * 60 * 1000;
-                  const tone = done ? "success" : overdue ? "danger" : within24 ? "warn" : "info";
+                  const inGrace = msToTarget <= 0 && msLeft > 0; // last 24h grace window
+                  const tone = done ? "success" : overdue ? "danger" : inGrace ? "warn" : "info";
                   const toneClass = {
                     success: "bg-success/15 border-success/50 text-success",
                     info: "bg-primary/10 border-primary/40 text-primary",
@@ -722,13 +721,15 @@ export default function CompanyDetail() {
                     danger: "bg-destructive/20 border-destructive text-destructive",
                   }[tone];
                   const fmtDL = `${String(deadline.getDate()).padStart(2,"0")}/${String(deadline.getMonth()+1).padStart(2,"0")}/${deadline.getFullYear()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}`;
+                  const overdueHrs = Math.floor(absMs / (60 * 60 * 1000));
+                  const overdueMin = Math.floor((absMs % (60 * 60 * 1000)) / 60000);
                   return (
                     <div className={cn("relative overflow-hidden rounded-xl border-2 shadow-sm px-4 py-2.5 flex items-center justify-between gap-3", toneClass)}>
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-background/70">
                           {!done && (
                             <span className={cn("absolute inset-0 rounded-full opacity-40 animate-ping",
-                              overdue ? "bg-destructive/50" : within24 ? "bg-orange-500/50" : "bg-primary/40")} />
+                              overdue ? "bg-destructive/50" : inGrace ? "bg-orange-500/50" : "bg-primary/40")} />
                           )}
                           <svg className="relative h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             {done
@@ -742,19 +743,19 @@ export default function CompanyDetail() {
                             {done
                               ? "✓ Applied / সম্পন্ন"
                               : overdue
-                                ? `⚠ ${hours + days * 24}ঘ ${mins}মি overdue — Status অবশ্যই "Applied" দিতে হবে`
-                                : within24
+                                ? `⚠ ${overdueHrs}ঘ ${overdueMin}মি overdue — Status অবশ্যই "Applied" দিতে হবে`
+                                : inGrace
                                   ? `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি`
-                                  : `বাকি ${days}দিন ${hours}ঘ ${String(mins).padStart(2,"0")}মি`}
+                                  : `বাকি ${wdLeft} working day + ২৪ঘ grace`}
                           </p>
                         </div>
                       </div>
                       {!done && (
                         <span className={cn(
                           "shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border bg-background/70",
-                          overdue ? "border-destructive text-destructive" : within24 ? "border-orange-500 text-orange-600 dark:text-orange-400" : "border-primary/60 text-primary",
+                          overdue ? "border-destructive text-destructive" : inGrace ? "border-orange-500 text-orange-600 dark:text-orange-400" : "border-primary/60 text-primary",
                         )}>
-                          {overdue ? "OVERDUE" : within24 ? "URGENT" : "LIVE"}
+                          {overdue ? "OVERDUE" : inGrace ? "URGENT" : "LIVE"}
                         </span>
                       )}
                     </div>
