@@ -715,6 +715,7 @@ export default function CompanyDetail() {
                   const totalMin = Math.floor(absMs / 60_000);
                   const hours = Math.floor((totalMin % (60 * 24)) / 60);
                   const mins = totalMin % 60;
+                  const secs = Math.floor((absMs % 60000) / 1000);
                   const inGrace = msToTarget <= 0 && msLeft > 0; // last 24h grace window
                   const tone = done ? "success" : overdue ? "danger" : inGrace ? "warn" : "info";
                   const toneClass = {
@@ -726,6 +727,7 @@ export default function CompanyDetail() {
                   const fmtDL = `${String(deadline.getDate()).padStart(2,"0")}/${String(deadline.getMonth()+1).padStart(2,"0")}/${deadline.getFullYear()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}`;
                   const overdueHrs = Math.floor(absMs / (60 * 60 * 1000));
                   const overdueMin = Math.floor((absMs % (60 * 60 * 1000)) / 60000);
+                  const overdueSec = Math.floor((absMs % 60000) / 1000);
                   return (
                     <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-400/40 shadow-lg shadow-emerald-500/10 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 text-white">
                       {/* animated particles */}
