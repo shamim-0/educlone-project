@@ -107,6 +107,13 @@ export default function CompanyDetail() {
   const [packageOpen, setPackageOpen] = useState(false);
   const [selectedPackageId, setSelectedPackageId] = useState<string>("none");
   const [savingPackage, setSavingPackage] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+
 
 
   useEffect(() => {
