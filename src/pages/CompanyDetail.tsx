@@ -605,25 +605,27 @@ export default function CompanyDetail() {
               if (ap?.status === "done" && ap?.updated_at) {
                 const start = new Date(ap.updated_at);
                 start.setHours(0, 0, 0, 0);
-                // target date = start + 10 working days (skipping Fri=5, Sat=6)
+                const isWorkingDay = (dt: Date) => {
+                  const d = dt.getDay();
+                  return d !== 5 && d !== 6;
+                };
+                // target date = start + 10 working days after the start date (skipping Fri=5, Sat=6)
                 const targetDate = new Date(start);
                 let added = 0;
                 while (added < 10) {
                   targetDate.setDate(targetDate.getDate() + 1);
-                  const d = targetDate.getDay();
-                  if (d !== 5 && d !== 6) added++;
+                  if (isWorkingDay(targetDate)) added++;
                 }
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const TOTAL_WD = 10;
-                // working days elapsed between start (exclusive) and today (inclusive)
+                // working days elapsed from the start date through today (inclusive)
                 let passed = 0;
-                {
+                if (today >= start) {
                   const cur = new Date(start);
-                  while (cur < today) {
+                  while (cur <= today) {
+                    if (isWorkingDay(cur)) passed++;
                     cur.setDate(cur.getDate() + 1);
-                    const d = cur.getDay();
-                    if (d !== 5 && d !== 6) passed++;
                   }
                 }
                 let remaining: number;
@@ -635,8 +637,7 @@ export default function CompanyDetail() {
                   const cur = new Date(targetDate);
                   while (cur < today) {
                     cur.setDate(cur.getDate() + 1);
-                    const d = cur.getDay();
-                    if (d !== 5 && d !== 6) over++;
+                    if (isWorkingDay(cur)) over++;
                   }
                   remaining = -over;
                 }
