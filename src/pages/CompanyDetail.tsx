@@ -755,6 +755,14 @@ export default function CompanyDetail() {
 
 
 
+            // Visa Wakala & Visa Issuance — alert banner when Saudization Quota Allocation is done (no time shown)
+            if ((def.key === "visa_wakala" || def.key === "visa_issuance") && s.status !== "done" && s.status !== "no_need") {
+              const sqa = steps["saudization_quota_allocation"] as any;
+              if (sqa?.status === "done") {
+                simpleAlert = { tone: "warn", text: "⚠ Saudization Quota Allocation সম্পন্ন হয়েছে — এটি এখন সম্পন্ন করতে হবে" };
+              }
+            }
+
             // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
             const isMisaCard = def.key === "misa_license" || def.key === "misa";
             let misaInfo: null | { target: Date; deadline: Date; msLeft: number; msToTarget: number; wdLeft: number; overdue: boolean; done: boolean; passed: number } = null;
