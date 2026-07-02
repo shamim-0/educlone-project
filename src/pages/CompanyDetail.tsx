@@ -672,7 +672,7 @@ export default function CompanyDetail() {
 
             // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
             const isMisaCard = def.key === "misa_license" || def.key === "misa";
-            let misaInfo: null | { deadline: Date; msLeft: number; overdue: boolean; done: boolean } = null;
+            let misaInfo: null | { target: Date; deadline: Date; msLeft: number; msToTarget: number; wdLeft: number; overdue: boolean; done: boolean } = null;
             if (isMisaCard) {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && ap?.updated_at) {
@@ -690,8 +690,16 @@ export default function CompanyDetail() {
                 deadline.setDate(deadline.getDate() + 1);
                 deadline.setHours(23, 59, 59, 999);
                 const msLeft = deadline.getTime() - nowTick;
+                const msToTarget = target.getTime() - nowTick;
+                const today0 = new Date(nowTick); today0.setHours(0, 0, 0, 0);
+                let wdLeft = 0;
+                const cur = new Date(today0);
+                while (cur <= target) {
+                  if (isWD(cur)) wdLeft++;
+                  cur.setDate(cur.getDate() + 1);
+                }
                 const done = s.status === "applied" || s.status === "done";
-                misaInfo = { deadline, msLeft, overdue: !done && msLeft <= 0, done };
+                misaInfo = { target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done };
               }
             }
             const misaRed = misaInfo?.overdue;
