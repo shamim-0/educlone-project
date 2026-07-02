@@ -288,6 +288,16 @@ export default function ServicesPage() {
 
                 {!editing && (
                   <div className="flex items-center gap-1 shrink-0">
+                    {r.key === "mother_company_formation_bd" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Set WhatsApp follow-up messages"
+                        onClick={() => openMsgs(r)}
+                      >
+                        <MessageSquare className="h-4 w-4 text-primary" />
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -310,6 +320,36 @@ export default function ServicesPage() {
           })}
         </div>
       )}
+
+      <Dialog open={!!msgRow} onOpenChange={(o) => !o && setMsgRow(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>WhatsApp Follow-up Messages</DialogTitle>
+            <DialogDescription>
+              Prefilled messages for {msgRow?.label}. Placeholders: <code>{"{company}"}</code>, <code>{"{cr}"}</code>, <code>{"{isbi}"}</code>. Leave blank to use default.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-1">
+                <label className="text-xs font-medium">{i + 1}{i === 0 ? "st" : i === 1 ? "nd" : "rd"} Follow-up (after {[3, 6, 9][i]} working days)</label>
+                <Textarea
+                  rows={3}
+                  value={msgs[i]}
+                  onChange={(e) => setMsgs((prev) => prev.map((m, idx) => (idx === i ? e.target.value : m)))}
+                  placeholder={`Hello, this is a follow-up regarding ${msgRow?.label} for {company}.`}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setMsgRow(null)}>Cancel</Button>
+            <Button onClick={saveMsgs} disabled={savingMsgs}>
+              {savingMsgs ? "Saving…" : "Save Messages"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
