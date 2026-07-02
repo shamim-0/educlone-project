@@ -671,7 +671,7 @@ export default function CompanyDetail() {
             }
 
             // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
-            const isMisaCard = /misa/i.test(def.label);
+            const isMisaCard = def.key === "misa_license" || def.key === "misa";
             let misaInfo: null | { deadline: Date; msLeft: number; overdue: boolean; done: boolean } = null;
             if (isMisaCard) {
               const ap = steps["all_papers_recieved"] as any;
