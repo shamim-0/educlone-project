@@ -575,6 +575,7 @@ export type Database = {
       services: {
         Row: {
           created_at: string
+          followup_messages: string[]
           has_creds: boolean
           id: string
           key: string
@@ -586,6 +587,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          followup_messages?: string[]
           has_creds?: boolean
           id?: string
           key: string
@@ -597,6 +599,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          followup_messages?: string[]
           has_creds?: boolean
           id?: string
           key?: string
