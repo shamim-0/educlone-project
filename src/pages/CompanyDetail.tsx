@@ -109,7 +109,7 @@ export default function CompanyDetail() {
   const [savingPackage, setSavingPackage] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setNowTick(Date.now()), 30_000);
+    const t = setInterval(() => setNowTick(Date.now()), 1_000);
     return () => clearInterval(t);
   }, []);
 
@@ -715,6 +715,7 @@ export default function CompanyDetail() {
                   const totalMin = Math.floor(absMs / 60_000);
                   const hours = Math.floor((totalMin % (60 * 24)) / 60);
                   const mins = totalMin % 60;
+                  const secs = Math.floor((absMs % 60000) / 1000);
                   const inGrace = msToTarget <= 0 && msLeft > 0; // last 24h grace window
                   const tone = done ? "success" : overdue ? "danger" : inGrace ? "warn" : "info";
                   const toneClass = {
@@ -726,6 +727,7 @@ export default function CompanyDetail() {
                   const fmtDL = `${String(deadline.getDate()).padStart(2,"0")}/${String(deadline.getMonth()+1).padStart(2,"0")}/${deadline.getFullYear()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}`;
                   const overdueHrs = Math.floor(absMs / (60 * 60 * 1000));
                   const overdueMin = Math.floor((absMs % (60 * 60 * 1000)) / 60000);
+                  const overdueSec = Math.floor((absMs % 60000) / 1000);
                   return (
                     <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-400/40 shadow-lg shadow-emerald-500/10 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 text-white">
                       {/* animated particles */}
@@ -757,13 +759,15 @@ export default function CompanyDetail() {
                               <p className="text-sm font-bold tabular-nums tracking-tight">{fmtDL}</p>
                             </div>
                           </div>
-                          {!done && (
+                          {!done && msToTarget <= 0 && (
                             <span className={cn(
                               "shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold border shadow-md backdrop-blur-sm",
-                              overdue ? "bg-red-500/90 border-red-300/50 text-white shadow-red-500/30" : inGrace ? "bg-amber-400/90 border-amber-200/50 text-amber-950 shadow-amber-500/30" : "bg-white/20 border-white/30 text-white shadow-emerald-500/20",
+                              overdue ? "bg-red-500/90 border-red-300/50 text-white shadow-red-500/30" : "bg-amber-400/90 border-amber-200/50 text-amber-950 shadow-amber-500/30",
                             )}>
-                              <span className={cn("h-1.5 w-1.5 rounded-full", overdue ? "bg-red-200 animate-ping" : inGrace ? "bg-amber-200 animate-ping" : "bg-emerald-200 animate-pulse")} />
-                              {overdue ? "OVERDUE" : inGrace ? "URGENT" : "LIVE"}
+                              <span className={cn("h-1.5 w-1.5 rounded-full", overdue ? "bg-red-200 animate-ping" : "bg-amber-200 animate-ping")} />
+                              {overdue
+                                ? `-${String(overdueHrs).padStart(2,"0")}:${String(overdueMin).padStart(2,"0")}:${String(overdueSec).padStart(2,"0")}`
+                                : `${String(hours).padStart(2,"0")}:${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`}
                             </span>
                           )}
                           {done && (
@@ -780,9 +784,9 @@ export default function CompanyDetail() {
                             {done
                               ? "✓ Applied / সম্পন্ন"
                               : overdue
-                                ? `⚠ ${overdueHrs}ঘ ${overdueMin}মি overdue — Status অবশ্যই "Applied" দিতে হবে`
+                                ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "Applied" দিতে হবে`
                                 : inGrace
-                                  ? `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি`
+                                  ? `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`
                                   : `বাকি ${wdLeft} working day + ২৪ঘ grace`}
                           </p>
                         </div>
