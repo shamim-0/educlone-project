@@ -692,12 +692,15 @@ export default function CompanyDetail() {
                 const msLeft = deadline.getTime() - nowTick;
                 const msToTarget = target.getTime() - nowTick;
                 const today0 = new Date(nowTick); today0.setHours(0, 0, 0, 0);
-                let wdLeft = 0;
-                const cur = new Date(today0);
-                while (cur <= target) {
-                  if (isWD(cur)) wdLeft++;
-                  cur.setDate(cur.getDate() + 1);
+                let passed = 0;
+                if (today0 >= start) {
+                  const cur = new Date(start);
+                  while (cur <= today0) {
+                    if (isWD(cur)) passed++;
+                    cur.setDate(cur.getDate() + 1);
+                  }
                 }
+                const wdLeft = Math.max(0, 10 - passed);
                 const done = s.status === "applied" || s.status === "done";
                 misaInfo = { target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done };
               }
