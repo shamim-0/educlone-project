@@ -684,7 +684,8 @@ export default function CompanyDetail() {
                     warn: "from-yellow-500 to-orange-600",
                     danger: "from-destructive to-red-800",
                   }[tone];
-                  const dateStr = mcfDates ? `${String(mcfDates.target.getDate()).padStart(2,"0")}/${String(mcfDates.target.getMonth()+1).padStart(2,"0")}/${mcfDates.target.getFullYear()}` : "";
+                  const fmtD = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+                  const dateStr = mcfDates ? `${fmtD(mcfDates.start)} - ${fmtD(mcfDates.target)}` : "";
                   return (
                     <div className={cn(
                       "group relative overflow-hidden rounded-xl border shadow-sm bg-gradient-to-r to-transparent",
