@@ -759,13 +759,15 @@ export default function CompanyDetail() {
                               <p className="text-sm font-bold tabular-nums tracking-tight">{fmtDL}</p>
                             </div>
                           </div>
-                          {!done && (
+                          {!done && msToTarget <= 0 && (
                             <span className={cn(
                               "shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold border shadow-md backdrop-blur-sm",
-                              overdue ? "bg-red-500/90 border-red-300/50 text-white shadow-red-500/30" : inGrace ? "bg-amber-400/90 border-amber-200/50 text-amber-950 shadow-amber-500/30" : "bg-white/20 border-white/30 text-white shadow-emerald-500/20",
+                              overdue ? "bg-red-500/90 border-red-300/50 text-white shadow-red-500/30" : "bg-amber-400/90 border-amber-200/50 text-amber-950 shadow-amber-500/30",
                             )}>
-                              <span className={cn("h-1.5 w-1.5 rounded-full", overdue ? "bg-red-200 animate-ping" : inGrace ? "bg-amber-200 animate-ping" : "bg-emerald-200 animate-pulse")} />
-                              {overdue ? "OVERDUE" : inGrace ? "URGENT" : "LIVE"}
+                              <span className={cn("h-1.5 w-1.5 rounded-full", overdue ? "bg-red-200 animate-ping" : "bg-amber-200 animate-ping")} />
+                              {overdue
+                                ? `-${String(overdueHrs).padStart(2,"0")}:${String(overdueMin).padStart(2,"0")}:${String(overdueSec).padStart(2,"0")}`
+                                : `${String(hours).padStart(2,"0")}:${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`}
                             </span>
                           )}
                           {done && (
