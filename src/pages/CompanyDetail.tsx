@@ -609,6 +609,7 @@ export default function CompanyDetail() {
             // windowWD = working days available inside this window to complete the service.
             let mcfBanner: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
             let mcfDates: null | { start: Date; target: Date; remaining: number; passed: number; windowWD: number } = null;
+            let simpleAlert: null | { tone: "info" | "warn" | "danger" | "success"; text: string } = null;
             const COUNTDOWN_CONFIG: Record<string, { offsetWD: number; windowWD: number }> = {
               mother_company_formation_bd: { offsetWD: 0, windowWD: 10 },
               usa_company_formation: { offsetWD: 0, windowWD: 10 },
