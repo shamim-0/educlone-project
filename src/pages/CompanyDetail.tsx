@@ -778,18 +778,19 @@ export default function CompanyDetail() {
                           )}
                         </div>
 
-                        {/* countdown text */}
-                        <div className="flex items-center gap-2">
-                          <p className="text-lg font-extrabold tabular-nums tracking-tight drop-shadow-sm">
-                            {done
-                              ? "✓ Applied / সম্পন্ন"
-                              : overdue
-                                ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "Applied" দিতে হবে`
-                                : inGrace
-                                  ? `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`
-                                  : `বাকি ${wdLeft} working day + ২৪ঘ grace`}
-                          </p>
-                        </div>
+                        {/* countdown text — only show once first 10 WD are over */}
+                        {(done || overdue || inGrace) && (
+                          <div className="flex items-center gap-2">
+                            <p className="text-lg font-extrabold tabular-nums tracking-tight drop-shadow-sm">
+                              {done
+                                ? "✓ Applied / সম্পন্ন"
+                                : overdue
+                                  ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "Applied" দিতে হবে`
+                                  : `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`}
+                            </p>
+                          </div>
+                        )}
+
 
                         {/* progress bar */}
                         {!done && (
@@ -809,6 +810,76 @@ export default function CompanyDetail() {
                     </div>
                   );
                 })()}
+
+                {isMisaCard && misaInfo && s.status !== "done" && (() => {
+                  // Follow-ups unlock 3, 6, 9 working days AFTER the first 10-WD target
+                  const isWD = (dt: Date) => { const d = dt.getDay(); return d !== 5 && d !== 6; };
+                  const today0 = new Date(nowTick); today0.setHours(0, 0, 0, 0);
+                  let passedAfter = 0;
+                  if (today0 > misaInfo.target) {
+                    const cur = new Date(misaInfo.target);
+                    cur.setDate(cur.getDate() + 1);
+                    while (cur <= today0) {
+                      if (isWD(cur)) passedAfter++;
+                      cur.setDate(cur.getDate() + 1);
+                    }
+                  }
+                  const thresholds = [3, 6, 9];
+                  const reached = thresholds.map(t => passedAfter >= t);
+                  const activeIdx = reached.lastIndexOf(true);
+                  const labels = ["1st Follow-up", "2nd Follow-up", "3rd Follow-up"];
+                  const custom = def.followupMessages ?? [];
+                  const defaults = [
+                    `Hello, this is a follow-up regarding Investment License (MISA) for ${company.name}.`,
+                    `Hello, this is our 2nd follow-up regarding Investment License (MISA) for ${company.name}.`,
+                    `Hello, this is our 3rd follow-up regarding Investment License (MISA) for ${company.name}.`,
+                  ];
+                  const fill = (tpl: string) => tpl
+                    .replace(/\{company\}/gi, company.name ?? "")
+                    .replace(/\{cr\}/gi, (company as any).cr_number ?? "")
+                    .replace(/\{isbi\}/gi, (company as any).isbi_code ?? "");
+                  const msgs = [0,1,2].map(i => fill((custom[i] && custom[i].trim()) ? custom[i] : defaults[i]));
+                  return (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-success"><path d="M20.52 3.48A11.9 11.9 0 0012.06 0C5.5 0 .17 5.33.17 11.9c0 2.1.55 4.14 1.6 5.94L0 24l6.35-1.66a11.9 11.9 0 005.7 1.45h.01c6.56 0 11.89-5.33 11.89-11.9 0-3.18-1.24-6.17-3.43-8.41zM12.06 21.4h-.01a9.5 9.5 0 01-4.84-1.33l-.35-.2-3.77.99 1-3.67-.23-.38a9.5 9.5 0 01-1.46-5.02c0-5.25 4.27-9.52 9.52-9.52 2.54 0 4.93.99 6.73 2.79a9.44 9.44 0 012.78 6.73c0 5.25-4.27 9.51-9.37 9.61z"/></svg>
+                        WhatsApp Follow-up:
+                      </span>
+                      {thresholds.map((t, i) => {
+                        const isReached = reached[i];
+                        const isActive = i === activeIdx;
+                        const daysLeft = Math.max(0, t - passedAfter);
+                        const disabled = !isReached;
+                        const href = `https://wa.me/?text=${encodeURIComponent(msgs[i])}`;
+                        const cls = cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border shadow-sm transition-all",
+                          disabled
+                            ? "bg-muted/50 text-muted-foreground border-border cursor-not-allowed opacity-70"
+                            : isActive
+                              ? "bg-success text-success-foreground border-success hover:brightness-110"
+                              : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                        );
+                        const inner = (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5"><path d="M20.52 3.48A11.9 11.9 0 0012.06 0C5.5 0 .17 5.33.17 11.9c0 2.1.55 4.14 1.6 5.94L0 24l6.35-1.66a11.9 11.9 0 005.7 1.45h.01c6.56 0 11.89-5.33 11.89-11.9 0-3.18-1.24-6.17-3.43-8.41zM12.06 21.4h-.01a9.5 9.5 0 01-4.84-1.33l-.35-.2-3.77.99 1-3.67-.23-.38a9.5 9.5 0 01-1.46-5.02c0-5.25 4.27-9.52 9.52-9.52 2.54 0 4.93.99 6.73 2.79a9.44 9.44 0 012.78 6.73c0 5.25-4.27 9.51-9.37 9.61z"/></svg>
+                            {labels[i]}
+                            {!isReached && <span className="opacity-70">· {daysLeft}d</span>}
+                          </>
+                        );
+                        const title = !isReached
+                          ? `Unlocks ${t} working days after first 10-WD target (${daysLeft} left)`
+                          : `${labels[i]} — opens WhatsApp with prefilled message`;
+                        return disabled ? (
+                          <span key={i} className={cls} title={title}>{inner}</span>
+                        ) : (
+                          <a key={i} href={href} target="_blank" rel="noopener noreferrer" className={cls} title={title}>{inner}</a>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
+
 
                 {mcfBanner && (() => {
                   const tone = mcfBanner.tone;
