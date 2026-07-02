@@ -699,8 +699,8 @@ export default function CompanyDetail() {
                 start.setHours(0, 0, 0, 0);
                 // Next Wednesday strictly after start (if start is Wed, add 7).
                 const target = new Date(start);
-                const daysUntilThu = ((4 - target.getDay() + 7) % 7) || 7;
-                target.setDate(target.getDate() + daysUntilThu);
+                const daysUntilWed = ((3 - target.getDay() + 7) % 7) || 7;
+                target.setDate(target.getDate() + daysUntilWed);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const MS = 24 * 60 * 60 * 1000;
