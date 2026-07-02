@@ -699,8 +699,8 @@ export default function CompanyDetail() {
                 start.setHours(0, 0, 0, 0);
                 // Next Wednesday strictly after start (if start is Wed, add 7).
                 const target = new Date(start);
-                const daysUntilThu = ((4 - target.getDay() + 7) % 7) || 7;
-                target.setDate(target.getDate() + daysUntilThu);
+                const daysUntilWed = ((3 - target.getDay() + 7) % 7) || 7;
+                target.setDate(target.getDate() + daysUntilWed);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const MS = 24 * 60 * 60 * 1000;
@@ -713,9 +713,9 @@ export default function CompanyDetail() {
                 if (s.status === "done") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
-                  mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী বৃহস্পতিবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
+                  mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী বুধবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
                 } else if (remaining === 0) {
-                  mcfBanner = { tone: "warn", text: `আজই বৃহস্পতিবার (${fmt(target)}) — আজকের মধ্যেই শেষ করতে হবে` };
+                  mcfBanner = { tone: "warn", text: `আজই বুধবার (${fmt(target)}) — আজকের মধ্যেই শেষ করতে হবে` };
                 } else {
                   mcfBanner = { tone: "danger", text: `${rangeStr} — ${Math.abs(remaining)} দিন পার হয়ে গেছে` };
                 }
@@ -753,13 +753,33 @@ export default function CompanyDetail() {
             }
 
 
-
-
-            // Visa Wakala & Visa Issuance — alert banner when Saudization Quota Allocation is done (no time shown)
-            if ((def.key === "visa_wakala" || def.key === "visa_issuance") && s.status !== "done" && s.status !== "no_need") {
+            // Visa Wakala, Visa Issuance, Employee Kafala Transfer — must be done by next Thursday after Saudization Quota Allocation is done.
+            if (def.key === "visa_wakala" || def.key === "visa_issuance" || def.key === "employee_kafala_transfer") {
               const sqa = steps["saudization_quota_allocation"] as any;
-              if (sqa?.status === "done") {
-                simpleAlert = { tone: "warn", text: "⚠ Saudization Quota Allocation সম্পন্ন হয়েছে — এটি এখন সম্পন্ন করতে হবে" };
+              if (sqa?.status === "done" && sqa?.updated_at) {
+                const start = new Date(sqa.updated_at);
+                start.setHours(0, 0, 0, 0);
+                const target = new Date(start);
+                const daysUntilThu = ((4 - target.getDay() + 7) % 7) || 7;
+                target.setDate(target.getDate() + daysUntilThu);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const MS = 24 * 60 * 60 * 1000;
+                const totalDays = Math.round((target.getTime() - start.getTime()) / MS);
+                const passed = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - start.getTime()) / MS)));
+                const remaining = Math.round((target.getTime() - today.getTime()) / MS);
+                mcfDates = { start, target, remaining, passed, windowWD: totalDays };
+                const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+                const rangeStr = `${fmt(start)} - ${fmt(target)}`;
+                if (s.status === "done") {
+                  mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
+                } else if (remaining > 0) {
+                  mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী বৃহস্পতিবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
+                } else if (remaining === 0) {
+                  mcfBanner = { tone: "warn", text: `আজই বৃহস্পতিবার (${fmt(target)}) — আজকের মধ্যেই শেষ করতে হবে` };
+                } else {
+                  mcfBanner = { tone: "danger", text: `${rangeStr} — ${Math.abs(remaining)} দিন পার হয়ে গেছে` };
+                }
               }
             }
 
