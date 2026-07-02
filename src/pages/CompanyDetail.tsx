@@ -721,6 +721,38 @@ export default function CompanyDetail() {
               }
             }
 
+            // Saudization Quota Allocation — must be done by the next Sunday after Saudi Employee Hiring is done.
+            if (def.key === "saudization_quota_allocation") {
+              const seh = steps["saudi_employee_hiring"] as any;
+              if (seh?.status === "done" && seh?.updated_at) {
+                const start = new Date(seh.updated_at);
+                start.setHours(0, 0, 0, 0);
+                const target = new Date(start);
+                const daysUntilSun = ((0 - target.getDay() + 7) % 7) || 7;
+                target.setDate(target.getDate() + daysUntilSun);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const MS = 24 * 60 * 60 * 1000;
+                const totalDays = Math.round((target.getTime() - start.getTime()) / MS);
+                const passed = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - start.getTime()) / MS)));
+                const remaining = Math.round((target.getTime() - today.getTime()) / MS);
+                mcfDates = { start, target, remaining, passed, windowWD: totalDays };
+                const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+                const rangeStr = `${fmt(start)} - ${fmt(target)}`;
+                if (s.status === "done") {
+                  mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
+                } else if (remaining > 0) {
+                  mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী রবিবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
+                } else if (remaining === 0) {
+                  mcfBanner = { tone: "warn", text: `আজই রবিবার (${fmt(target)}) — আজকের মধ্যেই শেষ করতে হবে` };
+                } else {
+                  mcfBanner = { tone: "danger", text: `${rangeStr} — ${Math.abs(remaining)} দিন পার হয়ে গেছে` };
+                }
+              }
+            }
+
+
+
 
             // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
             const isMisaCard = def.key === "misa_license" || def.key === "misa";
