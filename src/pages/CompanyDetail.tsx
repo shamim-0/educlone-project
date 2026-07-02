@@ -794,13 +794,18 @@ export default function CompanyDetail() {
                   const passed = mcfDates.passed;
                   const reached = thresholds.map(t => passed >= t);
                   const activeIdx = reached.lastIndexOf(true);
-                  const phone = ((company as any).whatsapp || (company as any).phone || "").replace(/[^\d]/g, "");
                   const labels = ["1st Follow-up", "2nd Follow-up", "3rd Follow-up"];
-                  const msgs = [
+                  const custom = def.followupMessages ?? [];
+                  const defaults = [
                     `Hello, this is a follow-up regarding Mother Company Formation (Bangladesh) for ${company.name}.`,
                     `Hello, this is our 2nd follow-up regarding Mother Company Formation (Bangladesh) for ${company.name}.`,
                     `Hello, this is our 3rd follow-up regarding Mother Company Formation (Bangladesh) for ${company.name}.`,
                   ];
+                  const fill = (tpl: string) => tpl
+                    .replace(/\{company\}/gi, company.name ?? "")
+                    .replace(/\{cr\}/gi, (company as any).cr_number ?? "")
+                    .replace(/\{isbi\}/gi, (company as any).isbi_code ?? "");
+                  const msgs = [0,1,2].map(i => fill((custom[i] && custom[i].trim()) ? custom[i] : defaults[i]));
                   return (
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs text-muted-foreground">WhatsApp Follow-up:</span>
@@ -808,8 +813,8 @@ export default function CompanyDetail() {
                         const isReached = reached[i];
                         const isActive = i === activeIdx;
                         const daysLeft = Math.max(0, t - passed);
-                        const disabled = !isReached || !phone;
-                        const href = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msgs[i])}` : undefined;
+                        const disabled = !isReached;
+                        const href = `https://wa.me/?text=${encodeURIComponent(msgs[i])}`;
                         const cls = cn(
                           "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border shadow-sm transition-all",
                           disabled
@@ -825,11 +830,9 @@ export default function CompanyDetail() {
                             {!isReached && <span className="opacity-70">· {daysLeft}d</span>}
                           </>
                         );
-                        const title = !phone
-                          ? "No WhatsApp number set for this company"
-                          : !isReached
-                            ? `Unlocks after ${t} working days (${daysLeft} left)`
-                            : `${labels[i]} (after ${t} working days)`;
+                        const title = !isReached
+                          ? `Unlocks after ${t} working days (${daysLeft} left)`
+                          : `${labels[i]} (after ${t} working days) — opens WhatsApp with prefilled message`;
                         return disabled ? (
                           <span key={i} className={cls} title={title}>{inner}</span>
                         ) : (
