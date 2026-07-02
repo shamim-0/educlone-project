@@ -109,7 +109,7 @@ export default function CompanyDetail() {
   const [savingPackage, setSavingPackage] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setNowTick(Date.now()), 30_000);
+    const t = setInterval(() => setNowTick(Date.now()), 1_000);
     return () => clearInterval(t);
   }, []);
 
