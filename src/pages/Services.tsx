@@ -288,7 +288,7 @@ export default function ServicesPage() {
 
                 {!editing && (
                   <div className="flex items-center gap-1 shrink-0">
-                    {r.key === "mother_company_formation_bd" && (
+                    {(r.key === "mother_company_formation_bd" || r.key === "misa_license" || r.key === "misa") && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -298,6 +298,7 @@ export default function ServicesPage() {
                         <MessageSquare className="h-4 w-4 text-primary" />
                       </Button>
                     )}
+
                     <Button
                       size="sm"
                       variant="ghost"
