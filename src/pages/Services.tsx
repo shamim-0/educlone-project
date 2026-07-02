@@ -28,6 +28,9 @@ export default function ServicesPage() {
   const [newLabel, setNewLabel] = useState("");
   const [savingOrder, setSavingOrder] = useState(false);
   const [dragKey, setDragKey] = useState<string | null>(null);
+  const [msgRow, setMsgRow] = useState<Row | null>(null);
+  const [msgs, setMsgs] = useState<string[]>(["", "", ""]);
+  const [savingMsgs, setSavingMsgs] = useState(false);
 
   useEffect(() => {
     document.title = "Services | ISBI Tracker";
@@ -38,7 +41,7 @@ export default function ServicesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("services")
-      .select("id,key,label,tags,has_creds,sort_order")
+      .select("id,key,label,tags,has_creds,sort_order,followup_messages")
       .order("sort_order", { ascending: true });
     if (error) {
       toast.error(error.message);
@@ -51,11 +54,37 @@ export default function ServicesPage() {
           tags: r.tags ?? [],
           hasCreds: !!r.has_creds,
           sort_order: r.sort_order,
+          followupMessages: r.followup_messages ?? [],
         }))
       );
     }
     setLoading(false);
   }
+
+  function openMsgs(r: Row) {
+    setMsgRow(r);
+    const cur = r.followupMessages ?? [];
+    setMsgs([cur[0] ?? "", cur[1] ?? "", cur[2] ?? ""]);
+  }
+
+  async function saveMsgs() {
+    if (!msgRow) return;
+    setSavingMsgs(true);
+    const { error } = await supabase
+      .from("services")
+      .update({ followup_messages: msgs } as any)
+      .eq("id", msgRow.id);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setRows((prev) => prev.map((r) => (r.id === msgRow.id ? { ...r, followupMessages: msgs } : r)));
+      toast.success("Follow-up messages saved");
+      await refreshServiceDefs();
+      setMsgRow(null);
+    }
+    setSavingMsgs(false);
+  }
+
 
   if (role && role !== "admin" && role !== "sub_admin") return <Navigate to="/" replace />;
   const canDelete = role === "admin";
