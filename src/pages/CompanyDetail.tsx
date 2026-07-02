@@ -713,9 +713,9 @@ export default function CompanyDetail() {
                 if (s.status === "done") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
-                  mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী বুধবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
+                  mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী বৃহস্পতিবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
                 } else if (remaining === 0) {
-                  mcfBanner = { tone: "warn", text: `আজই বুধবার (${fmt(target)}) — আজকের মধ্যেই শেষ করতে হবে` };
+                  mcfBanner = { tone: "warn", text: `আজই বৃহস্পতিবার (${fmt(target)}) — আজকের মধ্যেই শেষ করতে হবে` };
                 } else {
                   mcfBanner = { tone: "danger", text: `${rangeStr} — ${Math.abs(remaining)} দিন পার হয়ে গেছে` };
                 }
