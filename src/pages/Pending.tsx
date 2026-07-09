@@ -283,6 +283,15 @@ export default function PendingPage() {
             const count = list.length;
             const isOpen = openKey === def.key;
             const ratio = companies.length ? count / companies.length : 0;
+            const isPositive = statusFilter === "done" || statusFilter === "applied" || statusFilter === "no_need";
+            const isProcessing = statusFilter === "processing";
+            const accent = count === 0
+              ? { chip: "bg-success/15 text-success", badge: "bg-success text-success-foreground", bar: "bg-success" }
+              : isPositive
+              ? { chip: "bg-success/15 text-success", badge: "bg-success text-success-foreground", bar: "bg-success" }
+              : isProcessing
+              ? { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" }
+              : { chip: "bg-destructive/15 text-destructive", badge: "bg-destructive text-destructive-foreground", bar: "bg-destructive" };
             return (
               <Card
                 key={def.key}
@@ -300,7 +309,7 @@ export default function PendingPage() {
                     <div className="flex items-start gap-3 min-w-0">
                       <div className={cn(
                         "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
-                        count > 0 ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"
+                        accent.chip
                       )}>
                         <Clock className="h-5 w-5" />
                       </div>
@@ -316,7 +325,7 @@ export default function PendingPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <Badge className={cn(
                         "rounded-full px-3 py-1 text-sm font-bold border-0",
-                        count > 0 ? "bg-destructive text-destructive-foreground" : "bg-success text-success-foreground"
+                        accent.badge
                       )}>
                         {count}
                       </Badge>
@@ -325,14 +334,15 @@ export default function PendingPage() {
                   </div>
                   <div className="mt-4 h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className={cn("h-full transition-all duration-700", count > 0 ? "bg-destructive" : "bg-success")}
+                      className={cn("h-full transition-all duration-700", accent.bar)}
                       style={{ width: `${Math.max(4, ratio * 100)}%` }}
                     />
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
-                    {isOpen ? "Hide" : "Click to view"} {count} pending company{count === 1 ? "" : "(ies)"}
+                    {isOpen ? "Hide" : "Click to view"} {count} {currentStatusLabel.toLowerCase()} company{count === 1 ? "" : "(ies)"}
                   </div>
                 </button>
+
 
                 <div className="absolute bottom-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
