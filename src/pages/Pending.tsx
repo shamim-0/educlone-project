@@ -412,12 +412,16 @@ export default function PendingPage() {
                               <Badge
                                 className={cn(
                                   "text-[10px] border",
-                                  st === "processing"
+                                  st === "done"
+                                    ? "bg-success/15 text-success border-success/30"
+                                    : st === "processing"
                                     ? "bg-primary/15 text-primary border-primary/30"
+                                    : st === "applied"
+                                    ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
                                     : "bg-muted text-muted-foreground border-border"
                                 )}
                               >
-                                {st === "processing" ? "Processing" : "Not Started"}
+                                {STATUS_LABELS[st] ?? st.replace("_", " ")}
                               </Badge>
                               <Button asChild size="sm" variant="outline">
                                 <Link to={`/company/${co.id}`}>Update</Link>
