@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,17 @@ interface StepRow { company_id: string; step_key: string; status: string; }
 export default function PendingPage() {
   const { role, branchId } = useAuth();
   const STEP_DEFS = useServiceDefs();
+  const [searchParams] = useSearchParams();
+  const statusFilter = searchParams.get("status") ?? "";
+  const STATUS_LABELS: Record<string, string> = {
+    "": "Pending",
+    not_started: "Not Started",
+    processing: "Processing",
+    applied: "Applied",
+    done: "Done",
+    no_need: "No Need",
+  };
+  const currentStatusLabel = STATUS_LABELS[statusFilter] ?? "Pending";
   const [companies, setCompanies] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<StepRow[]>([]);
@@ -35,7 +46,7 @@ export default function PendingPage() {
   const [companySortBy, setCompanySortBy] = useState<string>("default");
 
   useEffect(() => {
-    document.title = "Pending Services | ISBI Tracker";
+    document.title = `${currentStatusLabel} Services | ISBI Tracker`;
     if (role === null) return;
     (async () => {
       // Paginate company_steps to bypass the 1000-row default cap
@@ -70,7 +81,7 @@ export default function PendingPage() {
       setSteps(s);
       setLoading(false);
     })();
-  }, [role, branchId]);
+  }, [role, branchId, currentStatusLabel]);
 
   const branchName = (id: string | null) => branches.find(x => x.id === id)?.name ?? "—";
 
@@ -90,8 +101,9 @@ export default function PendingPage() {
     return companies.filter(co => branchName(co.branch_id) === branchFilter);
   }, [companies, branchFilter, branches]);
 
-  // For each service, list companies where status !== done/no_need
-  // AND all earlier services in STEP_DEFS order are done/no_need (sequential gating).
+  // For each service, list companies matching the current status filter.
+  // Default (pending): status !== done/no_need/applied AND all earlier services done/no_need/applied.
+  // Specific status: companies where this service's status === selected status (no gating).
   const pendingByService = useMemo(() => {
     const out: Record<string, Company[]> = {};
     STEP_DEFS.forEach((def) => {
@@ -100,18 +112,21 @@ export default function PendingPage() {
         const applicableKeys = new Set(applicable.map(d => d.key));
         if (!applicableKeys.has(def.key)) return false;
         const cMap = stepMap.get(co.id);
+        const st = cMap?.get(def.key) ?? "not_started";
+        if (statusFilter) {
+          return st === statusFilter;
+        }
         const defIndex = applicable.findIndex(d => d.key === def.key);
         for (let i = 0; i < defIndex; i++) {
           const prevKey = applicable[i].key;
           const prev = cMap?.get(prevKey) ?? "not_started";
           if (prev !== "done" && prev !== "no_need" && prev !== "applied") return false;
         }
-        const st = cMap?.get(def.key) ?? "not_started";
         return st !== "done" && st !== "no_need" && st !== "applied";
       });
     });
     return out;
-  }, [branchScopedCompanies, stepMap, STEP_DEFS]);
+  }, [branchScopedCompanies, stepMap, STEP_DEFS, statusFilter]);
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
@@ -189,16 +204,16 @@ export default function PendingPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold flex items-center gap-2">
-              <ListChecks className="h-6 w-6 text-primary" /> Pending Services
+              <ListChecks className="h-6 w-6 text-primary" /> {currentStatusLabel} Services
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Click any service to see the companies where it's still pending.
+              Click any service to see the companies with status: <span className="font-semibold">{currentStatusLabel}</span>.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <div className="text-2xl font-bold">{totalPending}</div>
-              <div className="text-xs text-muted-foreground">Total pending</div>
+              <div className="text-xs text-muted-foreground">Total {currentStatusLabel.toLowerCase()}</div>
             </div>
             <div className="h-10 w-px bg-border" />
             <div className="text-right">
