@@ -83,9 +83,31 @@ export default function AppLayout() {
                 </NavLink>
               );
               if (m.to === "/pending") {
+                const currentStatus = new URLSearchParams(location.search).get("status") ?? "";
+                const activeItem = pendingStatusItems.find((s) => s.value === currentStatus);
+                const pendingLabel = location.pathname === "/pending" && activeItem && currentStatus
+                  ? activeItem.label.replace(/^[^\s]+\s/, "")
+                  : m.label;
+                const pendingLinkEl = (
+                  <NavLink
+                    to={m.to}
+                    end={m.end}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-card"
+                          : "text-foreground/70 hover:bg-secondary hover:text-foreground"
+                      )
+                    }
+                  >
+                    <m.icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{pendingLabel}</span>
+                  </NavLink>
+                );
                 return (
                   <div key={m.to} className="relative group">
-                    {linkEl}
+                    {pendingLinkEl}
                     <div className="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
                       <div className="min-w-[180px] rounded-lg border bg-popover shadow-lg p-1">
                         {pendingStatusItems.map((s) => {
