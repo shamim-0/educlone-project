@@ -101,8 +101,9 @@ export default function PendingPage() {
     return companies.filter(co => branchName(co.branch_id) === branchFilter);
   }, [companies, branchFilter, branches]);
 
-  // For each service, list companies where status !== done/no_need
-  // AND all earlier services in STEP_DEFS order are done/no_need (sequential gating).
+  // For each service, list companies matching the current status filter.
+  // Default (pending): status !== done/no_need/applied AND all earlier services done/no_need/applied.
+  // Specific status: companies where this service's status === selected status (no gating).
   const pendingByService = useMemo(() => {
     const out: Record<string, Company[]> = {};
     STEP_DEFS.forEach((def) => {
@@ -111,18 +112,21 @@ export default function PendingPage() {
         const applicableKeys = new Set(applicable.map(d => d.key));
         if (!applicableKeys.has(def.key)) return false;
         const cMap = stepMap.get(co.id);
+        const st = cMap?.get(def.key) ?? "not_started";
+        if (statusFilter) {
+          return st === statusFilter;
+        }
         const defIndex = applicable.findIndex(d => d.key === def.key);
         for (let i = 0; i < defIndex; i++) {
           const prevKey = applicable[i].key;
           const prev = cMap?.get(prevKey) ?? "not_started";
           if (prev !== "done" && prev !== "no_need" && prev !== "applied") return false;
         }
-        const st = cMap?.get(def.key) ?? "not_started";
         return st !== "done" && st !== "no_need" && st !== "applied";
       });
     });
     return out;
-  }, [branchScopedCompanies, stepMap, STEP_DEFS]);
+  }, [branchScopedCompanies, stepMap, STEP_DEFS, statusFilter]);
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
