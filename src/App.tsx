@@ -13,6 +13,7 @@ import CompanyDetail from "./pages/CompanyDetail";
 import Branch from "./pages/Branch";
 import Accounts from "./pages/Accounts";
 import Pending from "./pages/Pending";
+import MyTasks from "./pages/MyTasks";
 import Users from "./pages/Users";
 import Services from "./pages/Services";
 import Packages from "./pages/Packages";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/branch" element={<ProtectedRoute requireAdmin><Branch /></ProtectedRoute>} />
               <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
+              <Route path="/my-tasks" element={<ProtectedRoute requireRoles={["editor"]}><MyTasks /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
               <Route path="/services" element={<ProtectedRoute requireRoles={["admin","sub_admin"]}><Services /></ProtectedRoute>} />
               <Route path="/packages" element={<ProtectedRoute requireAdmin><Packages /></ProtectedRoute>} />
