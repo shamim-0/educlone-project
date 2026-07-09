@@ -46,7 +46,7 @@ export default function PendingPage() {
   const [companySortBy, setCompanySortBy] = useState<string>("default");
 
   useEffect(() => {
-    document.title = "Pending Services | ISBI Tracker";
+    document.title = `${currentStatusLabel} Services | ISBI Tracker`;
     if (role === null) return;
     (async () => {
       // Paginate company_steps to bypass the 1000-row default cap
