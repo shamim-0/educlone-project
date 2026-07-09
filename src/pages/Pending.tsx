@@ -204,16 +204,16 @@ export default function PendingPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold flex items-center gap-2">
-              <ListChecks className="h-6 w-6 text-primary" /> Pending Services
+              <ListChecks className="h-6 w-6 text-primary" /> {currentStatusLabel} Services
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Click any service to see the companies where it's still pending.
+              Click any service to see the companies with status: <span className="font-semibold">{currentStatusLabel}</span>.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <div className="text-2xl font-bold">{totalPending}</div>
-              <div className="text-xs text-muted-foreground">Total pending</div>
+              <div className="text-xs text-muted-foreground">Total {currentStatusLabel.toLowerCase()}</div>
             </div>
             <div className="h-10 w-px bg-border" />
             <div className="text-right">
