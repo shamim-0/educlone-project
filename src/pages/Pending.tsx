@@ -24,6 +24,17 @@ interface StepRow { company_id: string; step_key: string; status: string; }
 export default function PendingPage() {
   const { role, branchId } = useAuth();
   const STEP_DEFS = useServiceDefs();
+  const [searchParams] = useSearchParams();
+  const statusFilter = searchParams.get("status") ?? "";
+  const STATUS_LABELS: Record<string, string> = {
+    "": "Pending",
+    not_started: "Not Started",
+    processing: "Processing",
+    applied: "Applied",
+    done: "Done",
+    no_need: "No Need",
+  };
+  const currentStatusLabel = STATUS_LABELS[statusFilter] ?? "Pending";
   const [companies, setCompanies] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [steps, setSteps] = useState<StepRow[]>([]);
