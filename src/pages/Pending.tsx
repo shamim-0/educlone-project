@@ -283,15 +283,15 @@ export default function PendingPage() {
             const count = list.length;
             const isOpen = openKey === def.key;
             const ratio = companies.length ? count / companies.length : 0;
-            const isPositive = statusFilter === "done" || statusFilter === "applied" || statusFilter === "no_need";
-            const isProcessing = statusFilter === "processing";
-            const accent = count === 0
-              ? { chip: "bg-success/15 text-success", badge: "bg-success text-success-foreground", bar: "bg-success" }
-              : isPositive
-              ? { chip: "bg-success/15 text-success", badge: "bg-success text-success-foreground", bar: "bg-success" }
-              : isProcessing
-              ? { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" }
-              : { chip: "bg-destructive/15 text-destructive", badge: "bg-destructive text-destructive-foreground", bar: "bg-destructive" };
+            const accentByStatus: Record<string, { chip: string; badge: string; bar: string }> = {
+              done: { chip: "bg-success/15 text-success", badge: "bg-success text-success-foreground", bar: "bg-success" },
+              processing: { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" },
+              applied: { chip: "bg-amber-500/15 text-amber-600", badge: "bg-amber-500 text-white", bar: "bg-amber-500" },
+              no_need: { chip: "bg-muted text-muted-foreground", badge: "bg-muted text-foreground", bar: "bg-muted-foreground/50" },
+              not_started: { chip: "bg-destructive/15 text-destructive", badge: "bg-destructive text-destructive-foreground", bar: "bg-destructive" },
+              "": { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" },
+            };
+            const accent = accentByStatus[statusFilter] ?? accentByStatus[""];
             return (
               <Card
                 key={def.key}
