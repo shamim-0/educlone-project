@@ -34,8 +34,18 @@ const menu = [
 export default function AppLayout() {
   const { signOut, username, role, accountsAccess } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
   const { theme, toggle } = useTheme();
   const [pwdOpen, setPwdOpen] = useState(false);
+
+  const pendingStatusItems = [
+    { value: "", label: "🕐 Pending (default)" },
+    { value: "not_started", label: "⚪ Not Started" },
+    { value: "processing", label: "🔵 Processing" },
+    { value: "applied", label: "🟣 Applied" },
+    { value: "done", label: "🟢 Done" },
+    { value: "no_need", label: "⚫ No Need" },
+  ];
   const visibleMenu = menu.filter((m: any) => {
     if (m.adminOnly && role !== "admin") return false;
     if (m.roles && !m.roles.includes(role ?? "")) return false;
