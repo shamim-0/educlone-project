@@ -63,7 +63,7 @@ export default function AppLayout() {
       <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur shadow-card">
         <div className="container flex h-16 items-center justify-between gap-4">
           {/* Left: menu */}
-          <nav className="flex items-center gap-1 overflow-x-auto">
+          <nav className="flex items-center gap-1 flex-wrap">
             {visibleMenu.map((m) => {
               const linkEl = (
                 <NavLink
