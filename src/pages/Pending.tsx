@@ -81,7 +81,7 @@ export default function PendingPage() {
       setSteps(s);
       setLoading(false);
     })();
-  }, [role, branchId]);
+  }, [role, branchId, currentStatusLabel]);
 
   const branchName = (id: string | null) => branches.find(x => x.id === id)?.name ?? "—";
 
