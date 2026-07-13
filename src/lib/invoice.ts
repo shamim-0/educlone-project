@@ -206,7 +206,7 @@ function escapeHtml(s: string) {
 // ============================================================================
 export async function openDealSummary(companyId: string) {
   const [cRes, iRes, eRes] = await Promise.all([
-    supabase.from("companies").select("name, phone, whatsapp, address, total_deal, discount").eq("id", companyId).single(),
+    supabase.from("companies").select("name, client_name, phone, whatsapp, address, total_deal, discount").eq("id", companyId).single(),
     supabase.from("company_installments").select("id, amount, payment_date, note, created_at").eq("company_id", companyId),
     supabase.from("company_extra_deals").select("id, amount, note, created_at").eq("company_id", companyId),
   ]);
