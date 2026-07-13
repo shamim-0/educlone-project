@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, KeyRound, ClipboardCheck } from "lucide-react";
+import { Plus, KeyRound, ClipboardCheck, ListTodo } from "lucide-react";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { AssignTaskDialog } from "@/components/AssignTaskDialog";
+import { TodoTaskDialog } from "@/components/TodoTaskDialog";
 
 interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }

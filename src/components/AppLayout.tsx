@@ -14,6 +14,7 @@ import {
   Package,
   ChevronDown,
   UserCheck,
+  ListTodo,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,8 @@ const menu = [
   { to: "/services", label: "Services", icon: ListChecks, roles: ["admin", "sub_admin"] as string[] },
   { to: "/packages", label: "Packages", icon: Package, adminOnly: true },
   { to: "/my-tasks", label: "My Tasks", icon: UserCheck, roles: ["editor"] as string[] },
+  { to: "/todo-list", label: "To Do List", icon: ListTodo, adminOnly: true },
+  { to: "/my-todo-list", label: "To Do List", icon: ListTodo, roles: ["editor"] as string[] },
 ];
 
 export default function AppLayout() {

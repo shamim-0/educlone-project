@@ -14,6 +14,8 @@ import Branch from "./pages/Branch";
 import Accounts from "./pages/Accounts";
 import Pending from "./pages/Pending";
 import MyTasks from "./pages/MyTasks";
+import TodoList from "./pages/TodoList";
+import MyTodoList from "./pages/MyTodoList";
 import Users from "./pages/Users";
 import Services from "./pages/Services";
 import Packages from "./pages/Packages";
@@ -44,6 +46,8 @@ const App = () => (
               <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
               <Route path="/my-tasks" element={<ProtectedRoute requireRoles={["editor"]}><MyTasks /></ProtectedRoute>} />
+              <Route path="/todo-list" element={<ProtectedRoute requireAdmin><TodoList /></ProtectedRoute>} />
+              <Route path="/my-todo-list" element={<ProtectedRoute requireRoles={["editor"]}><MyTodoList /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
               <Route path="/services" element={<ProtectedRoute requireRoles={["admin","sub_admin"]}><Services /></ProtectedRoute>} />
               <Route path="/packages" element={<ProtectedRoute requireAdmin><Packages /></ProtectedRoute>} />
