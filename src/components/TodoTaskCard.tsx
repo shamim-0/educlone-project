@@ -122,9 +122,22 @@ export function TodoTaskCard({ task, perspective, onChanged, onEdit }: Props) {
 
       <div className="space-y-4 p-5">
         <div className="flex flex-wrap gap-1.5">
-          {serviceLabels.map((l, i) => (
-            <Badge key={i} variant="secondary" className="text-xs font-medium">{l}</Badge>
-          ))}
+          {task.services.map((k, i) => {
+            const label = defs.find((d) => d.key === k)?.label ?? k;
+            const st = task.serviceStatuses?.[k];
+            const isDone = st === "done" || st === "no_need";
+            return isDone ? (
+              <Badge
+                key={i}
+                className="border border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-medium gap-1"
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                {label}
+              </Badge>
+            ) : (
+              <Badge key={i} variant="secondary" className="text-xs font-medium">{label}</Badge>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
