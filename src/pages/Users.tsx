@@ -258,6 +258,13 @@ export default function UsersPage() {
         targetLabel={pwdTarget?.username}
       />
 
+      <TodoTaskDialog
+        open={!!todoTarget}
+        onOpenChange={(v) => { if (!v) setTodoTarget(null); }}
+        mode="admin"
+        presetAssignee={todoTarget ? { id: todoTarget.id, username: todoTarget.username } : undefined}
+      />
+
       <AssignTaskDialog
         open={!!assignTarget}
         onOpenChange={(v) => { if (!v) setAssignTarget(null); }}
