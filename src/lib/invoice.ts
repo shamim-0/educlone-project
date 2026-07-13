@@ -230,7 +230,7 @@ export async function openDealSummary(companyId: string) {
 
   renderSummaryWindow({
     company: {
-      name: company.name,
+      name: (company.client_name && String(company.client_name).trim()) || company.name,
       mobile: company.phone || company.whatsapp || "",
       address: company.address || "",
     },
