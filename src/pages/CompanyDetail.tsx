@@ -192,13 +192,14 @@ export default function CompanyDetail() {
       .from("companies")
       .update({
         name: company.name,
+        client_name: (company as any).client_name ?? company.name,
         branch_id: company.branch_id,
         type: company.type as any,
         cr_number: company.cr_number,
         whatsapp: company.whatsapp,
         contact_email: company.contact_email,
         note: company.note,
-      })
+      } as any)
       .eq("id", company.id);
     setSavingProfile(false);
     if (error) toast.error(error.message);
@@ -1326,6 +1327,15 @@ export default function CompanyDetail() {
             <div>
               <Label className="text-xs">COMPANY NAME</Label>
               <Input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} disabled={!canEdit} />
+            </div>
+            <div>
+              <Label className="text-xs">CLIENT NAME</Label>
+              <Input
+                value={(company as any).client_name ?? company.name}
+                onChange={(e) => setCompany({ ...company, client_name: e.target.value } as any)}
+                disabled={!canEdit}
+                placeholder="Defaults to company name"
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>

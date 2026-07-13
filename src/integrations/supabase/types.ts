@@ -86,6 +86,7 @@ export type Database = {
           account_note: string | null
           address: string | null
           branch_id: string | null
+          client_name: string | null
           contact_email: string | null
           cr_number: string | null
           created_at: string
@@ -112,6 +113,7 @@ export type Database = {
           account_note?: string | null
           address?: string | null
           branch_id?: string | null
+          client_name?: string | null
           contact_email?: string | null
           cr_number?: string | null
           created_at?: string
@@ -138,6 +140,7 @@ export type Database = {
           account_note?: string | null
           address?: string | null
           branch_id?: string | null
+          client_name?: string | null
           contact_email?: string | null
           cr_number?: string | null
           created_at?: string
