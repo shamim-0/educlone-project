@@ -876,7 +876,7 @@ export default function CompanyDetail() {
                               <p className="text-[11px] font-medium text-emerald-100/80 uppercase tracking-wider">{title}</p>
                               <p className="text-sm font-bold tabular-nums tracking-tight">{fmtDL}</p>
                               {phase === "complete" && (
-                                <p className="text-[11px] text-emerald-100/90 mt-0.5">Applied: {fmtDate(startDate)} — Done korte hobe 10 working days er moddhe</p>
+                                <p className="text-[11px] text-emerald-100/90 mt-0.5">Applied: {fmtDate(startDate)} — ১০ কার্যদিবসের মধ্যে সম্পন্ন করতে হবে</p>
                               )}
                             </div>
                           </div>
