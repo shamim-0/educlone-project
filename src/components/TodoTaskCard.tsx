@@ -206,6 +206,11 @@ export function TodoTaskCard({ task, perspective, onChanged, onEdit }: Props) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild className="gap-1">
+              <Link to={`/company/${task.company_id}`}>
+                <ExternalLink className="h-3.5 w-3.5" /> Update Task
+              </Link>
+            </Button>
             {canEdit && onEdit && (
               <Button size="sm" variant="outline" onClick={() => onEdit(task)} className="gap-1">
                 <Pencil className="h-3.5 w-3.5" /> Edit
