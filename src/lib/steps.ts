@@ -29,6 +29,7 @@ export const STATUS_OPTS = [
 // Service labels (case-insensitive) that support the "Applied" status
 const APPLIED_SUPPORTED_LABELS = [
   "mother company formation (bangladesh)",
+  "saudi company name reservation",
   "saudi company structure planning",
   "usa company formation (if applicable)",
   "canada company formation (if applicable)",
