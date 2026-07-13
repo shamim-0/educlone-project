@@ -27,6 +27,8 @@ export interface TodoTaskCardData {
   editor_note: string | null;
   status: "pending" | "in_progress" | "completed";
   services: string[];
+  /** per-service company_steps status keyed by service key */
+  serviceStatuses?: Record<string, string>;
   /** progress 0-100 for selected services on the company */
   progress: number;
 }
