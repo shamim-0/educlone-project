@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
-import { Building2, Calendar as CalendarIcon, User, Pencil, Trash2, AlertTriangle, Clock } from "lucide-react";
+import { Building2, Calendar as CalendarIcon, User, Pencil, Trash2, AlertTriangle, Clock, ExternalLink, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
