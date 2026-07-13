@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
-import { Building2, Calendar as CalendarIcon, User, Pencil, Trash2, AlertTriangle, Clock } from "lucide-react";
+import { Building2, Calendar as CalendarIcon, User, Pencil, Trash2, AlertTriangle, Clock, ExternalLink, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ export interface TodoTaskCardData {
   editor_note: string | null;
   status: "pending" | "in_progress" | "completed";
   services: string[];
+  /** per-service company_steps status keyed by service key */
+  serviceStatuses?: Record<string, string>;
   /** progress 0-100 for selected services on the company */
   progress: number;
 }
@@ -120,9 +122,22 @@ export function TodoTaskCard({ task, perspective, onChanged, onEdit }: Props) {
 
       <div className="space-y-4 p-5">
         <div className="flex flex-wrap gap-1.5">
-          {serviceLabels.map((l, i) => (
-            <Badge key={i} variant="secondary" className="text-xs font-medium">{l}</Badge>
-          ))}
+          {task.services.map((k, i) => {
+            const label = defs.find((d) => d.key === k)?.label ?? k;
+            const st = task.serviceStatuses?.[k];
+            const isDone = st === "done" || st === "no_need";
+            return isDone ? (
+              <Badge
+                key={i}
+                className="border border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-medium gap-1"
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                {label}
+              </Badge>
+            ) : (
+              <Badge key={i} variant="secondary" className="text-xs font-medium">{label}</Badge>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -191,6 +206,11 @@ export function TodoTaskCard({ task, perspective, onChanged, onEdit }: Props) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild className="gap-1">
+              <Link to={`/company/${task.company_id}`}>
+                <ExternalLink className="h-3.5 w-3.5" /> Update Task
+              </Link>
+            </Button>
             {canEdit && onEdit && (
               <Button size="sm" variant="outline" onClick={() => onEdit(task)} className="gap-1">
                 <Pencil className="h-3.5 w-3.5" /> Edit

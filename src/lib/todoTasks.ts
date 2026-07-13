@@ -56,9 +56,11 @@ export async function fetchTodoTasks(opts: FetchOpts = {}): Promise<TodoTaskCard
 
   return taskRows.map((t) => {
     const services = svcMap.get(t.id) ?? [];
+    const serviceStatuses: Record<string, string> = {};
     let done = 0;
     services.forEach((k) => {
-      const s = stepMap.get(t.company_id)?.get(k);
+      const s = stepMap.get(t.company_id)?.get(k) ?? "pending";
+      serviceStatuses[k] = s;
       if (s === "done" || s === "no_need") done++;
     });
     const progress = services.length === 0 ? 0 : Math.round((done / services.length) * 100);
@@ -76,6 +78,7 @@ export async function fetchTodoTasks(opts: FetchOpts = {}): Promise<TodoTaskCard
       editor_note: t.editor_note,
       status: t.status,
       services,
+      serviceStatuses,
       progress,
     } as TodoTaskCardData;
   });
