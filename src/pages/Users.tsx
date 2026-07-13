@@ -181,9 +181,14 @@ export default function UsersPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       {(roles[p.id] ?? "viewer") === "editor" && (
-                        <Button variant="outline" size="sm" className="gap-1" onClick={() => setAssignTarget(p)}>
-                          <ClipboardCheck className="h-3.5 w-3.5" /> Assign Task
-                        </Button>
+                        <>
+                          <Button variant="outline" size="sm" className="gap-1" onClick={() => setAssignTarget(p)}>
+                            <ClipboardCheck className="h-3.5 w-3.5" /> Assign Task
+                          </Button>
+                          <Button variant="outline" size="sm" className="gap-1" onClick={() => setTodoTarget(p)}>
+                            <ListTodo className="h-3.5 w-3.5" /> To Do List
+                          </Button>
+                        </>
                       )}
                       <Button variant="outline" size="sm" className="gap-1" onClick={() => setPwdTarget(p)}>
                         <KeyRound className="h-3.5 w-3.5" /> Change
