@@ -569,11 +569,25 @@ export default function AccountsPage() {
       <Dialog open={!!openCompany} onOpenChange={(o) => !o && setOpenCompany(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Receipt className="h-5 w-5 text-primary" />
-              Deal & Installments: {openCompany?.name}
+            <DialogTitle className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-primary" />
+                Deal & Installments: {openCompany?.name}
+              </span>
+              {openCompany && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mr-6 gap-1.5"
+                  onClick={() => openDealSummary(openCompany.id).catch((e) => toast.error(e.message || "Failed to generate PDF"))}
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate PDF
+                </Button>
+              )}
             </DialogTitle>
           </DialogHeader>
+
 
           {openCompany && (
             <div className="space-y-5">
