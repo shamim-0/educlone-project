@@ -831,25 +831,21 @@ export default function CompanyDetail() {
 
             return (
               <Card key={def.key} className={cn("p-4 space-y-3", misaRed && "bg-destructive/15 border-destructive border-2 animate-pulse")}>
-                {misaInfo && (misaInfo.msToTarget <= 0 || misaInfo.done) && (() => {
-                  const { msLeft, msToTarget, wdLeft, deadline, overdue, done } = misaInfo;
+                {misaInfo && (misaInfo.phase === "complete" || misaInfo.msToTarget <= 0 || misaInfo.done) && (() => {
+                  const { msLeft, msToTarget, wdLeft, deadline, overdue, done, phase, startDate } = misaInfo;
                   const absMs = Math.abs(msLeft);
                   const totalMin = Math.floor(absMs / 60_000);
                   const hours = Math.floor((totalMin % (60 * 24)) / 60);
                   const mins = totalMin % 60;
                   const secs = Math.floor((absMs % 60000) / 1000);
                   const inGrace = msToTarget <= 0 && msLeft > 0; // last 24h grace window
-                  const tone = done ? "success" : overdue ? "danger" : inGrace ? "warn" : "info";
-                  const toneClass = {
-                    success: "bg-success/15 border-success/50 text-success",
-                    info: "bg-primary/10 border-primary/40 text-primary",
-                    warn: "bg-orange-500/15 border-orange-500/60 text-orange-700 dark:text-orange-400",
-                    danger: "bg-destructive/20 border-destructive text-destructive",
-                  }[tone];
-                  const fmtDL = `${String(deadline.getDate()).padStart(2,"0")}/${String(deadline.getMonth()+1).padStart(2,"0")}/${deadline.getFullYear()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}`;
+                  const fmtDate = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+                  const fmtDL = `${fmtDate(deadline)} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}`;
                   const overdueHrs = Math.floor(absMs / (60 * 60 * 1000));
                   const overdueMin = Math.floor((absMs % (60 * 60 * 1000)) / 60000);
                   const overdueSec = Math.floor((absMs % 60000) / 1000);
+                  const title = phase === "complete" ? "MISA COMPLETE DEADLINE" : "MISA APPLIED DEADLINE";
+                  const requiredStatus = phase === "complete" ? "Done" : "Applied";
                   return (
                     <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-400/40 shadow-lg shadow-emerald-500/10 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 text-white">
                       {/* animated particles */}
@@ -877,8 +873,11 @@ export default function CompanyDetail() {
                               </svg>
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[11px] font-medium text-emerald-100/80 uppercase tracking-wider">MISA Applied Deadline</p>
+                              <p className="text-[11px] font-medium text-emerald-100/80 uppercase tracking-wider">{title}</p>
                               <p className="text-sm font-bold tabular-nums tracking-tight">{fmtDL}</p>
+                              {phase === "complete" && (
+                                <p className="text-[11px] text-emerald-100/90 mt-0.5">Applied: {fmtDate(startDate)} — Done korte hobe 10 working days er moddhe</p>
+                              )}
                             </div>
                           </div>
                           {!done && msToTarget <= 0 && (
@@ -890,6 +889,12 @@ export default function CompanyDetail() {
                               {overdue
                                 ? `-${String(overdueHrs).padStart(2,"0")}:${String(overdueMin).padStart(2,"0")}:${String(overdueSec).padStart(2,"0")}`
                                 : `${String(hours).padStart(2,"0")}:${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`}
+                            </span>
+                          )}
+                          {!done && phase === "complete" && msToTarget > 0 && (
+                            <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold border bg-white/15 border-white/30 text-white">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-200 animate-pulse" />
+                              {wdLeft} WD LEFT
                             </span>
                           )}
                           {done && (
@@ -905,13 +910,14 @@ export default function CompanyDetail() {
                           <div className="flex items-center gap-2">
                             <p className="text-lg font-extrabold tabular-nums tracking-tight drop-shadow-sm">
                               {done
-                                ? "✓ Applied / সম্পন্ন"
+                                ? "✓ সম্পন্ন / Done"
                                 : overdue
-                                  ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "Applied" দিতে হবে`
+                                  ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "${requiredStatus}" দিতে হবে`
                                   : `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`}
                             </p>
                           </div>
                         )}
+
 
 
                         {/* progress bar */}
