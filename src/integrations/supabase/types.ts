@@ -611,6 +611,85 @@ export type Database = {
         }
         Relationships: []
       }
+      todo_task_services: {
+        Row: {
+          created_at: string
+          id: string
+          service_key: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          service_key: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          service_key?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "todo_task_services_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todo_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      todo_tasks: {
+        Row: {
+          admin_note: string | null
+          assigned_to: string
+          company_id: string
+          created_at: string
+          created_by: string
+          creator_role: string
+          deadline: string | null
+          editor_note: string | null
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          assigned_to: string
+          company_id: string
+          created_at?: string
+          created_by: string
+          creator_role: string
+          deadline?: string | null
+          editor_note?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          assigned_to?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          creator_role?: string
+          deadline?: string | null
+          editor_note?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "todo_tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
