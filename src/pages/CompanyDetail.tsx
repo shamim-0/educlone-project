@@ -192,13 +192,14 @@ export default function CompanyDetail() {
       .from("companies")
       .update({
         name: company.name,
+        client_name: (company as any).client_name ?? company.name,
         branch_id: company.branch_id,
         type: company.type as any,
         cr_number: company.cr_number,
         whatsapp: company.whatsapp,
         contact_email: company.contact_email,
         note: company.note,
-      })
+      } as any)
       .eq("id", company.id);
     setSavingProfile(false);
     if (error) toast.error(error.message);
