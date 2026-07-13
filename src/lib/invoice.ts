@@ -44,11 +44,11 @@ export interface InvoiceData {
 export async function openInvoice(companyId: string, installmentId: string) {
   // Fetch company + all installments to compute ordinal index
   const [cRes, iRes] = await Promise.all([
-    supabase.from("companies").select("name, phone, whatsapp, address").eq("id", companyId).single(),
+    supabase.from("companies").select("name, client_name, phone, whatsapp, address").eq("id", companyId).single(),
     supabase.from("company_installments").select("id, amount, payment_date, created_at").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
-  const company = cRes.data as { name: string; phone: string | null; whatsapp: string | null; address: string | null };
+  const company = cRes.data as { name: string; client_name: string | null; phone: string | null; whatsapp: string | null; address: string | null };
   const insts = (iRes.data ?? []).slice().sort((a: any, b: any) => {
     const ad = a.payment_date ?? a.created_at ?? "";
     const bd = b.payment_date ?? b.created_at ?? "";
@@ -59,7 +59,7 @@ export async function openInvoice(companyId: string, installmentId: string) {
   if (!inst) throw new Error("Installment not found");
 
   const data: InvoiceData = {
-    clientName: company.name,
+    clientName: company.client_name?.trim() || company.name,
     mobile: company.phone || company.whatsapp || "",
     address: company.address || "",
     paymentIndex: idx + 1,
