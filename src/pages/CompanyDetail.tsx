@@ -783,22 +783,21 @@ export default function CompanyDetail() {
               }
             }
 
-            // Live countdown for Investment License (MISA License) — deadline = MCF target + 1 day grace (24h)
+            // Live countdown for Investment License (MISA License)
+            // Phase 1 (apply): after all_papers_received → status must become "Applied" within 10 WD (+24h grace)
+            // Phase 2 (complete): after status becomes "Applied" → status must become "Done" within 10 WD from applied date
             const isMisaCard = def.key === "misa_license" || def.key === "misa";
-            let misaInfo: null | { target: Date; deadline: Date; msLeft: number; msToTarget: number; wdLeft: number; overdue: boolean; done: boolean; passed: number } = null;
+            let misaInfo: null | { phase: "apply" | "complete"; target: Date; deadline: Date; msLeft: number; msToTarget: number; wdLeft: number; overdue: boolean; done: boolean; passed: number; startDate: Date } = null;
             if (isMisaCard) {
-              const ap = steps["all_papers_recieved"] as any;
-              if (ap?.status === "done" && ap?.updated_at) {
-                const start = new Date(ap.updated_at);
-                start.setHours(0, 0, 0, 0);
-                const isWD = (dt: Date) => { const d = dt.getDay(); return d !== 5 && d !== 6; };
+              const isWD = (dt: Date) => { const d = dt.getDay(); return d !== 5 && d !== 6; };
+              const build = (startSrc: Date, phase: "apply" | "complete", done: boolean) => {
+                const start = new Date(startSrc); start.setHours(0, 0, 0, 0);
                 const target = new Date(start);
                 let added = 0;
                 while (added < 10) {
                   target.setDate(target.getDate() + 1);
                   if (isWD(target)) added++;
                 }
-                // Deadline = end of (target + 1 day) → 24h grace after 10 WD period ends
                 const deadline = new Date(target);
                 deadline.setDate(deadline.getDate() + 1);
                 deadline.setHours(23, 59, 59, 999);
@@ -814,11 +813,21 @@ export default function CompanyDetail() {
                   }
                 }
                 const wdLeft = Math.max(0, 10 - passed);
-                const done = s.status === "applied" || s.status === "done";
-                misaInfo = { target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done, passed };
+                return { phase, target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done, passed, startDate: start };
+              };
+              if (s.status === "applied" && (s as any).updated_at) {
+                misaInfo = build(new Date((s as any).updated_at), "complete", false);
+              } else if (s.status === "done" && (s as any).updated_at) {
+                misaInfo = build(new Date((s as any).updated_at), "complete", true);
+              } else {
+                const ap = steps["all_papers_recieved"] as any;
+                if (ap?.status === "done" && ap?.updated_at) {
+                  misaInfo = build(new Date(ap.updated_at), "apply", false);
+                }
               }
             }
             const misaRed = misaInfo?.overdue;
+
 
             return (
               <Card key={def.key} className={cn("p-4 space-y-3", misaRed && "bg-destructive/15 border-destructive border-2 animate-pulse")}>
