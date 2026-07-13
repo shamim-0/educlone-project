@@ -1328,6 +1328,15 @@ export default function CompanyDetail() {
               <Label className="text-xs">COMPANY NAME</Label>
               <Input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} disabled={!canEdit} />
             </div>
+            <div>
+              <Label className="text-xs">CLIENT NAME</Label>
+              <Input
+                value={(company as any).client_name ?? company.name}
+                onChange={(e) => setCompany({ ...company, client_name: e.target.value } as any)}
+                disabled={!canEdit}
+                placeholder="Defaults to company name"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">TYPE</Label>
