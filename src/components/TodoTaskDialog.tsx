@@ -200,7 +200,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
 
           {mode === "admin" && !presetAssignee && (
             <div>
-              <Label>Assign To (Editor)</Label>
+              <Label>Assign To</Label>
               <Select value={assignedTo} onValueChange={setAssignedTo}>
                 <SelectTrigger><SelectValue placeholder="Select editor" /></SelectTrigger>
                 <SelectContent>
