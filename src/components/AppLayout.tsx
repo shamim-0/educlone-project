@@ -131,6 +131,9 @@ export default function AppLayout() {
 
           <nav className="flex min-h-12 items-center gap-1 overflow-visible pb-2">
             {visibleMenu.map((m) => {
+              const overdueCount =
+                m.to === "/my-todo-list" ? overdueMine : m.to === "/todo-list" ? overdueAll : 0;
+              const isOverdue = overdueCount > 0;
               const linkEl = (
                 <NavLink
                   to={m.to}
@@ -140,12 +143,19 @@ export default function AppLayout() {
                       "flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-all whitespace-nowrap",
                       isActive
                         ? "bg-primary text-primary-foreground shadow-elegant"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                      isOverdue &&
+                        "!bg-destructive !text-destructive-foreground shadow-elegant animate-pulse ring-2 ring-destructive/40"
                     )
                   }
                 >
                   <m.icon className="h-4 w-4" />
                   <span className="hidden sm:inline">{m.label}</span>
+                  {isOverdue && (
+                    <span className="ml-1 rounded-full bg-white/25 px-1.5 text-xs font-bold">
+                      {overdueCount}
+                    </span>
+                  )}
                 </NavLink>
               );
               if (m.to === "/pending") {
