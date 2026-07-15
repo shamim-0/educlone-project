@@ -34,7 +34,7 @@ const menu = [
   { to: "/packages", label: "Packages", icon: Package, adminOnly: true },
   { to: "/my-tasks", label: "My Tasks", icon: UserCheck, roles: ["editor", "sub_admin"] as string[] },
   { to: "/todo-list", label: "To Do List", icon: ListTodo, adminOnly: true },
-  { to: "/my-todo-list", label: "To Do List", icon: ListTodo, roles: ["editor", "sub_admin"] as string[] },
+  { to: "/my-todo-list", label: "My To Do List", icon: ListTodo, roles: ["editor", "sub_admin", "admin"] as string[] },
 ];
 
 export default function AppLayout() {
