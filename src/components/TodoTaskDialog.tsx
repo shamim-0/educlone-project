@@ -53,6 +53,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
   const [deadline, setDeadline] = useState<Date | undefined>();
   const [note, setNote] = useState("");
   const [services, setServices] = useState<Set<string>>(new Set());
+  const [companySearch, setCompanySearch] = useState("");
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
