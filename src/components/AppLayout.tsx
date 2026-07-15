@@ -43,6 +43,7 @@ export default function AppLayout() {
   const nav = useNavigate();
   const location = useLocation();
   const { theme, toggle } = useTheme();
+  const { mine: overdueMine, all: overdueAll } = useOverdueTodos();
   const [pwdOpen, setPwdOpen] = useState(false);
 
   const pendingStatusItems = [
