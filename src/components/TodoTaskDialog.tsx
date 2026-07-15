@@ -61,19 +61,17 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const [c, r] = await Promise.all([
-        supabase.from("companies").select("id,name").order("name"),
-        mode === "admin"
-          ? supabase.from("user_roles").select("user_id, profiles!inner(id,username)").eq("role", "editor")
-          : Promise.resolve({ data: [] as any, error: null }),
-      ]);
+      const c = await supabase.from("companies").select("id,name").order("name");
       setCompanies((c.data as Company[]) ?? []);
       if (mode === "admin") {
-        const rows = ((r.data as any[]) ?? []).map((x) => ({
-          id: x.profiles?.id ?? x.user_id,
-          username: x.profiles?.username ?? "—",
-        }));
-        setEditors(rows);
+        const r = await supabase.from("user_roles").select("user_id").eq("role", "editor");
+        const ids = ((r.data as any[]) ?? []).map((x) => x.user_id);
+        if (ids.length) {
+          const p = await supabase.from("profiles").select("id,username").in("id", ids).order("username");
+          setEditors(((p.data as any[]) ?? []).map((x) => ({ id: x.id, username: x.username ?? "—" })));
+        } else {
+          setEditors([]);
+        }
       }
     })();
   }, [open, mode]);
