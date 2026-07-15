@@ -175,7 +175,18 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
             <Select value={companyId} onValueChange={setCompanyId}>
               <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
               <SelectContent className="max-h-72">
-                {companies.map((c) => (
+                <div className="p-2 sticky top-0 bg-popover z-10">
+                  <Input
+                    value={companySearch}
+                    onChange={(e) => setCompanySearch(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    placeholder="Search company..."
+                    className="h-8"
+                  />
+                </div>
+                {filteredCompanies.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">No results</div>
+                ) : filteredCompanies.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
