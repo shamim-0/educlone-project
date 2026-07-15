@@ -45,9 +45,9 @@ const App = () => (
               <Route path="/branch" element={<ProtectedRoute requireAdmin><Branch /></ProtectedRoute>} />
               <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
-              <Route path="/my-tasks" element={<ProtectedRoute requireRoles={["editor"]}><MyTasks /></ProtectedRoute>} />
+              <Route path="/my-tasks" element={<ProtectedRoute requireRoles={["editor","sub_admin"]}><MyTasks /></ProtectedRoute>} />
               <Route path="/todo-list" element={<ProtectedRoute requireAdmin><TodoList /></ProtectedRoute>} />
-              <Route path="/my-todo-list" element={<ProtectedRoute requireRoles={["editor"]}><MyTodoList /></ProtectedRoute>} />
+              <Route path="/my-todo-list" element={<ProtectedRoute requireRoles={["editor","sub_admin"]}><MyTodoList /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
               <Route path="/services" element={<ProtectedRoute requireRoles={["admin","sub_admin"]}><Services /></ProtectedRoute>} />
               <Route path="/packages" element={<ProtectedRoute requireAdmin><Packages /></ProtectedRoute>} />

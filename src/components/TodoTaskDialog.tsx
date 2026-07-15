@@ -65,8 +65,8 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
       const c = await supabase.from("companies").select("id,name").order("name");
       setCompanies((c.data as Company[]) ?? []);
       if (mode === "admin") {
-        const r = await supabase.from("user_roles").select("user_id").eq("role", "editor");
-        const ids = ((r.data as any[]) ?? []).map((x) => x.user_id);
+        const r = await supabase.from("user_roles").select("user_id, role").in("role", ["editor", "sub_admin"]);
+        const ids = Array.from(new Set(((r.data as any[]) ?? []).map((x) => x.user_id)));
         if (ids.length) {
           const p = await supabase.from("profiles").select("id,username").in("id", ids).order("username");
           setEditors(((p.data as any[]) ?? []).map((x) => ({ id: x.id, username: x.username ?? "—" })));
@@ -200,7 +200,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
 
           {mode === "admin" && !presetAssignee && (
             <div>
-              <Label>Assign To (Editor)</Label>
+              <Label>Assign To</Label>
               <Select value={assignedTo} onValueChange={setAssignedTo}>
                 <SelectTrigger><SelectValue placeholder="Select editor" /></SelectTrigger>
                 <SelectContent>

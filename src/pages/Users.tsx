@@ -180,7 +180,7 @@ export default function UsersPage() {
                 {isAdmin && (
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {(roles[p.id] ?? "viewer") === "editor" && (
+                      {((roles[p.id] ?? "viewer") === "editor" || (roles[p.id] ?? "viewer") === "sub_admin") && (
                         <>
                           <Button variant="outline" size="sm" className="gap-1" onClick={() => setAssignTarget(p)}>
                             <ClipboardCheck className="h-3.5 w-3.5" /> Assign Task
