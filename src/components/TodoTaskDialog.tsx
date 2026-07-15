@@ -107,6 +107,10 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
     () => defs.filter((d) => d.label.toLowerCase().includes(search.toLowerCase())),
     [defs, search]
   );
+  const filteredCompanies = useMemo(
+    () => companies.filter((c) => c.name.toLowerCase().includes(companySearch.toLowerCase())),
+    [companies, companySearch]
+  );
 
   const save = async () => {
     if (!companyId) return toast.error("Select a company");
