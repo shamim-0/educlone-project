@@ -18,27 +18,24 @@ export function useOverdueTodos() {
     const today = new Date().toISOString().slice(0, 10);
 
     const load = async () => {
-      const mineQ = supabase
+      const mineRes = await supabase
         .from("todo_tasks")
         .select("id", { count: "exact", head: true })
         .eq("assigned_to", user.id)
         .neq("status", "completed")
         .lt("deadline", today);
-
-      const promises: Promise<any>[] = [mineQ];
-      if (role === "admin") {
-        promises.push(
-          supabase
-            .from("todo_tasks")
-            .select("id", { count: "exact", head: true })
-            .neq("status", "completed")
-            .lt("deadline", today)
-        );
-      }
-      const [mineRes, allRes] = await Promise.all(promises);
       if (cancelled) return;
       setMine(mineRes?.count ?? 0);
-      if (allRes) setAll(allRes?.count ?? 0);
+
+      if (role === "admin") {
+        const allRes = await supabase
+          .from("todo_tasks")
+          .select("id", { count: "exact", head: true })
+          .neq("status", "completed")
+          .lt("deadline", today);
+        if (cancelled) return;
+        setAll(allRes?.count ?? 0);
+      }
     };
 
     load();
