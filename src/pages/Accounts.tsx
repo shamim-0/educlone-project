@@ -81,6 +81,8 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [dayFilter, setDayFilter] = useState<string>("");
+  const [monthFilter, setMonthFilter] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
