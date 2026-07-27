@@ -1555,12 +1555,15 @@ export default function CompanyDetail() {
             </h2>
             <div className="space-y-3">
               {DOC_CATEGORIES.map(cat => {
+                const supportsFolders = cat.key === "client_required";
                 const files = documents.filter(d => d.category === cat.key);
-                const rootFiles = files.filter(d => !d.folder);
-                const folderNames = Array.from(new Set([
-                  ...files.filter(d => d.folder).map(d => d.folder as string),
-                  ...(extraFolders[cat.key] ?? []),
-                ])).sort((a, b) => a.localeCompare(b));
+                const rootFiles = supportsFolders ? files.filter(d => !d.folder) : files;
+                const folderNames = supportsFolders
+                  ? Array.from(new Set([
+                      ...files.filter(d => d.folder).map(d => d.folder as string),
+                      ...(extraFolders[cat.key] ?? []),
+                    ])).sort((a, b) => a.localeCompare(b))
+                  : [];
                 const renderFile = (f: CompanyDoc) => (
                   <li key={f.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2 py-1">
                     <div className="flex items-center gap-1.5 min-w-0">
@@ -1605,14 +1608,16 @@ export default function CompanyDetail() {
                       />
                       {canEdit && (
                         <div className="flex items-center gap-1 shrink-0">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs"
-                            onClick={() => createFolder(cat.key)}
-                          >
-                            <FolderPlus className="h-3 w-3 mr-1" /> Folder
-                          </Button>
+                          {supportsFolders && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => createFolder(cat.key)}
+                            >
+                              <FolderPlus className="h-3 w-3 mr-1" /> Folder
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             className="h-7 text-xs"
@@ -1629,14 +1634,20 @@ export default function CompanyDetail() {
                     {folderNames.map(fname => {
                       const ffiles = files.filter(d => d.folder === fname);
                       const key = folderKey(cat.key, fname);
+                      const expanded = !!openFolders[key];
                       return (
                         <div key={key} className="rounded-md border border-dashed border-border bg-background/40 p-2 space-y-1">
                           <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 min-w-0">
+                            <button
+                              type="button"
+                              className="flex items-center gap-1.5 min-w-0 text-left"
+                              onClick={() => setOpenFolders(prev => ({ ...prev, [key]: !prev[key] }))}
+                            >
+                              {expanded ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
                               <Folder className="h-3.5 w-3.5 text-accent shrink-0" />
                               <span className="text-xs font-medium truncate">{fname}</span>
                               <span className="text-[10px] text-muted-foreground">({ffiles.length})</span>
-                            </div>
+                            </button>
                             <input
                               ref={(el) => { fileInputs.current[key] = el; }}
                               type="file"
@@ -1649,26 +1660,39 @@ export default function CompanyDetail() {
                               }}
                             />
                             {canEdit && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 text-xs shrink-0"
-                                disabled={uploadingCat === key}
-                                onClick={() => fileInputs.current[key]?.click()}
-                              >
-                                <Upload className="h-3 w-3 mr-1" />
-                                {uploadingCat === key ? "…" : "Upload"}
-                              </Button>
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 text-xs"
+                                  disabled={uploadingCat === key}
+                                  onClick={() => fileInputs.current[key]?.click()}
+                                >
+                                  <Upload className="h-3 w-3 mr-1" />
+                                  {uploadingCat === key ? "…" : "Upload"}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-destructive hover:text-destructive"
+                                  onClick={() => deleteFolder(cat.key, fname)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
                             )}
                           </div>
-                          {ffiles.length === 0 ? (
-                            <p className="text-center text-[11px] text-muted-foreground py-1">Empty folder</p>
-                          ) : (
-                            <ul className="space-y-1">{ffiles.map(renderFile)}</ul>
+                          {expanded && (
+                            ffiles.length === 0 ? (
+                              <p className="text-center text-[11px] text-muted-foreground py-1">Empty folder</p>
+                            ) : (
+                              <ul className="space-y-1">{ffiles.map(renderFile)}</ul>
+                            )
                           )}
                         </div>
                       );
                     })}
+
 
                     {rootFiles.length === 0 && folderNames.length === 0 ? (
                       <p className="text-center text-xs text-muted-foreground py-2">No files uploaded</p>
