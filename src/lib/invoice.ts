@@ -51,13 +51,18 @@ export interface InvoiceData {
   amount: number;
   date: string; // ISO or readable
   method?: string;
+  invoiceNo?: number | null;
+}
+
+export function formatInvoiceNo(n?: number | null) {
+  return `ISBI${String(n ?? 0).padStart(5, "0")}`;
 }
 
 export async function openInvoice(companyId: string, installmentId: string) {
   // Fetch company + all installments to compute ordinal index
   const [cRes, iRes] = await Promise.all([
     supabase.from("companies").select("name, client_name, phone, whatsapp, address").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method").eq("company_id", companyId),
+    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method, invoice_no").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
   const company = cRes.data as { name: string; client_name: string | null; phone: string | null; whatsapp: string | null; address: string | null };
@@ -78,9 +83,11 @@ export async function openInvoice(companyId: string, installmentId: string) {
     amount: Number(inst.amount || 0),
     date: inst.payment_date || inst.created_at || new Date().toISOString(),
     method: methodLabel((inst as any).payment_method),
+    invoiceNo: (inst as any).invoice_no ?? null,
   };
   renderInvoiceWindow(data);
 }
+
 
 function renderInvoiceWindow(d: InvoiceData) {
   const dateStr = new Date(d.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
