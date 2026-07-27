@@ -154,7 +154,7 @@ function renderInvoiceWindow(d: InvoiceData) {
     </div>
   </div>
 
-  <div class="date">${dateStr}</div>
+  <div class="date"><span class="inv-no">Invoice No: ${formatInvoiceNo(d.invoiceNo)}</span><br />${dateStr}</div>
 
   <div class="invoice-to">
     <div class="lbl">Invoice to :</div>
