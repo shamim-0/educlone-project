@@ -476,8 +476,32 @@ export default function AccountsPage() {
                 <SelectItem value="deal_desc">📊 Biggest Deal</SelectItem>
               </SelectContent>
             </Select>
+            <Input
+              type="date"
+              value={dayFilter}
+              onChange={(e) => setDayFilter(e.target.value)}
+              className="sm:w-44"
+              title="Filter by payment day"
+            />
+            <Input
+              type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="sm:w-40"
+              title="Filter by payment month"
+            />
+            {(dayFilter || monthFilter) && (
+              <Button variant="outline" onClick={() => { setDayFilter(""); setMonthFilter(""); }}>
+                Clear date
+              </Button>
+            )}
           </div>
         </div>
+        {(dayFilter || monthFilter) && (
+          <p className="-mt-3 mb-4 text-xs text-muted-foreground">
+            Showing payments {dayFilter ? `on ${dayFilter}` : ""}{dayFilter && monthFilter ? " and " : ""}{monthFilter ? `in ${monthFilter}` : ""} only.
+          </p>
+        )}
 
         {/* Branch tabs */}
         <div className="mb-5 flex flex-wrap gap-2">
