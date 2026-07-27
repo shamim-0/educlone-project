@@ -318,29 +318,35 @@ export default function CompanyDetail() {
     setShareholders(prev => prev.filter(s => s.id !== sid));
   }
 
-  async function uploadDocument(category: string, file: File) {
-    if (!id) return;
+  async function uploadDocuments(category: string, files: File[]) {
+    if (!id || files.length === 0) return;
     setUploadingCat(category);
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${id}/${category}/${Date.now()}_${safeName}`;
-    const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
-    if (upErr) { setUploadingCat(null); return toast.error(upErr.message); }
-    const { data, error } = await supabase
-      .from("company_documents")
-      .insert({
-        company_id: id,
-        category,
-        file_name: file.name,
-        file_path: path,
-        file_size: file.size,
-        mime_type: file.type || null,
-      })
-      .select()
-      .single();
+    const uploaded: CompanyDoc[] = [];
+    const failed: string[] = [];
+    for (const file of files) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${id}/${category}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+      const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
+      if (upErr) { failed.push(file.name); continue; }
+      const { data, error } = await supabase
+        .from("company_documents")
+        .insert({
+          company_id: id,
+          category,
+          file_name: file.name,
+          file_path: path,
+          file_size: file.size,
+          mime_type: file.type || null,
+        })
+        .select()
+        .single();
+      if (error || !data) { failed.push(file.name); continue; }
+      uploaded.push(data as CompanyDoc);
+    }
     setUploadingCat(null);
-    if (error) return toast.error(error.message);
-    setDocuments(prev => [...prev, data as CompanyDoc]);
-    toast.success("File uploaded");
+    if (uploaded.length) setDocuments(prev => [...prev, ...uploaded]);
+    if (uploaded.length) toast.success(`${uploaded.length} file${uploaded.length > 1 ? "s" : ""} uploaded`);
+    if (failed.length) toast.error(`Failed: ${failed.join(", ")}`);
   }
 
   async function downloadDocument(doc: CompanyDoc) {
