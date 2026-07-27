@@ -18,7 +18,7 @@ import {
   Wallet, TrendingUp, AlertCircle, Search, Pencil, Plus, Trash2, Save,
   Calendar, Receipt, Percent, Building2, ArrowDownRight, FileText,
 } from "lucide-react";
-import { openInvoice, openDealSummary } from "@/lib/invoice";
+import { openInvoice, openDealSummary, PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +38,7 @@ interface Installment {
   amount: number;
   payment_date: string | null;
   note: string | null;
+  payment_method?: string | null;
 }
 interface ExtraDeal {
   id: string;
@@ -98,6 +99,7 @@ export default function AccountsPage() {
   const [instAmount, setInstAmount] = useState("");
   const [instDate, setInstDate] = useState("");
   const [instNote, setInstNote] = useState("");
+  const [instMethod, setInstMethod] = useState("cash");
   const [savingInst, setSavingInst] = useState(false);
 
   const [extraOpen, setExtraOpen] = useState(false);
@@ -293,6 +295,7 @@ export default function AccountsPage() {
     setInstAmount("");
     setInstDate(new Date().toISOString().slice(0, 10));
     setInstNote("");
+    setInstMethod("cash");
     setInstOpen(true);
   }
 
@@ -301,6 +304,7 @@ export default function AccountsPage() {
     setInstAmount(String(x.amount));
     setInstDate(x.payment_date ? x.payment_date.slice(0, 10) : "");
     setInstNote(x.note ?? "");
+    setInstMethod(x.payment_method || "cash");
     setInstOpen(true);
   }
 
@@ -314,6 +318,7 @@ export default function AccountsPage() {
       amount: v,
       payment_date: instDate ? new Date(instDate).toISOString() : null,
       note: instNote.trim() || null,
+      payment_method: instMethod,
     };
     if (editingInst) {
       const { data, error } = await supabase
@@ -837,6 +842,7 @@ export default function AccountsPage() {
                               <div className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(Number(x.amount))}</div>
                               <div className="text-xs text-muted-foreground truncate">
                                 {x.payment_date ? new Date(x.payment_date).toLocaleDateString() : "No date"}
+                                {` · ${methodLabel(x.payment_method)}`}
                                 {x.note ? ` · ${x.note}` : ""}
                               </div>
                             </div>
@@ -881,6 +887,17 @@ export default function AccountsPage() {
             <div>
               <Label htmlFor="iDate">Payment Date</Label>
               <Input id="iDate" type="date" value={instDate} onChange={(e) => setInstDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Payment Method</Label>
+              <Select value={instMethod} onValueChange={setInstMethod}>
+                <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="iNote">Note</Label>

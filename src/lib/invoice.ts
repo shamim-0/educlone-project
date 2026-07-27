@@ -1,5 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export const PAYMENT_METHODS = [
+  { value: "bank", label: "Bank" },
+  { value: "cash", label: "Cash" },
+  { value: "check", label: "Check" },
+  { value: "online", label: "Online Payment" },
+  { value: "other", label: "Other" },
+] as const;
+
+export function methodLabel(v?: string | null) {
+  return PAYMENT_METHODS.find((m) => m.value === v)?.label ?? "Cash";
+}
+
 const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
   "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
 const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
@@ -45,7 +57,7 @@ export async function openInvoice(companyId: string, installmentId: string) {
   // Fetch company + all installments to compute ordinal index
   const [cRes, iRes] = await Promise.all([
     supabase.from("companies").select("name, client_name, phone, whatsapp, address").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, created_at").eq("company_id", companyId),
+    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
   const company = cRes.data as { name: string; client_name: string | null; phone: string | null; whatsapp: string | null; address: string | null };
@@ -65,7 +77,7 @@ export async function openInvoice(companyId: string, installmentId: string) {
     paymentIndex: idx + 1,
     amount: Number(inst.amount || 0),
     date: inst.payment_date || inst.created_at || new Date().toISOString(),
-    method: "In Cash",
+    method: methodLabel((inst as any).payment_method),
   };
   renderInvoiceWindow(data);
 }
@@ -207,7 +219,7 @@ function escapeHtml(s: string) {
 export async function openDealSummary(companyId: string) {
   const [cRes, iRes, eRes] = await Promise.all([
     supabase.from("companies").select("name, client_name, phone, whatsapp, address, total_deal, discount").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, note, created_at").eq("company_id", companyId),
+    supabase.from("company_installments").select("id, amount, payment_date, note, created_at, payment_method").eq("company_id", companyId),
     supabase.from("company_extra_deals").select("id, amount, note, created_at").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
@@ -274,7 +286,7 @@ function renderSummaryWindow(d: SummaryPayload) {
     : d.installments.map((x: any, i: number) => `
         <tr>
           <td>${i + 1}</td>
-          <td>${escapeHtml(x.note || `Payment #${i + 1}`)}</td>
+          <td>${escapeHtml(x.note || `Payment #${i + 1}`)} <span style="color:#64748b">(${escapeHtml(methodLabel(x.payment_method))})</span></td>
           <td>${dateFmt(x.payment_date || x.created_at)}</td>
           <td class="r">${money(Number(x.amount || 0))}</td>
         </tr>`).join("");
