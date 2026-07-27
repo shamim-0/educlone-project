@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Zap, Save, Plus, Trash2, Upload, FileText, Download, Folder, FileDown, AlertTriangle, Pencil, Package as PackageIcon, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Zap, Save, Plus, Trash2, Upload, FileText, Download, Folder, FolderPlus, FileDown, AlertTriangle, Pencil, Package as PackageIcon, CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -48,7 +48,8 @@ interface Shareholder {
   share_percent: number | null; phone: string | null; email: string | null;
   birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
 }
-interface CompanyDoc { id: string; category: string; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
+interface CompanyDoc { id: string; category: string; folder: string | null; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
+const folderKey = (cat: string, folder: string | null) => `${cat}::${folder ?? ""}`;
 
 const DOC_CATEGORIES = [
   { key: "final_quotation", title: "Final quotation and agreement", subtitle: "", flag: "FQ", color: "border-primary/30" },
@@ -98,6 +99,7 @@ export default function CompanyDetail() {
   const [savingSh, setSavingSh] = useState(false);
   const [documents, setDocuments] = useState<CompanyDoc[]>([]);
   const [uploadingCat, setUploadingCat] = useState<string | null>(null);
+  const [extraFolders, setExtraFolders] = useState<Record<string, string[]>>({});
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -318,14 +320,15 @@ export default function CompanyDetail() {
     setShareholders(prev => prev.filter(s => s.id !== sid));
   }
 
-  async function uploadDocuments(category: string, files: File[]) {
+  async function uploadDocuments(category: string, files: File[], folder: string | null = null) {
     if (!id || files.length === 0) return;
-    setUploadingCat(category);
+    setUploadingCat(folderKey(category, folder));
     const uploaded: CompanyDoc[] = [];
     const failed: string[] = [];
     for (const file of files) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${id}/${category}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+      const safeFolder = folder ? `${folder.replace(/[^a-zA-Z0-9._-]/g, "_")}/` : "";
+      const path = `${id}/${category}/${safeFolder}${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
       const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
       if (upErr) { failed.push(file.name); continue; }
       const { data, error } = await supabase
@@ -333,6 +336,7 @@ export default function CompanyDetail() {
         .insert({
           company_id: id,
           category,
+          folder,
           file_name: file.name,
           file_path: path,
           file_size: file.size,
@@ -348,6 +352,19 @@ export default function CompanyDetail() {
     if (uploaded.length) toast.success(`${uploaded.length} file${uploaded.length > 1 ? "s" : ""} uploaded`);
     if (failed.length) toast.error(`Failed: ${failed.join(", ")}`);
   }
+
+  function createFolder(category: string) {
+    const name = window.prompt("Folder name")?.trim();
+    if (!name) return;
+    const existing = [
+      ...documents.filter(d => d.category === category && d.folder).map(d => d.folder as string),
+      ...(extraFolders[category] ?? []),
+    ];
+    if (existing.includes(name)) return toast.error("Folder already exists");
+    setExtraFolders(prev => ({ ...prev, [category]: [...(prev[category] ?? []), name] }));
+    toast.success("Folder created");
+  }
+
 
   async function downloadDocument(doc: CompanyDoc) {
     const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
@@ -1539,6 +1556,29 @@ export default function CompanyDetail() {
             <div className="space-y-3">
               {DOC_CATEGORIES.map(cat => {
                 const files = documents.filter(d => d.category === cat.key);
+                const rootFiles = files.filter(d => !d.folder);
+                const folderNames = Array.from(new Set([
+                  ...files.filter(d => d.folder).map(d => d.folder as string),
+                  ...(extraFolders[cat.key] ?? []),
+                ])).sort((a, b) => a.localeCompare(b));
+                const renderFile = (f: CompanyDoc) => (
+                  <li key={f.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2 py-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs truncate">{f.file_name}</span>
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => downloadDocument(f)}>
+                        <Download className="h-3 w-3" />
+                      </Button>
+                      {canEdit && (
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </li>
+                );
                 return (
                   <Card key={cat.key} className={cn("p-3 space-y-2 bg-muted/20", cat.color)}>
                     <div className="flex items-center justify-between gap-2">
@@ -1553,51 +1593,87 @@ export default function CompanyDetail() {
                       </div>
                       <span className="text-[10px] text-muted-foreground shrink-0">({files.length})</span>
                       <input
-                        ref={(el) => { fileInputs.current[cat.key] = el; }}
+                        ref={(el) => { fileInputs.current[folderKey(cat.key, null)] = el; }}
                         type="file"
                         multiple
                         className="hidden"
                         onChange={(e) => {
                           const fs = Array.from(e.target.files ?? []);
-                          if (fs.length) uploadDocuments(cat.key, fs);
+                          if (fs.length) uploadDocuments(cat.key, fs, null);
                           e.target.value = "";
                         }}
                       />
                       {canEdit && (
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs"
-                          disabled={uploadingCat === cat.key}
-                          onClick={() => fileInputs.current[cat.key]?.click()}
-                        >
-                          <Upload className="h-3 w-3 mr-1" />
-                          {uploadingCat === cat.key ? "…" : "Upload"}
-                        </Button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            onClick={() => createFolder(cat.key)}
+                          >
+                            <FolderPlus className="h-3 w-3 mr-1" /> Folder
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs"
+                            disabled={uploadingCat === folderKey(cat.key, null)}
+                            onClick={() => fileInputs.current[folderKey(cat.key, null)]?.click()}
+                          >
+                            <Upload className="h-3 w-3 mr-1" />
+                            {uploadingCat === folderKey(cat.key, null) ? "…" : "Upload"}
+                          </Button>
+                        </div>
                       )}
                     </div>
-                    {files.length === 0 ? (
+
+                    {folderNames.map(fname => {
+                      const ffiles = files.filter(d => d.folder === fname);
+                      const key = folderKey(cat.key, fname);
+                      return (
+                        <div key={key} className="rounded-md border border-dashed border-border bg-background/40 p-2 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Folder className="h-3.5 w-3.5 text-accent shrink-0" />
+                              <span className="text-xs font-medium truncate">{fname}</span>
+                              <span className="text-[10px] text-muted-foreground">({ffiles.length})</span>
+                            </div>
+                            <input
+                              ref={(el) => { fileInputs.current[key] = el; }}
+                              type="file"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                const fs = Array.from(e.target.files ?? []);
+                                if (fs.length) uploadDocuments(cat.key, fs, fname);
+                                e.target.value = "";
+                              }}
+                            />
+                            {canEdit && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-xs shrink-0"
+                                disabled={uploadingCat === key}
+                                onClick={() => fileInputs.current[key]?.click()}
+                              >
+                                <Upload className="h-3 w-3 mr-1" />
+                                {uploadingCat === key ? "…" : "Upload"}
+                              </Button>
+                            )}
+                          </div>
+                          {ffiles.length === 0 ? (
+                            <p className="text-center text-[11px] text-muted-foreground py-1">Empty folder</p>
+                          ) : (
+                            <ul className="space-y-1">{ffiles.map(renderFile)}</ul>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {rootFiles.length === 0 && folderNames.length === 0 ? (
                       <p className="text-center text-xs text-muted-foreground py-2">No files uploaded</p>
                     ) : (
-                      <ul className="space-y-1">
-                        {files.map(f => (
-                          <li key={f.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2 py-1">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <span className="text-xs truncate">{f.file_name}</span>
-                            </div>
-                            <div className="flex items-center gap-0.5 shrink-0">
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => downloadDocument(f)}>
-                                <Download className="h-3 w-3" />
-                              </Button>
-                              {canEdit && (
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteDocument(f)}>
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
+                      <ul className="space-y-1">{rootFiles.map(renderFile)}</ul>
                     )}
                   </Card>
                 );
