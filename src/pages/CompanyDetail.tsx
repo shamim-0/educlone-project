@@ -366,6 +366,24 @@ export default function CompanyDetail() {
     toast.success("Folder created");
   }
 
+  async function deleteFolder(category: string, folder: string) {
+    const inFolder = documents.filter(d => d.category === category && d.folder === folder);
+    if (inFolder.length > 0 && !window.confirm(`Delete folder "${folder}" and its ${inFolder.length} file(s)?`)) return;
+    if (inFolder.length > 0) {
+      await supabase.storage.from("company-documents").remove(inFolder.map(d => d.file_path));
+      const { error } = await supabase
+        .from("company_documents")
+        .delete()
+        .in("id", inFolder.map(d => d.id));
+      if (error) return toast.error(error.message);
+      setDocuments(prev => prev.filter(d => !(d.category === category && d.folder === folder)));
+    }
+    setExtraFolders(prev => ({ ...prev, [category]: (prev[category] ?? []).filter(f => f !== folder) }));
+    toast.success("Folder deleted");
+  }
+
+
+
 
   async function downloadDocument(doc: CompanyDoc) {
     const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
