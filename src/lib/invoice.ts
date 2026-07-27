@@ -96,7 +96,7 @@ function renderInvoiceWindow(d: InvoiceData) {
   const ordinal = ord(d.paymentIndex);
 
   const html = `<!doctype html><html><head><meta charset="utf-8" />
-<title>Invoice - ${escapeHtml(d.clientName)}</title>
+<title>Invoice ${formatInvoiceNo(d.invoiceNo)} - ${escapeHtml(d.clientName)}</title>
 <style>
   @page { size: A4; margin: 0; }
   * { box-sizing: border-box; }
