@@ -18,7 +18,7 @@ import {
   Wallet, TrendingUp, AlertCircle, Search, Pencil, Plus, Trash2, Save,
   Calendar, Receipt, Percent, Building2, ArrowDownRight, FileText,
 } from "lucide-react";
-import { openInvoice, openDealSummary } from "@/lib/invoice";
+import { openInvoice, openDealSummary, PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
