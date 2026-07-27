@@ -51,13 +51,18 @@ export interface InvoiceData {
   amount: number;
   date: string; // ISO or readable
   method?: string;
+  invoiceNo?: number | null;
+}
+
+export function formatInvoiceNo(n?: number | null) {
+  return `ISBI${String(n ?? 0).padStart(5, "0")}`;
 }
 
 export async function openInvoice(companyId: string, installmentId: string) {
   // Fetch company + all installments to compute ordinal index
   const [cRes, iRes] = await Promise.all([
     supabase.from("companies").select("name, client_name, phone, whatsapp, address").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method").eq("company_id", companyId),
+    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method, invoice_no").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
   const company = cRes.data as { name: string; client_name: string | null; phone: string | null; whatsapp: string | null; address: string | null };
@@ -78,9 +83,11 @@ export async function openInvoice(companyId: string, installmentId: string) {
     amount: Number(inst.amount || 0),
     date: inst.payment_date || inst.created_at || new Date().toISOString(),
     method: methodLabel((inst as any).payment_method),
+    invoiceNo: (inst as any).invoice_no ?? null,
   };
   renderInvoiceWindow(data);
 }
+
 
 function renderInvoiceWindow(d: InvoiceData) {
   const dateStr = new Date(d.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
@@ -89,7 +96,7 @@ function renderInvoiceWindow(d: InvoiceData) {
   const ordinal = ord(d.paymentIndex);
 
   const html = `<!doctype html><html><head><meta charset="utf-8" />
-<title>Invoice - ${escapeHtml(d.clientName)}</title>
+<title>Invoice ${formatInvoiceNo(d.invoiceNo)} - ${escapeHtml(d.clientName)}</title>
 <style>
   @page { size: A4; margin: 0; }
   * { box-sizing: border-box; }
@@ -101,6 +108,8 @@ function renderInvoiceWindow(d: InvoiceData) {
   .head-text h1 { margin: 0; font-size: 24px; letter-spacing: 1px; font-weight: 800; color: #1a1a1a; }
   .head-text p { margin: 4px 0 0; font-size: 12px; color: #333; }
   .date { text-align: right; color: #2563eb; font-size: 14px; margin-top: 32px; font-weight: 500; }
+  .date .inv-no { display: inline-block; background: #2563eb; color: #fff; padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 13px; letter-spacing: .5px; margin-bottom: 6px; }
+
   .invoice-to { margin-top: 18px; }
   .invoice-to .lbl { font-weight: 700; font-size: 14px; }
   .invoice-to .name { font-size: 20px; font-weight: 700; margin-top: 6px; }
@@ -147,7 +156,7 @@ function renderInvoiceWindow(d: InvoiceData) {
     </div>
   </div>
 
-  <div class="date">${dateStr}</div>
+  <div class="date"><span class="inv-no">Invoice No: ${formatInvoiceNo(d.invoiceNo)}</span><br />${dateStr}</div>
 
   <div class="invoice-to">
     <div class="lbl">Invoice to :</div>
@@ -219,7 +228,7 @@ function escapeHtml(s: string) {
 export async function openDealSummary(companyId: string) {
   const [cRes, iRes, eRes] = await Promise.all([
     supabase.from("companies").select("name, client_name, phone, whatsapp, address, total_deal, discount").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, note, created_at, payment_method").eq("company_id", companyId),
+    supabase.from("company_installments").select("id, amount, payment_date, note, created_at, payment_method, invoice_no").eq("company_id", companyId),
     supabase.from("company_extra_deals").select("id, amount, note, created_at").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
@@ -286,7 +295,7 @@ function renderSummaryWindow(d: SummaryPayload) {
     : d.installments.map((x: any, i: number) => `
         <tr>
           <td>${i + 1}</td>
-          <td>${escapeHtml(x.note || `Payment #${i + 1}`)} <span style="color:#64748b">(${escapeHtml(methodLabel(x.payment_method))})</span></td>
+          <td><b>${formatInvoiceNo(x.invoice_no)}</b> — ${escapeHtml(x.note || `Payment #${i + 1}`)} <span style="color:#64748b">(${escapeHtml(methodLabel(x.payment_method))})</span></td>
           <td>${dateFmt(x.payment_date || x.created_at)}</td>
           <td class="r">${money(Number(x.amount || 0))}</td>
         </tr>`).join("");

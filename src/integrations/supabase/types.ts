@@ -268,6 +268,7 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          invoice_no: number
           note: string | null
           payment_date: string | null
           payment_method: string
@@ -278,6 +279,7 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          invoice_no?: number
           note?: string | null
           payment_date?: string | null
           payment_method?: string
@@ -288,6 +290,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          invoice_no?: number
           note?: string | null
           payment_date?: string | null
           payment_method?: string
