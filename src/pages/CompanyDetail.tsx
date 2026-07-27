@@ -319,14 +319,15 @@ export default function CompanyDetail() {
     setShareholders(prev => prev.filter(s => s.id !== sid));
   }
 
-  async function uploadDocuments(category: string, files: File[]) {
+  async function uploadDocuments(category: string, files: File[], folder: string | null = null) {
     if (!id || files.length === 0) return;
-    setUploadingCat(category);
+    setUploadingCat(folderKey(category, folder));
     const uploaded: CompanyDoc[] = [];
     const failed: string[] = [];
     for (const file of files) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${id}/${category}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+      const safeFolder = folder ? `${folder.replace(/[^a-zA-Z0-9._-]/g, "_")}/` : "";
+      const path = `${id}/${category}/${safeFolder}${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
       const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
       if (upErr) { failed.push(file.name); continue; }
       const { data, error } = await supabase
@@ -334,6 +335,7 @@ export default function CompanyDetail() {
         .insert({
           company_id: id,
           category,
+          folder,
           file_name: file.name,
           file_path: path,
           file_size: file.size,
@@ -349,6 +351,19 @@ export default function CompanyDetail() {
     if (uploaded.length) toast.success(`${uploaded.length} file${uploaded.length > 1 ? "s" : ""} uploaded`);
     if (failed.length) toast.error(`Failed: ${failed.join(", ")}`);
   }
+
+  function createFolder(category: string) {
+    const name = window.prompt("Folder name")?.trim();
+    if (!name) return;
+    const existing = [
+      ...documents.filter(d => d.category === category && d.folder).map(d => d.folder as string),
+      ...(extraFolders[category] ?? []),
+    ];
+    if (existing.includes(name)) return toast.error("Folder already exists");
+    setExtraFolders(prev => ({ ...prev, [category]: [...(prev[category] ?? []), name] }));
+    toast.success("Folder created");
+  }
+
 
   async function downloadDocument(doc: CompanyDoc) {
     const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
