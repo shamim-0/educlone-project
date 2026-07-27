@@ -209,9 +209,9 @@ export default function CompanyDetail() {
     else toast.success("Profile saved");
   }
 
-  async function saveStep(key: string) {
+  async function saveStep(key: string, override?: Partial<Step>) {
     if (!id) return;
-    const s = steps[key];
+    const s = { ...steps[key], ...(override ?? {}) } as Step;
     const payload = {
       company_id: id,
       step_key: key,
