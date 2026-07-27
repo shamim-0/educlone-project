@@ -1,5 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export const PAYMENT_METHODS = [
+  { value: "bank", label: "Bank" },
+  { value: "cash", label: "Cash" },
+  { value: "check", label: "Check" },
+  { value: "online", label: "Online Payment" },
+  { value: "other", label: "Other" },
+] as const;
+
+export function methodLabel(v?: string | null) {
+  return PAYMENT_METHODS.find((m) => m.value === v)?.label ?? "Cash";
+}
+
 const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
   "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
 const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
