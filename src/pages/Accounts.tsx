@@ -81,6 +81,8 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [dayFilter, setDayFilter] = useState<string>("");
+  const [monthFilter, setMonthFilter] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
@@ -130,11 +132,24 @@ export default function AccountsPage() {
 
   useEffect(() => { document.title = "Accounts | ISBI Tracker"; load(); }, []);
 
+  /** installments limited to the selected day / month (payment_date based) */
+  const dateFilterActive = !!dayFilter || !!monthFilter;
+  const periodInstallments = useMemo(() => {
+    if (!dateFilterActive) return installments;
+    return installments.filter((x) => {
+      if (!x.payment_date) return false;
+      const d = String(x.payment_date).slice(0, 10);
+      if (dayFilter && d !== dayFilter) return false;
+      if (monthFilter && d.slice(0, 7) !== monthFilter) return false;
+      return true;
+    });
+  }, [installments, dayFilter, monthFilter, dateFilterActive]);
+
   const receivedByCompany = useMemo(() => {
     const map: Record<string, number> = {};
-    installments.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
+    periodInstallments.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
     return map;
-  }, [installments]);
+  }, [periodInstallments]);
 
   const extrasByCompany = useMemo(() => {
     const map: Record<string, number> = {};
@@ -163,6 +178,10 @@ export default function AccountsPage() {
     let arr = companies;
     if (branchFilter !== "all") arr = arr.filter((c) => (c.branches?.name ?? "—") === branchFilter);
     if (q) arr = arr.filter((c) => c.name.toLowerCase().includes(q));
+    if (dateFilterActive) {
+      const ids = new Set(periodInstallments.map((x) => x.company_id));
+      arr = arr.filter((c) => ids.has(c.id));
+    }
     const sorted = [...arr];
     switch (sortBy) {
       case "name_asc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -182,7 +201,7 @@ export default function AccountsPage() {
           return b.name.localeCompare(a.name);
         });
     }
-  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany]);
+  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany, dateFilterActive, periodInstallments]);
 
   const totals = useMemo(() => {
     const baseDeal = filtered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
@@ -457,8 +476,32 @@ export default function AccountsPage() {
                 <SelectItem value="deal_desc">📊 Biggest Deal</SelectItem>
               </SelectContent>
             </Select>
+            <Input
+              type="date"
+              value={dayFilter}
+              onChange={(e) => setDayFilter(e.target.value)}
+              className="sm:w-44"
+              title="Filter by payment day"
+            />
+            <Input
+              type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="sm:w-40"
+              title="Filter by payment month"
+            />
+            {(dayFilter || monthFilter) && (
+              <Button variant="outline" onClick={() => { setDayFilter(""); setMonthFilter(""); }}>
+                Clear date
+              </Button>
+            )}
           </div>
         </div>
+        {(dayFilter || monthFilter) && (
+          <p className="-mt-3 mb-4 text-xs text-muted-foreground">
+            Showing payments {dayFilter ? `on ${dayFilter}` : ""}{dayFilter && monthFilter ? " and " : ""}{monthFilter ? `in ${monthFilter}` : ""} only.
+          </p>
+        )}
 
         {/* Branch tabs */}
         <div className="mb-5 flex flex-wrap gap-2">
