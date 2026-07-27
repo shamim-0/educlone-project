@@ -108,6 +108,8 @@ function renderInvoiceWindow(d: InvoiceData) {
   .head-text h1 { margin: 0; font-size: 24px; letter-spacing: 1px; font-weight: 800; color: #1a1a1a; }
   .head-text p { margin: 4px 0 0; font-size: 12px; color: #333; }
   .date { text-align: right; color: #2563eb; font-size: 14px; margin-top: 32px; font-weight: 500; }
+  .date .inv-no { display: inline-block; background: #2563eb; color: #fff; padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 13px; letter-spacing: .5px; margin-bottom: 6px; }
+
   .invoice-to { margin-top: 18px; }
   .invoice-to .lbl { font-weight: 700; font-size: 14px; }
   .invoice-to .name { font-size: 20px; font-weight: 700; margin-top: 6px; }
