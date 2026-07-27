@@ -842,6 +842,7 @@ export default function AccountsPage() {
                               <div className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(Number(x.amount))}</div>
                               <div className="text-xs text-muted-foreground truncate">
                                 {x.payment_date ? new Date(x.payment_date).toLocaleDateString() : "No date"}
+                                {` · ${methodLabel(x.payment_method)}`}
                                 {x.note ? ` · ${x.note}` : ""}
                               </div>
                             </div>
@@ -886,6 +887,17 @@ export default function AccountsPage() {
             <div>
               <Label htmlFor="iDate">Payment Date</Label>
               <Input id="iDate" type="date" value={instDate} onChange={(e) => setInstDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Payment Method</Label>
+              <Select value={instMethod} onValueChange={setInstMethod}>
+                <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="iNote">Note</Label>
