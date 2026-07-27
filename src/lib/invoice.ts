@@ -228,7 +228,7 @@ function escapeHtml(s: string) {
 export async function openDealSummary(companyId: string) {
   const [cRes, iRes, eRes] = await Promise.all([
     supabase.from("companies").select("name, client_name, phone, whatsapp, address, total_deal, discount").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, note, created_at, payment_method").eq("company_id", companyId),
+    supabase.from("company_installments").select("id, amount, payment_date, note, created_at, payment_method, invoice_no").eq("company_id", companyId),
     supabase.from("company_extra_deals").select("id, amount, note, created_at").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
