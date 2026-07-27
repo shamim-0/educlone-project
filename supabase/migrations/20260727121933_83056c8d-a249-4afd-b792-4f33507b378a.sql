@@ -1,0 +1,1 @@
+ALTER TABLE public.company_documents ADD COLUMN IF NOT EXISTS folder text;
