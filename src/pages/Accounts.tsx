@@ -295,6 +295,7 @@ export default function AccountsPage() {
     setInstAmount("");
     setInstDate(new Date().toISOString().slice(0, 10));
     setInstNote("");
+    setInstMethod("cash");
     setInstOpen(true);
   }
 
@@ -303,6 +304,7 @@ export default function AccountsPage() {
     setInstAmount(String(x.amount));
     setInstDate(x.payment_date ? x.payment_date.slice(0, 10) : "");
     setInstNote(x.note ?? "");
+    setInstMethod(x.payment_method || "cash");
     setInstOpen(true);
   }
 
@@ -316,6 +318,7 @@ export default function AccountsPage() {
       amount: v,
       payment_date: instDate ? new Date(instDate).toISOString() : null,
       note: instNote.trim() || null,
+      payment_method: instMethod,
     };
     if (editingInst) {
       const { data, error } = await supabase
