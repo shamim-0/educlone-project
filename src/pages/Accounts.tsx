@@ -38,6 +38,7 @@ interface Installment {
   amount: number;
   payment_date: string | null;
   note: string | null;
+  payment_method?: string | null;
 }
 interface ExtraDeal {
   id: string;
@@ -98,6 +99,7 @@ export default function AccountsPage() {
   const [instAmount, setInstAmount] = useState("");
   const [instDate, setInstDate] = useState("");
   const [instNote, setInstNote] = useState("");
+  const [instMethod, setInstMethod] = useState("cash");
   const [savingInst, setSavingInst] = useState(false);
 
   const [extraOpen, setExtraOpen] = useState(false);
