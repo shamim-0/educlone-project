@@ -132,11 +132,24 @@ export default function AccountsPage() {
 
   useEffect(() => { document.title = "Accounts | ISBI Tracker"; load(); }, []);
 
+  /** installments limited to the selected day / month (payment_date based) */
+  const dateFilterActive = !!dayFilter || !!monthFilter;
+  const periodInstallments = useMemo(() => {
+    if (!dateFilterActive) return installments;
+    return installments.filter((x) => {
+      if (!x.payment_date) return false;
+      const d = String(x.payment_date).slice(0, 10);
+      if (dayFilter && d !== dayFilter) return false;
+      if (monthFilter && d.slice(0, 7) !== monthFilter) return false;
+      return true;
+    });
+  }, [installments, dayFilter, monthFilter, dateFilterActive]);
+
   const receivedByCompany = useMemo(() => {
     const map: Record<string, number> = {};
-    installments.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
+    periodInstallments.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
     return map;
-  }, [installments]);
+  }, [periodInstallments]);
 
   const extrasByCompany = useMemo(() => {
     const map: Record<string, number> = {};
