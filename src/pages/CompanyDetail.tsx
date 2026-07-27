@@ -209,9 +209,9 @@ export default function CompanyDetail() {
     else toast.success("Profile saved");
   }
 
-  async function saveStep(key: string) {
+  async function saveStep(key: string, override?: Partial<Step>) {
     if (!id) return;
-    const s = steps[key];
+    const s = { ...steps[key], ...(override ?? {}) } as Step;
     const payload = {
       company_id: id,
       step_key: key,
@@ -1284,7 +1284,7 @@ export default function CompanyDetail() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Select value={s.status} onValueChange={(v) => updateStep(def.key, { status: v })} disabled={!canEdit}>
+                    <Select value={s.status} onValueChange={(v) => { updateStep(def.key, { status: v }); saveStep(def.key, { status: v } as any); }} disabled={!canEdit}>
                       <SelectTrigger className={cn("w-[140px] h-8 text-xs font-medium border", statusBadgeClass(s.status))}><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {getStatusOptsFor(def.label).map(o => (
