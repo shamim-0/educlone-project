@@ -1555,10 +1555,11 @@ export default function CompanyDetail() {
                       <input
                         ref={(el) => { fileInputs.current[cat.key] = el; }}
                         type="file"
+                        multiple
                         className="hidden"
                         onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) uploadDocument(cat.key, f);
+                          const fs = Array.from(e.target.files ?? []);
+                          if (fs.length) uploadDocuments(cat.key, fs);
                           e.target.value = "";
                         }}
                       />
