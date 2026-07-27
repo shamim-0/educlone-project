@@ -295,7 +295,7 @@ function renderSummaryWindow(d: SummaryPayload) {
     : d.installments.map((x: any, i: number) => `
         <tr>
           <td>${i + 1}</td>
-          <td>${escapeHtml(x.note || `Payment #${i + 1}`)} <span style="color:#64748b">(${escapeHtml(methodLabel(x.payment_method))})</span></td>
+          <td><b>${formatInvoiceNo(x.invoice_no)}</b> — ${escapeHtml(x.note || `Payment #${i + 1}`)} <span style="color:#64748b">(${escapeHtml(methodLabel(x.payment_method))})</span></td>
           <td>${dateFmt(x.payment_date || x.created_at)}</td>
           <td class="r">${money(Number(x.amount || 0))}</td>
         </tr>`).join("");
