@@ -178,6 +178,10 @@ export default function AccountsPage() {
     let arr = companies;
     if (branchFilter !== "all") arr = arr.filter((c) => (c.branches?.name ?? "—") === branchFilter);
     if (q) arr = arr.filter((c) => c.name.toLowerCase().includes(q));
+    if (dateFilterActive) {
+      const ids = new Set(periodInstallments.map((x) => x.company_id));
+      arr = arr.filter((c) => ids.has(c.id));
+    }
     const sorted = [...arr];
     switch (sortBy) {
       case "name_asc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
