@@ -49,6 +49,7 @@ interface Shareholder {
   birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
 }
 interface CompanyDoc { id: string; category: string; folder: string | null; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
+const folderKey = (cat: string, folder: string | null) => `${cat}::${folder ?? ""}`;
 
 const DOC_CATEGORIES = [
   { key: "final_quotation", title: "Final quotation and agreement", subtitle: "", flag: "FQ", color: "border-primary/30" },
