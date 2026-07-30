@@ -45,6 +45,8 @@ function ord(n: number) {
 
 export interface InvoiceData {
   clientName: string;
+  projectName?: string | null;
+  passportIqama?: string | null;
   mobile?: string | null;
   address?: string | null;
   paymentIndex: number; // 1-based
@@ -52,20 +54,25 @@ export interface InvoiceData {
   date: string; // ISO or readable
   method?: string;
   invoiceNo?: number | null;
+  issuedBy?: string | null; // admin-only, never printed
 }
 
 export function formatInvoiceNo(n?: number | null) {
   return `ISBI${String(n ?? 0).padStart(5, "0")}`;
 }
 
-export async function openInvoice(companyId: string, installmentId: string) {
+export async function openInvoice(
+  companyId: string,
+  installmentId: string,
+  opts?: { showIssuer?: boolean },
+) {
   // Fetch company + all installments to compute ordinal index
   const [cRes, iRes] = await Promise.all([
-    supabase.from("companies").select("name, client_name, phone, whatsapp, address").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method, invoice_no").eq("company_id", companyId),
+    supabase.from("companies").select("name, client_name, passport_iqama, phone, whatsapp, address").eq("id", companyId).single(),
+    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method, invoice_no, created_by").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
-  const company = cRes.data as { name: string; client_name: string | null; phone: string | null; whatsapp: string | null; address: string | null };
+  const company = cRes.data as any;
   const insts = (iRes.data ?? []).slice().sort((a: any, b: any) => {
     const ad = a.payment_date ?? a.created_at ?? "";
     const bd = b.payment_date ?? b.created_at ?? "";
@@ -75,8 +82,16 @@ export async function openInvoice(companyId: string, installmentId: string) {
   const inst = insts[idx];
   if (!inst) throw new Error("Installment not found");
 
+  let issuedBy: string | null = null;
+  if (opts?.showIssuer && (inst as any).created_by) {
+    const p = await supabase.from("profiles").select("username, email").eq("id", (inst as any).created_by).maybeSingle();
+    issuedBy = (p.data as any)?.username || (p.data as any)?.email || null;
+  }
+
   const data: InvoiceData = {
     clientName: company.client_name?.trim() || company.name,
+    projectName: company.name,
+    passportIqama: company.passport_iqama || "",
     mobile: company.phone || company.whatsapp || "",
     address: company.address || "",
     paymentIndex: idx + 1,
@@ -84,6 +99,7 @@ export async function openInvoice(companyId: string, installmentId: string) {
     date: inst.payment_date || inst.created_at || new Date().toISOString(),
     method: methodLabel((inst as any).payment_method),
     invoiceNo: (inst as any).invoice_no ?? null,
+    issuedBy,
   };
   renderInvoiceWindow(data);
 }
