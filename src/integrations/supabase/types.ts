@@ -92,7 +92,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          deal_updated_at: string | null
+          deal_updated_by: string | null
           discount: number
+          discount_updated_at: string | null
+          discount_updated_by: string | null
           emergency: boolean
           id: string
           legacy_id: number | null
@@ -120,7 +124,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          deal_updated_at?: string | null
+          deal_updated_by?: string | null
           discount?: number
+          discount_updated_at?: string | null
+          discount_updated_by?: string | null
           emergency?: boolean
           id?: string
           legacy_id?: number | null
@@ -148,7 +156,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          deal_updated_at?: string | null
+          deal_updated_by?: string | null
           discount?: number
+          discount_updated_at?: string | null
+          discount_updated_by?: string | null
           emergency?: boolean
           id?: string
           legacy_id?: number | null
