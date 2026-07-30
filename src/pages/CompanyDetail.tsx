@@ -435,6 +435,12 @@ export default function CompanyDetail() {
     navigate("/");
   }
 
+  const profileTitle = company
+    ? ((company as any).update_by
+        ? adminTitle((company as any).update_by, (company as any).updated_at)
+        : adminTitle(profileNames[(company as any).created_by ?? ""], (company as any).created_at, "Added by"))
+    : undefined;
+
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
@@ -1367,7 +1373,6 @@ export default function CompanyDetail() {
         </div>
 
         {/* Profile */}
-        {(() => null)()}
         <div className="space-y-4">
 
           <Card className="p-4 space-y-3" title={profileTitle}>
