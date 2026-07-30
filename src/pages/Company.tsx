@@ -85,18 +85,18 @@ export default function CompanyPage() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const selectedPkg = packages.find((p) => p.id === packageId);
+    const dealAmount = Number(deal);
+    if (!deal.trim() || !Number.isFinite(dealAmount) || dealAmount <= 0) {
+      toast.error("Deal amount is required");
+      return;
+    }
     const payload: Record<string, unknown> = {
       name: String(fd.get("name") ?? "").trim(),
       type,
       branch_id: branchId2 || null,
       package_id: packageId || null,
+      total_deal: dealAmount,
     };
-    if (selectedPkg) {
-      payload.total_deal = selectedPkg.price;
-    } else {
-      payload.total_deal = null;
-    }
     if (!payload.name) { toast.error("Company name required"); return; }
     const { error } = editing
       ? await supabase.from("companies").update(payload as any).eq("id", editing.id)
@@ -112,8 +112,16 @@ export default function CompanyPage() {
     if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setOpen(true); };
-  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setOpen(true); };
+  const onPackageChange = (v: string) => {
+    const id = v === "none" ? "" : v;
+    setPackageId(id);
+    const pkg = packages.find((p) => p.id === id);
+    if (pkg) setDeal(String(pkg.price));
+  };
+
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setOpen(true); };
+  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setDeal(r.total_deal != null ? String(r.total_deal) : ""); setOpen(true); };
+
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
