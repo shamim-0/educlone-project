@@ -81,6 +81,7 @@ export default function CompanyDetail() {
     isAdmin ? auditTitle(name, at, verb) : undefined;
 
   const STEP_DEFS = useServiceDefs();
+
   const [company, setCompany] = useState<Company | null>(null);
   const applicableDefs = useMemo(() => getApplicableServiceDefs(company?.type ?? "", STEP_DEFS), [company?.type, STEP_DEFS]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -217,7 +218,10 @@ export default function CompanyDetail() {
       .eq("id", company.id);
     setSavingProfile(false);
     if (error) toast.error(error.message);
-    else toast.success("Profile saved");
+    else {
+      setCompany({ ...(company as any), update_by: myUsername ?? null, updated_at: new Date().toISOString() });
+      toast.success("Profile saved");
+    }
   }
 
   async function saveStep(key: string, override?: Partial<Step>) {
@@ -430,6 +434,12 @@ export default function CompanyDetail() {
     toast.success("Company deleted");
     navigate("/");
   }
+
+  const profileTitle = company
+    ? ((company as any).update_by
+        ? adminTitle((company as any).update_by, (company as any).updated_at)
+        : adminTitle(profileNames[(company as any).created_by ?? ""], (company as any).created_at, "Added by"))
+    : undefined;
 
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
@@ -1364,8 +1374,9 @@ export default function CompanyDetail() {
 
         {/* Profile */}
         <div className="space-y-4">
-          <Card className="p-4 space-y-3" title={adminTitle((company as any).update_by, (company as any).updated_at)}>
-            <h2 className="font-semibold" title={adminTitle((company as any).update_by, (company as any).updated_at)}>📋 Company Profile</h2>
+
+          <Card className="p-4 space-y-3" title={profileTitle}>
+            <h2 className="font-semibold" title={profileTitle}>📋 Company Profile</h2>
             <div>
               <Label className="text-xs">BRANCH</Label>
               <Select
