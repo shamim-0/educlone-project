@@ -19,6 +19,7 @@ interface Company {
   type: CompanyType;
   branch_id: string | null;
   package_id?: string | null;
+  total_deal?: number | null;
   created_at?: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
