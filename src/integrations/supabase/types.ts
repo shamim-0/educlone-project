@@ -270,6 +270,7 @@ export type Database = {
           amount: number
           company_id: string
           created_at: string
+          created_by: string | null
           id: string
           invoice_no: number
           note: string | null
@@ -281,6 +282,7 @@ export type Database = {
           amount?: number
           company_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
           invoice_no?: number
           note?: string | null
@@ -292,6 +294,7 @@ export type Database = {
           amount?: number
           company_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           invoice_no?: number
           note?: string | null
