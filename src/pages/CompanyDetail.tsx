@@ -210,6 +210,9 @@ export default function CompanyDetail() {
         whatsapp: company.whatsapp,
         contact_email: company.contact_email,
         note: company.note,
+        update_by: myUsername ?? null,
+        updated_at: new Date().toISOString(),
+
       } as any)
       .eq("id", company.id);
     setSavingProfile(false);
@@ -228,6 +231,7 @@ export default function CompanyDetail() {
       username: s.username,
       password: s.password,
       subtasks_done: s.subtasks_done ?? [],
+      update_status_by: myUsername ?? null,
       updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
@@ -252,7 +256,7 @@ export default function CompanyDetail() {
     setSavingActivity(true);
     const { data, error } = await supabase
       .from("cr_activities")
-      .insert({ company_id: id, code, label })
+      .insert({ company_id: id, code, label, updated_by: myUsername ?? null } as any)
       .select()
       .single();
     setSavingActivity(false);
@@ -275,7 +279,7 @@ export default function CompanyDetail() {
     setSavingManager(true);
     const { data, error } = await supabase
       .from("company_managers")
-      .insert({ company_id: id, name, manager_type: mgrType, iqama: mgrIqama.trim() || null, birthdate: mgrBirthdate || null })
+      .insert({ company_id: id, name, manager_type: mgrType, iqama: mgrIqama.trim() || null, birthdate: mgrBirthdate || null, updated_by: myUsername ?? null } as any)
       .select()
       .single();
     setSavingManager(false);
@@ -303,6 +307,7 @@ export default function CompanyDetail() {
       .insert({
         company_id: id,
         shareholder_type: shForm.shareholder_type,
+        updated_by: myUsername ?? null,
         name,
         arabic_name: shForm.arabic_name.trim() || null,
         share_percent: sp ? Number(sp) : null,
@@ -350,6 +355,7 @@ export default function CompanyDetail() {
           file_path: path,
           file_size: file.size,
           mime_type: file.type || null,
+          uploaded_by: (await supabase.auth.getUser()).data.user?.id ?? null,
         })
         .select()
         .single();
