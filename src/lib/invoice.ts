@@ -155,7 +155,8 @@ function renderInvoiceWindow(d: InvoiceData) {
   .bottom-bar .ico { color: #2563eb; font-weight: 700; }
   .toolbar { position: fixed; top: 10px; right: 10px; z-index: 99; }
   .toolbar button { background: #2563eb; color: #fff; border: 0; padding: 10px 18px; font-size: 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-  @media print { .toolbar { display: none; } body { background: #fff; } .page { box-shadow: none; padding: 14mm 14mm; } }
+  .issuer { margin-top: 10px; display: inline-block; background: #fef3c7; border: 1px dashed #d97706; color: #92400e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  @media print { .toolbar, .issuer { display: none !important; } body { background: #fff; } .page { box-shadow: none; padding: 14mm 14mm; } }
 </style></head>
 <body>
 <div class="toolbar"><button onclick="window.print()">Print / Save PDF</button></div>
@@ -177,8 +178,11 @@ function renderInvoiceWindow(d: InvoiceData) {
   <div class="invoice-to">
     <div class="lbl">Invoice to :</div>
     <div class="name">Client Name: ${escapeHtml(d.clientName)}</div>
+    ${d.projectName ? `<div class="line">Project Name : ${escapeHtml(d.projectName)}</div>` : ""}
+    ${d.passportIqama ? `<div class="line">Passport / Iqama No : ${escapeHtml(d.passportIqama)}</div>` : ""}
     ${d.mobile ? `<div class="line">Mobile : ${escapeHtml(d.mobile)}</div>` : ""}
     ${d.address ? `<div class="line">${escapeHtml(d.address)}</div>` : ""}
+    ${d.issuedBy ? `<div class="issuer">Issued by: ${escapeHtml(d.issuedBy)} (admin only — not printed)</div>` : ""}
   </div>
 
   <table class="items">
