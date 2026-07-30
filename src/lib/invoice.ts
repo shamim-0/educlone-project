@@ -305,7 +305,7 @@ function renderSummaryWindow(d: SummaryPayload) {
     : d.extras.map((x: any, i: number) => `
         <tr>
           <td>${i + 1}</td>
-          <td>${escapeHtml(x.note || "Extra deal")}</td>
+          <td>Extra</td>
           <td>${dateFmt(x.created_at)}</td>
           <td class="r">${money(Number(x.amount || 0))}</td>
         </tr>`).join("");
