@@ -1,11 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const PAYMENT_METHODS = [
-  { value: "bank", label: "Bank" },
-  { value: "cash", label: "Cash" },
-  { value: "check", label: "Check" },
-  { value: "online", label: "Online Payment" },
-  { value: "other", label: "Other" },
+  { value: "bank", label: "In Bank" },
+  { value: "cash", label: "In Cash" },
+  { value: "check", label: "In Check" },
+  { value: "online", label: "In Online Payment" },
+  { value: "other", label: "In Other" },
 ] as const;
 
 export function methodLabel(v?: string | null) {
@@ -45,6 +45,8 @@ function ord(n: number) {
 
 export interface InvoiceData {
   clientName: string;
+  projectName?: string | null;
+  passportIqama?: string | null;
   mobile?: string | null;
   address?: string | null;
   paymentIndex: number; // 1-based
@@ -52,20 +54,25 @@ export interface InvoiceData {
   date: string; // ISO or readable
   method?: string;
   invoiceNo?: number | null;
+  issuedBy?: string | null; // admin-only, never printed
 }
 
 export function formatInvoiceNo(n?: number | null) {
   return `ISBI${String(n ?? 0).padStart(5, "0")}`;
 }
 
-export async function openInvoice(companyId: string, installmentId: string) {
+export async function openInvoice(
+  companyId: string,
+  installmentId: string,
+  opts?: { showIssuer?: boolean },
+) {
   // Fetch company + all installments to compute ordinal index
   const [cRes, iRes] = await Promise.all([
-    supabase.from("companies").select("name, client_name, phone, whatsapp, address").eq("id", companyId).single(),
-    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method, invoice_no").eq("company_id", companyId),
+    supabase.from("companies").select("name, client_name, passport_iqama, phone, whatsapp, address").eq("id", companyId).single(),
+    supabase.from("company_installments").select("id, amount, payment_date, created_at, payment_method, invoice_no, created_by").eq("company_id", companyId),
   ]);
   if (cRes.error || !cRes.data) throw new Error(cRes.error?.message || "Company not found");
-  const company = cRes.data as { name: string; client_name: string | null; phone: string | null; whatsapp: string | null; address: string | null };
+  const company = cRes.data as any;
   const insts = (iRes.data ?? []).slice().sort((a: any, b: any) => {
     const ad = a.payment_date ?? a.created_at ?? "";
     const bd = b.payment_date ?? b.created_at ?? "";
@@ -75,8 +82,16 @@ export async function openInvoice(companyId: string, installmentId: string) {
   const inst = insts[idx];
   if (!inst) throw new Error("Installment not found");
 
+  let issuedBy: string | null = null;
+  if (opts?.showIssuer && (inst as any).created_by) {
+    const p = await supabase.from("profiles").select("username, email").eq("id", (inst as any).created_by).maybeSingle();
+    issuedBy = (p.data as any)?.username || (p.data as any)?.email || null;
+  }
+
   const data: InvoiceData = {
     clientName: company.client_name?.trim() || company.name,
+    projectName: company.name,
+    passportIqama: company.passport_iqama || "",
     mobile: company.phone || company.whatsapp || "",
     address: company.address || "",
     paymentIndex: idx + 1,
@@ -84,6 +99,7 @@ export async function openInvoice(companyId: string, installmentId: string) {
     date: inst.payment_date || inst.created_at || new Date().toISOString(),
     method: methodLabel((inst as any).payment_method),
     invoiceNo: (inst as any).invoice_no ?? null,
+    issuedBy,
   };
   renderInvoiceWindow(data);
 }
@@ -139,7 +155,8 @@ function renderInvoiceWindow(d: InvoiceData) {
   .bottom-bar .ico { color: #2563eb; font-weight: 700; }
   .toolbar { position: fixed; top: 10px; right: 10px; z-index: 99; }
   .toolbar button { background: #2563eb; color: #fff; border: 0; padding: 10px 18px; font-size: 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-  @media print { .toolbar { display: none; } body { background: #fff; } .page { box-shadow: none; padding: 14mm 14mm; } }
+  .issuer { margin-top: 10px; display: inline-block; background: #fef3c7; border: 1px dashed #d97706; color: #92400e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  @media print { .toolbar, .issuer { display: none !important; } body { background: #fff; } .page { box-shadow: none; padding: 14mm 14mm; } }
 </style></head>
 <body>
 <div class="toolbar"><button onclick="window.print()">Print / Save PDF</button></div>
@@ -161,8 +178,11 @@ function renderInvoiceWindow(d: InvoiceData) {
   <div class="invoice-to">
     <div class="lbl">Invoice to :</div>
     <div class="name">Client Name: ${escapeHtml(d.clientName)}</div>
+    ${d.projectName ? `<div class="line">Project Name : ${escapeHtml(d.projectName)}</div>` : ""}
+    ${d.passportIqama ? `<div class="line">Passport / Iqama No : ${escapeHtml(d.passportIqama)}</div>` : ""}
     ${d.mobile ? `<div class="line">Mobile : ${escapeHtml(d.mobile)}</div>` : ""}
     ${d.address ? `<div class="line">${escapeHtml(d.address)}</div>` : ""}
+    ${d.issuedBy ? `<div class="issuer">Issued by: ${escapeHtml(d.issuedBy)} (admin only — not printed)</div>` : ""}
   </div>
 
   <table class="items">
@@ -455,3 +475,154 @@ function renderSummaryWindow(d: SummaryPayload) {
   w.document.close();
 }
 
+
+// ============================================================================
+// Date-range payments statement (Accounts → From/To filter)
+// ============================================================================
+export interface RangeRow {
+  companyName: string;
+  invoiceNo?: number | null;
+  date?: string | null;
+  method?: string | null;
+  note?: string | null;
+  amount: number;
+}
+
+export function openRangeStatement(opts: {
+  from?: string;
+  to?: string;
+  branch?: string;
+  rows: RangeRow[];
+}) {
+  const money = (n: number) => `${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SR`;
+  const dateFmt = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const rows = opts.rows.slice().sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")));
+  const total = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
+
+  const byMethod = new Map<string, number>();
+  rows.forEach((r) => {
+    const k = methodLabel(r.method);
+    byMethod.set(k, (byMethod.get(k) ?? 0) + Number(r.amount || 0));
+  });
+
+  const periodLabel = `${opts.from ? dateFmt(opts.from) : "Beginning"} — ${opts.to ? dateFmt(opts.to) : "Today"}`;
+
+  const bodyRows = rows.length === 0
+    ? `<tr><td colspan="6" style="text-align:center;color:#888;padding:16px">No payments in this period</td></tr>`
+    : rows.map((r, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><b>${formatInvoiceNo(r.invoiceNo)}</b></td>
+          <td>${escapeHtml(r.companyName)}</td>
+          <td>${dateFmt(r.date)}</td>
+          <td>${escapeHtml(methodLabel(r.method))}${r.note ? ` — ${escapeHtml(r.note)}` : ""}</td>
+          <td class="r">${money(Number(r.amount || 0))}</td>
+        </tr>`).join("");
+
+  const methodRows = Array.from(byMethod.entries())
+    .map(([k, v]) => `<tr><td class="label">${escapeHtml(k)}</td><td class="value">${money(v)}</td></tr>`).join("");
+
+  const html = `<!doctype html><html><head><meta charset="utf-8" />
+<title>Payments Statement ${escapeHtml(periodLabel)}</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #222; background: #f5f5f5; }
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; padding: 16mm 14mm; }
+  .header { display: flex; align-items: center; gap: 16px; padding-bottom: 10px; border-bottom: 3px solid #3b82f6; }
+  .shield { width: 60px; height: 60px; flex-shrink: 0; }
+  .head-text { text-align: center; flex: 1; }
+  .head-text h1 { margin: 0; font-size: 22px; letter-spacing: 1px; font-weight: 800; }
+  .head-text p { margin: 4px 0 0; font-size: 11px; color: #333; }
+  .title-bar { margin-top: 14px; display:flex; justify-content:space-between; align-items:flex-end; }
+  .title-bar h2 { margin:0; font-size: 20px; color:#1e3a8a; }
+  .title-bar .meta { text-align:right; font-size:12px; color:#555; }
+  .period { margin-top:12px; padding:10px 14px; background:#f1f5f9; border-left:4px solid #2563eb; border-radius:4px; font-size:13px; }
+  .stats { margin-top:14px; display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
+  .stat { background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px; text-align:center; }
+  .stat .lbl { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:#64748b; font-weight:600; }
+  .stat .val { font-size:15px; font-weight:800; margin-top:4px; color:#047857; }
+  h3.sec { margin: 16px 0 6px; font-size: 13px; color:#1e3a8a; text-transform:uppercase; letter-spacing:.6px; border-bottom:2px solid #dbeafe; padding-bottom:4px; }
+  table { width:100%; border-collapse: collapse; font-size:12px; }
+  table thead th { background:#2563eb; color:#fff; padding:8px 10px; text-align:left; font-weight:600; font-size:11px; }
+  table thead th.r { text-align:right; }
+  table tbody td { padding:7px 10px; border-bottom:1px solid #eef2f7; }
+  table tbody tr:nth-child(even) td { background:#f8fafc; }
+  table tbody td.r { text-align:right; font-variant-numeric: tabular-nums; }
+  .total-row td { font-weight:800; background:#1e3a8a !important; color:#fff; }
+  .breakdown { margin-top:14px; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+  .breakdown td { padding:8px 12px; border-bottom:1px solid #eef2f7; font-size:12px; }
+  .breakdown .value { text-align:right; font-weight:700; }
+  .words { margin-top:10px; text-align:right; font-size:11px; color:#555; font-style:italic; }
+  .footer { margin-top:22px; padding-top:10px; border-top:2px solid #3b82f6; display:flex; justify-content:space-between; font-size:10px; color:#444; }
+  .footer .sig .name { font-family:'Brush Script MT', cursive; font-size:24px; color:#2563eb; }
+  .footer .sig .title { border-top:1px solid #999; padding-top:2px; margin-top:2px; font-weight:600; text-align:center; }
+  .toolbar { position: fixed; top:10px; right:10px; z-index:99; }
+  .toolbar button { background:#2563eb; color:#fff; border:0; padding:10px 18px; font-size:14px; border-radius:6px; cursor:pointer; }
+  @media print { .toolbar { display:none; } body { background:#fff; } .page { padding:12mm; } }
+</style></head>
+<body>
+<div class="toolbar"><button onclick="window.print()">Print / Save PDF</button></div>
+<div class="page">
+  <div class="header">
+    <svg class="shield" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6c46a"/><stop offset="1" stop-color="#a07a20"/></linearGradient></defs>
+      <path d="M32 4 L58 14 V32 C58 46 46 56 32 60 C18 56 6 46 6 32 V14 Z" fill="url(#g)" stroke="#7a5b10" stroke-width="1"/>
+      <path d="M20 32 L29 41 L46 24" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="head-text">
+      <h1>INVESECURITY BUSINESS INCUBATOR</h1>
+      <p>Empowering Local Brands to Global | <b>CR:</b> 7051792260 | <b>VAT:</b> 314252983300003</p>
+    </div>
+  </div>
+
+  <div class="title-bar">
+    <h2>Payments Statement</h2>
+    <div class="meta"><b>Generated:</b> ${today}</div>
+  </div>
+
+  <div class="period"><b>Period:</b> ${escapeHtml(periodLabel)}${opts.branch && opts.branch !== "all" ? ` &nbsp;·&nbsp; <b>Branch:</b> ${escapeHtml(opts.branch)}` : ""}</div>
+
+  <div class="stats">
+    <div class="stat"><div class="lbl">Payments</div><div class="val" style="color:#1e3a8a">${rows.length}</div></div>
+    <div class="stat"><div class="lbl">Companies</div><div class="val" style="color:#1e3a8a">${new Set(rows.map(r => r.companyName)).size}</div></div>
+    <div class="stat"><div class="lbl">Total Received</div><div class="val">${money(total)}</div></div>
+  </div>
+
+  <h3 class="sec">Payments (${rows.length})</h3>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Invoice</th><th>Company</th><th style="width:100px">Date</th><th>Method / Note</th><th class="r" style="width:120px">Amount</th></tr></thead>
+    <tbody>
+      ${bodyRows}
+      <tr class="total-row"><td colspan="5" class="r">Total Received</td><td class="r">${money(total)}</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sec">Breakdown by Payment Method</h3>
+  <div class="breakdown"><table>
+    ${methodRows || `<tr><td class="label">—</td><td class="value">${money(0)}</td></tr>`}
+    <tr><td class="label"><b>Total</b></td><td class="value">${money(total)}</td></tr>
+  </table></div>
+
+  <div class="words">In words: <b>${numberToWords(total)} SR</b></div>
+
+  <div class="footer">
+    <div>
+      <div><b>☎</b> +966 571 353 340 &nbsp;·&nbsp; <b>✉</b> contact@invesecurity.com</div>
+      <div style="margin-top:2px">Crystal Palace KSA, 3328 King Abdulaziz Rd, Al Murabba, Riyadh 12631, Saudi Arabia</div>
+    </div>
+    <div class="sig">
+      <div class="name">Zahid Hassan</div>
+      <div class="title">Chief Executive Officer</div>
+    </div>
+  </div>
+</div>
+</body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) { alert("Please allow popups to view the statement."); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}

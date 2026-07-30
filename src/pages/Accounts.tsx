@@ -18,7 +18,7 @@ import {
   Wallet, TrendingUp, AlertCircle, Search, Pencil, Plus, Trash2, Save,
   Calendar, Receipt, Percent, Building2, ArrowDownRight, FileText,
 } from "lucide-react";
-import { openInvoice, openDealSummary, PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
+import { openInvoice, openDealSummary, openRangeStatement, PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,6 +84,8 @@ export default function AccountsPage() {
   const [branchFilter, setBranchFilter] = useState<string>("all");
   const [dayFilter, setDayFilter] = useState<string>("");
   const [monthFilter, setMonthFilter] = useState<string>("");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
@@ -135,7 +137,7 @@ export default function AccountsPage() {
   useEffect(() => { document.title = "Accounts | ISBI Tracker"; load(); }, []);
 
   /** installments limited to the selected day / month (payment_date based) */
-  const dateFilterActive = !!dayFilter || !!monthFilter;
+  const dateFilterActive = !!dayFilter || !!monthFilter || !!fromDate || !!toDate;
   const periodInstallments = useMemo(() => {
     if (!dateFilterActive) return installments;
     return installments.filter((x) => {
@@ -143,9 +145,11 @@ export default function AccountsPage() {
       const d = String(x.payment_date).slice(0, 10);
       if (dayFilter && d !== dayFilter) return false;
       if (monthFilter && d.slice(0, 7) !== monthFilter) return false;
+      if (fromDate && d < fromDate) return false;
+      if (toDate && d > toDate) return false;
       return true;
     });
-  }, [installments, dayFilter, monthFilter, dateFilterActive]);
+  }, [installments, dayFilter, monthFilter, fromDate, toDate, dateFilterActive]);
 
   const receivedByCompany = useMemo(() => {
     const map: Record<string, number> = {};
@@ -327,8 +331,11 @@ export default function AccountsPage() {
       if (error) return toast.error(error.message);
       setInstallments((prev) => prev.map((x) => x.id === editingInst.id ? (data as Installment) : x));
     } else {
+      const { data: authData } = await supabase.auth.getUser();
       const { data, error } = await supabase
-        .from("company_installments").insert(payload).select().single();
+        .from("company_installments")
+        .insert({ ...payload, created_by: authData.user?.id ?? null })
+        .select().single();
       setSavingInst(false);
       if (error) return toast.error(error.message);
       setInstallments((prev) => [...prev, data as Installment]);
@@ -495,16 +502,59 @@ export default function AccountsPage() {
               className="sm:w-40"
               title="Filter by payment month"
             />
-            {(dayFilter || monthFilter) && (
-              <Button variant="outline" onClick={() => { setDayFilter(""); setMonthFilter(""); }}>
+            <div className="flex items-center gap-1">
+              <Input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="sm:w-40"
+                title="From date"
+              />
+              <span className="text-muted-foreground text-xs">to</span>
+              <Input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="sm:w-40"
+                title="To date"
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                const nameById = new Map(companies.map((c) => [c.id, c.name] as const));
+                const ids = new Set(filtered.map((c) => c.id));
+                openRangeStatement({
+                  from: fromDate || undefined,
+                  to: toDate || undefined,
+                  branch: branchFilter,
+                  rows: periodInstallments
+                    .filter((x) => ids.has(x.company_id))
+                    .map((x) => ({
+                      companyName: nameById.get(x.company_id) ?? "—",
+                      invoiceNo: (x as any).invoice_no ?? null,
+                      date: x.payment_date,
+                      method: x.payment_method,
+                      note: x.note,
+                      amount: Number(x.amount || 0),
+                    })),
+                });
+              }}
+            >
+              <FileText className="h-4 w-4" /> Statement PDF
+            </Button>
+            {(dayFilter || monthFilter || fromDate || toDate) && (
+              <Button variant="outline" onClick={() => { setDayFilter(""); setMonthFilter(""); setFromDate(""); setToDate(""); }}>
                 Clear date
               </Button>
             )}
           </div>
         </div>
-        {(dayFilter || monthFilter) && (
+        {(dayFilter || monthFilter || fromDate || toDate) && (
           <p className="-mt-3 mb-4 text-xs text-muted-foreground">
-            Showing payments {dayFilter ? `on ${dayFilter}` : ""}{dayFilter && monthFilter ? " and " : ""}{monthFilter ? `in ${monthFilter}` : ""} only.
+            Showing payments {dayFilter ? `on ${dayFilter}` : ""}{dayFilter && monthFilter ? " and " : ""}{monthFilter ? `in ${monthFilter}` : ""}
+            {(fromDate || toDate) ? `${dayFilter || monthFilter ? " and " : ""}from ${fromDate || "beginning"} to ${toDate || "today"}` : ""} only.
           </p>
         )}
 
@@ -852,7 +902,7 @@ export default function AccountsPage() {
                               size="icon"
                               variant="ghost"
                               title="Generate Invoice"
-                              onClick={() => openInvoice(x.company_id, x.id).catch((e) => toast.error(e.message))}
+                              onClick={() => openInvoice(x.company_id, x.id, { showIssuer: role === "admin" }).catch((e) => toast.error(e.message))}
                             >
                               <FileText className="h-4 w-4 text-primary" />
                             </Button>

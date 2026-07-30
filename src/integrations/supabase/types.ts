@@ -99,6 +99,7 @@ export type Database = {
           name: string
           note: string | null
           package_id: string | null
+          passport_iqama: string | null
           phone: string | null
           slug: string | null
           take_action: boolean
@@ -126,6 +127,7 @@ export type Database = {
           name: string
           note?: string | null
           package_id?: string | null
+          passport_iqama?: string | null
           phone?: string | null
           slug?: string | null
           take_action?: boolean
@@ -153,6 +155,7 @@ export type Database = {
           name?: string
           note?: string | null
           package_id?: string | null
+          passport_iqama?: string | null
           phone?: string | null
           slug?: string | null
           take_action?: boolean
@@ -267,6 +270,7 @@ export type Database = {
           amount: number
           company_id: string
           created_at: string
+          created_by: string | null
           id: string
           invoice_no: number
           note: string | null
@@ -278,6 +282,7 @@ export type Database = {
           amount?: number
           company_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
           invoice_no?: number
           note?: string | null
@@ -289,6 +294,7 @@ export type Database = {
           amount?: number
           company_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           invoice_no?: number
           note?: string | null

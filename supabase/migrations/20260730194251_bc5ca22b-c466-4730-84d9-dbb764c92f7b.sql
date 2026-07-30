@@ -1,0 +1,1 @@
+ALTER TABLE public.company_installments ADD COLUMN IF NOT EXISTS created_by uuid;
