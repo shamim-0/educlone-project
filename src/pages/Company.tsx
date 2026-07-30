@@ -288,7 +288,7 @@ export default function CompanyPage() {
             </div>
             <div>
               <Label>Package (optional)</Label>
-              <Select value={packageId || "none"} onValueChange={(v) => setPackageId(v === "none" ? "" : v)}>
+              <Select value={packageId || "none"} onValueChange={onPackageChange}>
                 <SelectTrigger><SelectValue placeholder="No package" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No package</SelectItem>
@@ -297,11 +297,23 @@ export default function CompanyPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {packageId && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Deal amount will be set to {packages.find((p) => p.id === packageId)?.price.toLocaleString()}
-                </p>
-              )}
+            </div>
+            <div>
+              <Label htmlFor="deal">Deal Amount <span className="text-destructive">*</span></Label>
+              <Input
+                id="deal"
+                name="deal"
+                type="number"
+                min="1"
+                step="0.01"
+                required
+                value={deal}
+                onChange={(e) => setDeal(e.target.value)}
+                placeholder="e.g. 15000"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This deal is created under the company and shows in Accounts.
+              </p>
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>
