@@ -238,6 +238,14 @@ export default function AccountsPage() {
   const oExtras = openCompany ? (extrasByCompany[openCompany.id] ?? 0) : 0;
   const oDeal = oBaseDeal + oExtras;
   const oDisc = Number(openCompany?.discount || 0);
+  const dealTitle = openCompany
+    ? (adminTitle((openCompany as any).deal_updated_by, (openCompany as any).deal_updated_at)
+        ?? adminTitle((openCompany as any).update_by, (openCompany as any).updated_at)
+        ?? adminTitle(profileNames[(openCompany as any).created_by ?? ""], (openCompany as any).created_at, "Added by"))
+    : undefined;
+  const discountTitle = openCompany
+    ? adminTitle((openCompany as any).discount_updated_by, (openCompany as any).discount_updated_at)
+    : undefined;
   const oNet = oDeal - oDisc;
   const oRecv = openCompany ? (receivedByCompany[openCompany.id] ?? 0) : 0;
   const oDue = oNet - oRecv;
@@ -718,7 +726,7 @@ export default function AccountsPage() {
               </Card>
 
               {/* Company setup deal */}
-              <div className="rounded-xl border p-4" title={adminTitle((openCompany as any).deal_updated_by, (openCompany as any).deal_updated_at)}>
+              <div className="rounded-xl border p-4" title={dealTitle}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Wallet className="h-4 w-4 text-primary" />
@@ -746,13 +754,13 @@ export default function AccountsPage() {
                   </div>
                 ) : (
                   <div className="mt-3 text-sm">
-                    <InfoRow label="Setup Deal" value={fmt(oBaseDeal)} bold />
+                    <InfoRow label="Setup Deal" value={fmt(oBaseDeal)} bold title={dealTitle} />
                   </div>
                 )}
               </div>
 
               {/* Discount */}
-              <div className="rounded-xl border p-4" title={adminTitle((openCompany as any).discount_updated_by, (openCompany as any).discount_updated_at)}>
+              <div className="rounded-xl border p-4" title={discountTitle}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Percent className="h-4 w-4 text-amber-500" />
@@ -816,7 +824,7 @@ export default function AccountsPage() {
                   </div>
                 ) : (
                   <div className="mt-3 text-sm">
-                    <InfoRow label="Discount" value={fmt(oDisc)} icon={<ArrowDownRight className="h-3 w-3 text-amber-500" />} bold />
+                    <InfoRow label="Discount" value={fmt(oDisc)} icon={<ArrowDownRight className="h-3 w-3 text-amber-500" />} bold title={discountTitle} />
                   </div>
                 )}
               </div>
@@ -1065,13 +1073,13 @@ function MiniStat({ label, value, tone }: { label: string; value: string; tone: 
   );
 }
 
-function InfoRow({ label, value, bold, icon }: { label: string; value: string; bold?: boolean; icon?: React.ReactNode }) {
+function InfoRow({ label, value, bold, icon, title }: { label: string; value: string; bold?: boolean; icon?: React.ReactNode; title?: string }) {
   return (
-    <div className="rounded-lg bg-muted/30 px-3 py-2">
+    <div className="rounded-lg bg-muted/30 px-3 py-2" title={title}>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
         {icon}{label}
       </div>
-      <div className={`tabular-nums ${bold ? "font-bold text-foreground" : "font-medium"}`}>{value}</div>
+      <div className={`tabular-nums ${bold ? "font-bold text-foreground" : "font-medium"}`} title={title}>{value}</div>
     </div>
   );
 }
