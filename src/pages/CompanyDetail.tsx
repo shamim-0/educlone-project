@@ -1367,7 +1367,9 @@ export default function CompanyDetail() {
         </div>
 
         {/* Profile */}
+        {(() => null)()}
         <div className="space-y-4">
+
           <Card className="p-4 space-y-3" title={profileTitle}>
             <h2 className="font-semibold" title={profileTitle}>📋 Company Profile</h2>
             <div>
