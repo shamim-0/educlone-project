@@ -120,7 +120,7 @@ export default function AccountsPage() {
     const restrictToBranch = role !== "admin" && !!branchId;
     let cq = supabase
       .from("companies")
-      .select("id, name, type, total_deal, discount, branch_id, branches!companies_branch_id_fkey(name)")
+      .select("id, name, type, total_deal, discount, branch_id, created_by, update_by, updated_at, created_at, branches!companies_branch_id_fkey(name)")
       .order("name");
     if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
     const [c, i, e] = await Promise.all([
@@ -627,7 +627,9 @@ export default function AccountsPage() {
                 return (
                   <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
-                    <TableCell>
+                    <TableCell title={(c as any).update_by
+                      ? adminTitle((c as any).update_by, (c as any).updated_at, "Last updated by")
+                      : adminTitle(profileNames[(c as any).created_by ?? ""], (c as any).created_at, "Added by")}>
                       <div className="font-medium">{c.name}</div>
                       <Badge variant="secondary" className="capitalize mt-1 text-[10px]">{c.type}</Badge>
                     </TableCell>
