@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { STATUS_OPTS, statusBadgeClass, getApplicableServiceDefs, getStatusOptsFor } from "@/lib/steps";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfileNames } from "@/hooks/useProfileNames";
+import { auditTitle } from "@/lib/audit";
 
 interface Branch { id: string; name: string }
 interface Company {
@@ -72,7 +74,12 @@ const DOC_CATEGORIES = [
 export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { role, branchId: myBranchId } = useAuth();
+  const { role, branchId: myBranchId, username: myUsername } = useAuth();
+  const profileNames = useProfileNames();
+  const isAdmin = role === "admin";
+  const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
+    isAdmin ? auditTitle(name, at, verb) : undefined;
+
   const STEP_DEFS = useServiceDefs();
   const [company, setCompany] = useState<Company | null>(null);
   const applicableDefs = useMemo(() => getApplicableServiceDefs(company?.type ?? "", STEP_DEFS), [company?.type, STEP_DEFS]);
