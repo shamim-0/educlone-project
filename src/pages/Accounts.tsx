@@ -22,6 +22,8 @@ import { openInvoice, openDealSummary, openRangeStatement, PAYMENT_METHODS, meth
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfileNames } from "@/hooks/useProfileNames";
+import { auditTitle } from "@/lib/audit";
 
 interface Company {
   id: string;
@@ -73,7 +75,10 @@ function AnimatedProgress({
 }
 
 export default function AccountsPage() {
-  const { role, accountsAccess, branchId } = useAuth();
+  const { role, accountsAccess, branchId, username: myUsername } = useAuth();
+  const profileNames = useProfileNames();
+  const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
+    role === "admin" ? auditTitle(name, at, verb) : undefined;
   // Admin always writes. Editor writes only if accounts access is granted. Viewer is read-only.
   const canWrite = role === "admin" || ((role === "editor" || role === "sub_admin") && accountsAccess);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -115,7 +120,7 @@ export default function AccountsPage() {
     const restrictToBranch = role !== "admin" && !!branchId;
     let cq = supabase
       .from("companies")
-      .select("id, name, type, total_deal, discount, branch_id, branches!companies_branch_id_fkey(name)")
+      .select("id, name, type, total_deal, discount, branch_id, created_by, update_by, updated_at, created_at, branches!companies_branch_id_fkey(name)")
       .order("name");
     if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
     const [c, i, e] = await Promise.all([
@@ -370,16 +375,16 @@ export default function AccountsPage() {
     if (Number.isNaN(v) || v <= 0) { toast.error("Enter amount"); return; }
     if (!extraNote.trim()) { toast.error("Enter note"); return; }
     setSavingExtra(true);
-    const payload = { company_id: openCompany.id, amount: v, note: extraNote.trim() };
+    const payload = { company_id: openCompany.id, amount: v, note: extraNote.trim(), updated_by: myUsername ?? null };
     if (editingExtra) {
       const { data, error } = await supabase
-        .from("company_extra_deals").update(payload).eq("id", editingExtra.id).select().single();
+        .from("company_extra_deals").update(payload as any).eq("id", editingExtra.id).select().single();
       setSavingExtra(false);
       if (error) return toast.error(error.message);
       setExtraDeals((prev) => prev.map((x) => x.id === editingExtra.id ? (data as ExtraDeal) : x));
     } else {
       const { data, error } = await supabase
-        .from("company_extra_deals").insert(payload).select().single();
+        .from("company_extra_deals").insert(payload as any).select().single();
       setSavingExtra(false);
       if (error) return toast.error(error.message);
       setExtraDeals((prev) => [data as ExtraDeal, ...prev]);
@@ -622,7 +627,9 @@ export default function AccountsPage() {
                 return (
                   <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
-                    <TableCell>
+                    <TableCell title={(c as any).update_by
+                      ? adminTitle((c as any).update_by, (c as any).updated_at, "Last updated by")
+                      : adminTitle(profileNames[(c as any).created_by ?? ""], (c as any).created_at, "Added by")}>
                       <div className="font-medium">{c.name}</div>
                       <Badge variant="secondary" className="capitalize mt-1 text-[10px]">{c.type}</Badge>
                     </TableCell>
@@ -840,7 +847,7 @@ export default function AccountsPage() {
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-auto pr-1">
                     {companyExtras.map((x) => (
-                      <div key={x.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                      <div key={x.id} title={adminTitle((x as any).updated_by, (x as any).updated_at ?? (x as any).created_at, "Added by")} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                             <Plus className="h-4 w-4 text-primary" />
@@ -884,7 +891,7 @@ export default function AccountsPage() {
                       .slice()
                       .sort((a, b) => (b.payment_date ?? "").localeCompare(a.payment_date ?? ""))
                       .map((x) => (
-                        <div key={x.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                        <div key={x.id} title={adminTitle(profileNames[(x as any).created_by ?? ""], (x as any).created_at, "Added by")} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
                               <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />

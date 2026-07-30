@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { STATUS_OPTS, statusBadgeClass, getApplicableServiceDefs, getStatusOptsFor } from "@/lib/steps";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfileNames } from "@/hooks/useProfileNames";
+import { auditTitle } from "@/lib/audit";
 
 interface Branch { id: string; name: string }
 interface Company {
@@ -72,7 +74,12 @@ const DOC_CATEGORIES = [
 export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { role, branchId: myBranchId } = useAuth();
+  const { role, branchId: myBranchId, username: myUsername } = useAuth();
+  const profileNames = useProfileNames();
+  const isAdmin = role === "admin";
+  const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
+    isAdmin ? auditTitle(name, at, verb) : undefined;
+
   const STEP_DEFS = useServiceDefs();
   const [company, setCompany] = useState<Company | null>(null);
   const applicableDefs = useMemo(() => getApplicableServiceDefs(company?.type ?? "", STEP_DEFS), [company?.type, STEP_DEFS]);
@@ -203,6 +210,9 @@ export default function CompanyDetail() {
         whatsapp: company.whatsapp,
         contact_email: company.contact_email,
         note: company.note,
+        update_by: myUsername ?? null,
+        updated_at: new Date().toISOString(),
+
       } as any)
       .eq("id", company.id);
     setSavingProfile(false);
@@ -221,6 +231,7 @@ export default function CompanyDetail() {
       username: s.username,
       password: s.password,
       subtasks_done: s.subtasks_done ?? [],
+      update_status_by: myUsername ?? null,
       updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
@@ -245,7 +256,7 @@ export default function CompanyDetail() {
     setSavingActivity(true);
     const { data, error } = await supabase
       .from("cr_activities")
-      .insert({ company_id: id, code, label })
+      .insert({ company_id: id, code, label, updated_by: myUsername ?? null } as any)
       .select()
       .single();
     setSavingActivity(false);
@@ -268,7 +279,7 @@ export default function CompanyDetail() {
     setSavingManager(true);
     const { data, error } = await supabase
       .from("company_managers")
-      .insert({ company_id: id, name, manager_type: mgrType, iqama: mgrIqama.trim() || null, birthdate: mgrBirthdate || null })
+      .insert({ company_id: id, name, manager_type: mgrType, iqama: mgrIqama.trim() || null, birthdate: mgrBirthdate || null, updated_by: myUsername ?? null } as any)
       .select()
       .single();
     setSavingManager(false);
@@ -296,6 +307,7 @@ export default function CompanyDetail() {
       .insert({
         company_id: id,
         shareholder_type: shForm.shareholder_type,
+        updated_by: myUsername ?? null,
         name,
         arabic_name: shForm.arabic_name.trim() || null,
         share_percent: sp ? Number(sp) : null,
@@ -343,6 +355,7 @@ export default function CompanyDetail() {
           file_path: path,
           file_size: file.size,
           mime_type: file.type || null,
+          uploaded_by: (await supabase.auth.getUser()).data.user?.id ?? null,
         })
         .select()
         .single();
@@ -421,7 +434,6 @@ export default function CompanyDetail() {
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
-  const isAdmin = role === "admin";
   const isEditorLike = role === "editor" || role === "sub_admin";
   // Admin always edits. Editor/Sub-admin edit only companies in their assigned branch (or if they have no branch restriction). Viewer cannot edit.
   const canEdit = isAdmin || (isEditorLike && (!myBranchId || company.branch_id === myBranchId));
@@ -874,7 +886,7 @@ export default function CompanyDetail() {
 
 
             return (
-              <Card key={def.key} className={cn("p-4 space-y-3", misaRed && "bg-destructive/15 border-destructive border-2 animate-pulse")}>
+              <Card key={def.key} title={adminTitle((s as any).update_status_by, (s as any).updated_at)} className={cn("p-4 space-y-3", misaRed && "bg-destructive/15 border-destructive border-2 animate-pulse")}>
                 {misaInfo && (misaInfo.phase === "complete" || misaInfo.msToTarget <= 0 || misaInfo.done) && (() => {
                   const { msLeft, msToTarget, wdLeft, deadline, overdue, done, phase, startDate } = misaInfo;
                   const absMs = Math.abs(msLeft);
@@ -1352,8 +1364,8 @@ export default function CompanyDetail() {
 
         {/* Profile */}
         <div className="space-y-4">
-          <Card className="p-4 space-y-3">
-            <h2 className="font-semibold">📋 Company Profile</h2>
+          <Card className="p-4 space-y-3" title={adminTitle((company as any).update_by, (company as any).updated_at)}>
+            <h2 className="font-semibold" title={adminTitle((company as any).update_by, (company as any).updated_at)}>📋 Company Profile</h2>
             <div>
               <Label className="text-xs">BRANCH</Label>
               <Select
@@ -1428,7 +1440,10 @@ export default function CompanyDetail() {
           </Card>
 
           {/* Company Activities */}
-          <Card className="p-4 space-y-3">
+          <Card className="p-4 space-y-3" title={(() => {
+            const last = [...activities].sort((a, b) => new Date((b as any).created_at ?? 0).getTime() - new Date((a as any).created_at ?? 0).getTime())[0] as any;
+            return adminTitle(last?.updated_by, last?.created_at);
+          })()}>
             <div className="flex items-center justify-between">
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">✅</span> Company Activities
@@ -1444,7 +1459,7 @@ export default function CompanyDetail() {
             ) : (
               <ul className="space-y-2">
                 {activities.map(a => (
-                  <li key={a.id} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <li key={a.id} title={adminTitle((a as any).updated_by, (a as any).created_at, "Added by")} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
                     <div className="min-w-0">
                       <div className="text-xs font-mono text-muted-foreground">{a.code}</div>
                       <div className="text-sm font-medium truncate">{a.label}</div>
@@ -1477,7 +1492,7 @@ export default function CompanyDetail() {
             ) : (
               <ul className="space-y-2">
                 {managers.map(m => (
-                  <li key={m.id} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <li key={m.id} title={adminTitle((m as any).updated_by, (m as any).created_at, "Added by")} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">{m.name}</div>
                       <div className="text-xs text-muted-foreground">
@@ -1545,7 +1560,7 @@ export default function CompanyDetail() {
             ) : (
               <ul className="space-y-2">
                 {shareholders.map(sh => (
-                  <li key={sh.id} className="flex items-start justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <li key={sh.id} title={adminTitle((sh as any).updated_by, (sh as any).created_at, "Added by")} className="flex items-start justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">
                         {sh.name}
@@ -1594,7 +1609,7 @@ export default function CompanyDetail() {
                     ])).sort((a, b) => a.localeCompare(b))
                   : [];
                 const renderFile = (f: CompanyDoc) => (
-                  <li key={f.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2 py-1">
+                  <li key={f.id} title={adminTitle(profileNames[(f as any).uploaded_by ?? ""], (f as any).created_at, "Uploaded by")} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2 py-1">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="text-xs truncate">{f.file_name}</span>
