@@ -25,6 +25,9 @@ interface Company {
   created_at?: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
+  created_by?: string | null;
+  update_by?: string | null;
+  updated_at?: string | null;
   branches?: { name: string } | null;
 }
 interface Branch { id: string; name: string; }
@@ -252,7 +255,18 @@ export default function CompanyPage() {
         loading={loading}
         showIndex
         columns={[
-          { key: "name", header: "Company Name" },
+          {
+            key: "name",
+            header: "Company Name",
+            render: (r) => {
+              const title = isAdmin
+                ? (r.update_by
+                    ? auditTitle(r.update_by, r.updated_at, "Last updated by")
+                    : auditTitle(profileNames[r.created_by ?? ""], r.created_at, "Added by"))
+                : undefined;
+              return <span title={title}>{r.name}</span>;
+            },
+          },
           { key: "branch", header: "Branch", render: (r) => r.branches?.name ?? "—" },
           { key: "type", header: "Type", render: (r) => <Badge variant="secondary" className="capitalize">{r.type}</Badge> },
         ]}
