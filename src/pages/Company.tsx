@@ -11,6 +11,8 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfileNames } from "@/hooks/useProfileNames";
+import { auditTitle } from "@/lib/audit";
 
 type CompanyType = "entrepreneur" | "trading" | "services";
 interface Company {
@@ -35,7 +37,9 @@ const TYPES: { value: CompanyType; label: string }[] = [
 ];
 
 export default function CompanyPage() {
-  const { role, branchId } = useAuth();
+  const { role, branchId, username: myUsername } = useAuth();
+  const profileNames = useProfileNames();
+  const isAdmin = role === "admin";
   const [rows, setRows] = useState<Company[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [packages, setPackages] = useState<Pkg[]>([]);
@@ -58,7 +62,7 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, type, branch_id, package_id, total_deal, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
+      .select("id, name, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
@@ -98,9 +102,10 @@ export default function CompanyPage() {
       total_deal: dealAmount,
     };
     if (!payload.name) { toast.error("Company name required"); return; }
+    const { data: authData } = await supabase.auth.getUser();
     const { error } = editing
-      ? await supabase.from("companies").update(payload as any).eq("id", editing.id)
-      : await supabase.from("companies").insert(payload as any);
+      ? await supabase.from("companies").update({ ...payload, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any).eq("id", editing.id)
+      : await supabase.from("companies").insert({ ...payload, created_by: authData.user?.id ?? null, update_by: myUsername ?? null } as any);
     if (error) { toast.error(error.message); return; }
     toast.success(editing ? "Updated" : "Created");
     setOpen(false); setEditing(null); load();
