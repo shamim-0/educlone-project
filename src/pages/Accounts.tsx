@@ -22,6 +22,8 @@ import { openInvoice, openDealSummary, openRangeStatement, PAYMENT_METHODS, meth
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfileNames } from "@/hooks/useProfileNames";
+import { auditTitle } from "@/lib/audit";
 
 interface Company {
   id: string;
