@@ -428,7 +428,6 @@ export default function CompanyDetail() {
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!company) return <p className="text-muted-foreground">Company not found. <Link to="/" className="underline">Back</Link></p>;
 
-  const isAdmin = role === "admin";
   const isEditorLike = role === "editor" || role === "sub_admin";
   // Admin always edits. Editor/Sub-admin edit only companies in their assigned branch (or if they have no branch restriction). Viewer cannot edit.
   const canEdit = isAdmin || (isEditorLike && (!myBranchId || company.branch_id === myBranchId));
