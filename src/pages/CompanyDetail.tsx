@@ -1379,6 +1379,15 @@ export default function CompanyDetail() {
                 placeholder="Defaults to company name"
               />
             </div>
+            <div>
+              <Label className="text-xs">PASSPORT / IQAMA NUMBER</Label>
+              <Input
+                value={(company as any).passport_iqama ?? ""}
+                onChange={(e) => setCompany({ ...company, passport_iqama: e.target.value } as any)}
+                disabled={!canEdit}
+                placeholder="Passport or Iqama number"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">TYPE</Label>
