@@ -120,7 +120,7 @@ export default function AccountsPage() {
     const restrictToBranch = role !== "admin" && !!branchId;
     let cq = supabase
       .from("companies")
-      .select("id, name, type, total_deal, discount, branch_id, created_by, update_by, updated_at, created_at, branches!companies_branch_id_fkey(name)")
+      .select("id, name, type, total_deal, discount, deal_updated_by, deal_updated_at, discount_updated_by, discount_updated_at, branch_id, created_by, update_by, updated_at, created_at, branches!companies_branch_id_fkey(name)")
       .order("name");
     if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
     const [c, i, e] = await Promise.all([
@@ -263,12 +263,12 @@ export default function AccountsPage() {
     setSavingDeal(true);
     const { error } = await supabase
       .from("companies")
-      .update({ total_deal: v })
+      .update({ total_deal: v, deal_updated_by: myUsername ?? null, deal_updated_at: new Date().toISOString() } as any)
       .eq("id", openCompany.id);
     setSavingDeal(false);
     if (error) return toast.error(error.message);
-    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v } : c));
-    setOpenCompany({ ...openCompany, total_deal: v });
+    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, total_deal: v, deal_updated_by: myUsername ?? null, deal_updated_at: new Date().toISOString() } as any : c));
+    setOpenCompany({ ...openCompany, total_deal: v, deal_updated_by: myUsername ?? null, deal_updated_at: new Date().toISOString() } as any);
     setEditingSetup(false);
     toast.success("Company setup deal updated");
   }
@@ -287,12 +287,12 @@ export default function AccountsPage() {
     setSavingDeal(true);
     const { error } = await supabase
       .from("companies")
-      .update({ discount: discSr })
+      .update({ discount: discSr, discount_updated_by: myUsername ?? null, discount_updated_at: new Date().toISOString() } as any)
       .eq("id", openCompany.id);
     setSavingDeal(false);
     if (error) return toast.error(error.message);
-    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, discount: discSr } : c));
-    setOpenCompany({ ...openCompany, discount: discSr });
+    setCompanies((prev) => prev.map((c) => c.id === openCompany.id ? { ...c, discount: discSr, discount_updated_by: myUsername ?? null, discount_updated_at: new Date().toISOString() } as any : c));
+    setOpenCompany({ ...openCompany, discount: discSr, discount_updated_by: myUsername ?? null, discount_updated_at: new Date().toISOString() } as any);
     setDiscountAmount(String(discSr));
     setDiscountMode("sr");
     setEditingDiscount(false);
@@ -718,7 +718,7 @@ export default function AccountsPage() {
               </Card>
 
               {/* Company setup deal */}
-              <div className="rounded-xl border p-4">
+              <div className="rounded-xl border p-4" title={adminTitle((openCompany as any).deal_updated_by, (openCompany as any).deal_updated_at)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Wallet className="h-4 w-4 text-primary" />
@@ -752,7 +752,7 @@ export default function AccountsPage() {
               </div>
 
               {/* Discount */}
-              <div className="rounded-xl border p-4">
+              <div className="rounded-xl border p-4" title={adminTitle((openCompany as any).discount_updated_by, (openCompany as any).discount_updated_at)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Percent className="h-4 w-4 text-amber-500" />
