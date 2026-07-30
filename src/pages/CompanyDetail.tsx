@@ -196,6 +196,7 @@ export default function CompanyDetail() {
       .update({
         name: company.name,
         client_name: (company as any).client_name ?? company.name,
+        passport_iqama: (company as any).passport_iqama || null,
         branch_id: company.branch_id,
         type: company.type as any,
         cr_number: company.cr_number,
