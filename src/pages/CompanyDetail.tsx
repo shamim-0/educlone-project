@@ -886,7 +886,7 @@ export default function CompanyDetail() {
 
 
             return (
-              <Card key={def.key} className={cn("p-4 space-y-3", misaRed && "bg-destructive/15 border-destructive border-2 animate-pulse")}>
+              <Card key={def.key} title={adminTitle((s as any).update_status_by, (s as any).updated_at)} className={cn("p-4 space-y-3", misaRed && "bg-destructive/15 border-destructive border-2 animate-pulse")}>
                 {misaInfo && (misaInfo.phase === "complete" || misaInfo.msToTarget <= 0 || misaInfo.done) && (() => {
                   const { msLeft, msToTarget, wdLeft, deadline, overdue, done, phase, startDate } = misaInfo;
                   const absMs = Math.abs(msLeft);
@@ -1364,8 +1364,8 @@ export default function CompanyDetail() {
 
         {/* Profile */}
         <div className="space-y-4">
-          <Card className="p-4 space-y-3">
-            <h2 className="font-semibold">📋 Company Profile</h2>
+          <Card className="p-4 space-y-3" title={adminTitle((company as any).update_by, (company as any).updated_at)}>
+            <h2 className="font-semibold" title={adminTitle((company as any).update_by, (company as any).updated_at)}>📋 Company Profile</h2>
             <div>
               <Label className="text-xs">BRANCH</Label>
               <Select
@@ -1440,7 +1440,10 @@ export default function CompanyDetail() {
           </Card>
 
           {/* Company Activities */}
-          <Card className="p-4 space-y-3">
+          <Card className="p-4 space-y-3" title={(() => {
+            const last = [...activities].sort((a, b) => new Date((b as any).created_at ?? 0).getTime() - new Date((a as any).created_at ?? 0).getTime())[0] as any;
+            return adminTitle(last?.updated_by, last?.created_at);
+          })()}>
             <div className="flex items-center justify-between">
               <h2 className="font-semibold flex items-center gap-2">
                 <span className="text-accent">✅</span> Company Activities
@@ -1456,7 +1459,7 @@ export default function CompanyDetail() {
             ) : (
               <ul className="space-y-2">
                 {activities.map(a => (
-                  <li key={a.id} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <li key={a.id} title={adminTitle((a as any).updated_by, (a as any).created_at, "Added by")} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
                     <div className="min-w-0">
                       <div className="text-xs font-mono text-muted-foreground">{a.code}</div>
                       <div className="text-sm font-medium truncate">{a.label}</div>
@@ -1489,7 +1492,7 @@ export default function CompanyDetail() {
             ) : (
               <ul className="space-y-2">
                 {managers.map(m => (
-                  <li key={m.id} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <li key={m.id} title={adminTitle((m as any).updated_by, (m as any).created_at, "Added by")} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">{m.name}</div>
                       <div className="text-xs text-muted-foreground">
@@ -1557,7 +1560,7 @@ export default function CompanyDetail() {
             ) : (
               <ul className="space-y-2">
                 {shareholders.map(sh => (
-                  <li key={sh.id} className="flex items-start justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <li key={sh.id} title={adminTitle((sh as any).updated_by, (sh as any).created_at, "Added by")} className="flex items-start justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">
                         {sh.name}
@@ -1606,7 +1609,7 @@ export default function CompanyDetail() {
                     ])).sort((a, b) => a.localeCompare(b))
                   : [];
                 const renderFile = (f: CompanyDoc) => (
-                  <li key={f.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2 py-1">
+                  <li key={f.id} title={adminTitle(profileNames[(f as any).uploaded_by ?? ""], (f as any).created_at, "Uploaded by")} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background/60 px-2 py-1">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="text-xs truncate">{f.file_name}</span>
