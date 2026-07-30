@@ -19,6 +19,7 @@ interface Company {
   type: CompanyType;
   branch_id: string | null;
   package_id?: string | null;
+  total_deal?: number | null;
   created_at?: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
@@ -45,6 +46,7 @@ export default function CompanyPage() {
   const [type, setType] = useState<CompanyType>("trading");
   const [branchId2, setBranchId] = useState<string>("");
   const [packageId, setPackageId] = useState<string>("");
+  const [deal, setDeal] = useState<string>("");
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -56,7 +58,7 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, type, branch_id, package_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
+      .select("id, name, type, branch_id, package_id, total_deal, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
@@ -83,18 +85,18 @@ export default function CompanyPage() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const selectedPkg = packages.find((p) => p.id === packageId);
+    const dealAmount = Number(deal);
+    if (!deal.trim() || !Number.isFinite(dealAmount) || dealAmount <= 0) {
+      toast.error("Deal amount is required");
+      return;
+    }
     const payload: Record<string, unknown> = {
       name: String(fd.get("name") ?? "").trim(),
       type,
       branch_id: branchId2 || null,
       package_id: packageId || null,
+      total_deal: dealAmount,
     };
-    if (selectedPkg) {
-      payload.total_deal = selectedPkg.price;
-    } else {
-      payload.total_deal = null;
-    }
     if (!payload.name) { toast.error("Company name required"); return; }
     const { error } = editing
       ? await supabase.from("companies").update(payload as any).eq("id", editing.id)
@@ -110,8 +112,16 @@ export default function CompanyPage() {
     if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setOpen(true); };
-  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setOpen(true); };
+  const onPackageChange = (v: string) => {
+    const id = v === "none" ? "" : v;
+    setPackageId(id);
+    const pkg = packages.find((p) => p.id === id);
+    if (pkg) setDeal(String(pkg.price));
+  };
+
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setOpen(true); };
+  const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setDeal(r.total_deal != null ? String(r.total_deal) : ""); setOpen(true); };
+
 
   const branchTabs = useMemo(() => {
     const map = new Map<string, number>();
@@ -278,7 +288,7 @@ export default function CompanyPage() {
             </div>
             <div>
               <Label>Package (optional)</Label>
-              <Select value={packageId || "none"} onValueChange={(v) => setPackageId(v === "none" ? "" : v)}>
+              <Select value={packageId || "none"} onValueChange={onPackageChange}>
                 <SelectTrigger><SelectValue placeholder="No package" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No package</SelectItem>
@@ -287,11 +297,23 @@ export default function CompanyPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {packageId && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Deal amount will be set to {packages.find((p) => p.id === packageId)?.price.toLocaleString()}
-                </p>
-              )}
+            </div>
+            <div>
+              <Label htmlFor="deal">Deal Amount <span className="text-destructive">*</span></Label>
+              <Input
+                id="deal"
+                name="deal"
+                type="number"
+                min="1"
+                step="0.01"
+                required
+                value={deal}
+                onChange={(e) => setDeal(e.target.value)}
+                placeholder="e.g. 15000"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This deal is created under the company and shows in Accounts.
+              </p>
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>
