@@ -46,6 +46,7 @@ export default function CompanyPage() {
   const [type, setType] = useState<CompanyType>("trading");
   const [branchId2, setBranchId] = useState<string>("");
   const [packageId, setPackageId] = useState<string>("");
+  const [deal, setDeal] = useState<string>("");
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
