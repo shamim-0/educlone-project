@@ -1,11 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const PAYMENT_METHODS = [
-  { value: "bank", label: "Bank" },
-  { value: "cash", label: "Cash" },
-  { value: "check", label: "Check" },
-  { value: "online", label: "Online Payment" },
-  { value: "other", label: "Other" },
+  { value: "bank", label: "In Bank" },
+  { value: "cash", label: "In Cash" },
+  { value: "check", label: "In Check" },
+  { value: "online", label: "In Online Payment" },
+  { value: "other", label: "In Other" },
 ] as const;
 
 export function methodLabel(v?: string | null) {
