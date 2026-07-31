@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, KeyRound, ClipboardCheck, ListTodo } from "lucide-react";
+import { Plus, KeyRound, ClipboardCheck, ListTodo, Activity } from "lucide-react";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
+import { UserActivityDialog } from "@/components/UserActivityDialog";
 
 interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
@@ -35,6 +36,7 @@ export default function UsersPage() {
   const [pwdTarget, setPwdTarget] = useState<Profile | null>(null);
   const [assignTarget, setAssignTarget] = useState<Profile | null>(null);
   const [todoTarget, setTodoTarget] = useState<Profile | null>(null);
+  const [activityTarget, setActivityTarget] = useState<Profile | null>(null);
 
   const isAdmin = myRole === "admin";
 
@@ -190,6 +192,9 @@ export default function UsersPage() {
                           </Button>
                         </>
                       )}
+                      <Button variant="outline" size="sm" className="gap-1" onClick={() => setActivityTarget(p)}>
+                        <Activity className="h-3.5 w-3.5" /> Activity
+                      </Button>
                       <Button variant="outline" size="sm" className="gap-1" onClick={() => setPwdTarget(p)}>
                         <KeyRound className="h-3.5 w-3.5" /> Change
                       </Button>
@@ -270,6 +275,12 @@ export default function UsersPage() {
         onOpenChange={(v) => { if (!v) setAssignTarget(null); }}
         userId={assignTarget?.id}
         username={assignTarget?.username}
+      />
+      <UserActivityDialog
+        open={!!activityTarget}
+        onOpenChange={(v) => { if (!v) setActivityTarget(null); }}
+        userId={activityTarget?.id}
+        username={activityTarget?.username}
       />
     </Card>
   );
