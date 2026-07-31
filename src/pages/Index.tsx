@@ -253,6 +253,7 @@ export default function Index() {
     const service = companies.filter((c) => c.type === "services").length;
     const trading = companies.filter((c) => c.type === "trading").length;
     const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
+    const industrial = companies.filter((c) => c.type === "industrial_license").length;
     const completed = companies.filter((c) => {
       const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
       return (stepCounts[c.id]?.done ?? 0) >= applicableTotal;
@@ -268,7 +269,7 @@ export default function Index() {
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, completed, takeAction, emergency, avgProgress };
+    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, avgProgress };
   }, [companies, stepCounts, serviceDefs]);
 
 
