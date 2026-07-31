@@ -342,7 +342,7 @@ export default function Index() {
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3">
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-foreground">{stats.total}</div>
           <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</div>
