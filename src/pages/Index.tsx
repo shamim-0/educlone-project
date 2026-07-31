@@ -253,6 +253,7 @@ export default function Index() {
     const service = companies.filter((c) => c.type === "services").length;
     const trading = companies.filter((c) => c.type === "trading").length;
     const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
+    const industrial = companies.filter((c) => c.type === "industrial_license").length;
     const completed = companies.filter((c) => {
       const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
       return (stepCounts[c.id]?.done ?? 0) >= applicableTotal;
@@ -268,7 +269,7 @@ export default function Index() {
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, completed, takeAction, emergency, avgProgress };
+    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, avgProgress };
   }, [companies, stepCounts, serviceDefs]);
 
 
@@ -341,7 +342,7 @@ export default function Index() {
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3">
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-foreground">{stats.total}</div>
           <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</div>
@@ -357,6 +358,10 @@ export default function Index() {
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-primary">{stats.entrepreneur}</div>
           <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Entrepreneur</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
+          <div className="text-lg font-bold text-primary">{stats.industrial}</div>
+          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Industrial</div>
         </div>
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-success">{stats.completed}</div>
