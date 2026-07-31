@@ -794,7 +794,11 @@ export type Database = {
     Enums: {
       account_type: "enterpaner" | "trading" | "services"
       app_role: "admin" | "editor" | "viewer" | "sub_admin"
-      company_type: "entrepreneur" | "trading" | "services"
+      company_type:
+        | "entrepreneur"
+        | "trading"
+        | "services"
+        | "industrial_license"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -924,7 +928,12 @@ export const Constants = {
     Enums: {
       account_type: ["enterpaner", "trading", "services"],
       app_role: ["admin", "editor", "viewer", "sub_admin"],
-      company_type: ["entrepreneur", "trading", "services"],
+      company_type: [
+        "entrepreneur",
+        "trading",
+        "services",
+        "industrial_license",
+      ],
     },
   },
 } as const
