@@ -19,7 +19,7 @@ import { getApplicableServiceDefs } from "@/lib/steps";
 
 interface Company { id: string; name: string; type: string; branch_id: string | null; created_at?: string; emergency?: boolean | null; take_action?: boolean | null; }
 interface Branch { id: string; name: string; }
-interface StepRow { company_id: string; step_key: string; status: string; }
+interface StepRow { company_id: string; step_key: string; status: string; updated_at?: string | null; }
 
 export default function PendingPage() {
   const { role, branchId } = useAuth();
@@ -58,7 +58,7 @@ export default function PendingPage() {
         while (true) {
           const { data, error } = await supabase
             .from("company_steps")
-            .select("company_id,step_key,status")
+            .select("company_id,step_key,status,updated_at")
             .range(from, from + pageSize - 1);
           if (error) { toast.error(error.message); break; }
           const rows = (data ?? []) as StepRow[];
@@ -91,6 +91,17 @@ export default function PendingPage() {
     steps.forEach(r => {
       if (!m.has(r.company_id)) m.set(r.company_id, new Map());
       m.get(r.company_id)!.set(r.step_key, r.status);
+    });
+    return m;
+  }, [steps]);
+
+  // Map: company_id -> step_key -> updated_at (when the status was last set)
+  const stepDateMap = useMemo(() => {
+    const m = new Map<string, Map<string, string>>();
+    steps.forEach(r => {
+      if (!r.updated_at) return;
+      if (!m.has(r.company_id)) m.set(r.company_id, new Map());
+      m.get(r.company_id)!.set(r.step_key, r.updated_at);
     });
     return m;
   }, [steps]);
@@ -161,13 +172,18 @@ export default function PendingPage() {
     const list = pendingByService[def.key] ?? [];
     return list.map((co, i) => {
       const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
+      const when = stepDateMap.get(co.id)?.get(def.key);
+      const label = STATUS_LABELS[st] ?? st;
       return {
         "#": i + 1,
         "Company": co.name,
         "Type": co.type,
         "Branch": branchName(co.branch_id),
-        "Status": st === "processing" ? "Processing" : "Not Started",
-      };
+        "Status": label,
+        "Status Date": when
+          ? new Date(when).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+          : "—",
+      } as Record<string, string | number>;
     });
   };
 
@@ -175,25 +191,32 @@ export default function PendingPage() {
     const rows = exportRows(def);
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Pending");
-    XLSX.writeFile(wb, `Pending - ${def.label}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, currentStatusLabel.slice(0, 30));
+    XLSX.writeFile(wb, `${currentStatusLabel} - ${def.label}.xlsx`);
   };
 
   const exportPDF = (def: typeof STEP_DEFS[number]) => {
     const rows = exportRows(def);
     const doc = new jsPDF();
     doc.setFontSize(14);
-    doc.text(`Pending: ${def.label}`, 14, 15);
+    doc.text(`${currentStatusLabel}: ${def.label}`, 14, 15);
     doc.setFontSize(10);
     doc.text(`Total: ${rows.length}`, 14, 22);
     autoTable(doc, {
       startY: 28,
-      head: [["#", "Company", "Type", "Branch", "Status"]],
-      body: rows.map(r => [r["#"], r.Company, r.Type, r.Branch, r.Status]),
+      head: [["#", "Company", "Type", "Branch", "Status", "Status Date"]],
+      body: rows.map(r => [
+        r["#"],
+        r.Company,
+        r.Type,
+        r.Branch,
+        r.Status,
+        r["Status Date"] ?? "—",
+      ]),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [99, 102, 241] },
     });
-    doc.save(`Pending - ${def.label}.pdf`);
+    doc.save(`${currentStatusLabel} - ${def.label}.pdf`);
   };
 
 
