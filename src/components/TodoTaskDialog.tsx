@@ -53,9 +53,11 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
   const [deadline, setDeadline] = useState<Date | undefined>();
   const [note, setNote] = useState("");
   const [services, setServices] = useState<Set<string>>(new Set());
+  const [allowedKeys, setAllowedKeys] = useState<string[] | null>(null);
   const [companySearch, setCompanySearch] = useState("");
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
+
 
   const isEdit = !!editTask;
 
@@ -65,6 +67,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
       const c = await supabase.from("companies").select("id,name").order("name");
       setCompanies((c.data as Company[]) ?? []);
       if (mode === "admin") {
+        setAllowedKeys(null);
         const r = await supabase.from("user_roles").select("user_id, role").in("role", ["editor", "sub_admin"]);
         const ids = Array.from(new Set(((r.data as any[]) ?? []).map((x) => x.user_id)));
         if (ids.length) {
@@ -73,9 +76,13 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
         } else {
           setEditors([]);
         }
+      } else if (user?.id) {
+        const a = await supabase.from("user_service_assignments").select("service_key").eq("user_id", user.id);
+        setAllowedKeys(((a.data as any[]) ?? []).map((r) => r.service_key));
       }
     })();
-  }, [open, mode]);
+  }, [open, mode, user?.id]);
+
 
   useEffect(() => {
     if (!open) return;
@@ -103,10 +110,15 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
     });
   };
 
-  const filteredDefs = useMemo(
-    () => defs.filter((d) => d.label.toLowerCase().includes(search.toLowerCase())),
-    [defs, search]
-  );
+  const filteredDefs = useMemo(() => {
+    const allow = mode === "admin" || !allowedKeys ? null : new Set(allowedKeys);
+    return defs.filter(
+      (d) =>
+        (!allow || allow.has(d.key) || services.has(d.key)) &&
+        d.label.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [defs, search, mode, allowedKeys, services]);
+
   const filteredCompanies = useMemo(
     () => companies.filter((c) => c.name.toLowerCase().includes(companySearch.toLowerCase())),
     [companies, companySearch]

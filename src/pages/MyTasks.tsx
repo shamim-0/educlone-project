@@ -77,17 +77,12 @@ export default function MyTasksPage() {
   };
 
   const defaultSort = (a: Company, b: Company) => {
-    const ae = a.emergency ? 0 : 1;
-    const be = b.emergency ? 0 : 1;
-    if (ae !== be) return ae - be;
-    const at = a.take_action ? 0 : 1;
-    const bt = b.take_action ? 0 : 1;
-    if (at !== bt) return at - bt;
     const ac = extractCode(a.name);
     const bc = extractCode(b.name);
     if (ac !== bc) return bc - ac;
     return b.name.localeCompare(a.name);
   };
+
 
   const grouped = useMemo(() => {
     const out: { def: (typeof defs)[number]; items: { company: Company; status: string }[] }[] = [];
