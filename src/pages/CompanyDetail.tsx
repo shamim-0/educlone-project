@@ -1306,7 +1306,7 @@ export default function CompanyDetail() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-col items-end gap-1 shrink-0">
                     <Select value={s.status} onValueChange={(v) => { updateStep(def.key, { status: v }); saveStep(def.key, { status: v } as any); }} disabled={!canEdit}>
                       <SelectTrigger className={cn("w-[140px] h-8 text-xs font-medium border", statusBadgeClass(s.status))}><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -1317,6 +1317,12 @@ export default function CompanyDetail() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {(s as any).update_status_by && (
+                      <div className="text-right text-[11px] text-muted-foreground">
+                        Last updated by {(s as any).update_status_by}
+                        {(s as any).updated_at ? ` • ${fmtWhen((s as any).updated_at)}` : ""}
+                      </div>
+                    )}
                   </div>
                 </div>
 
