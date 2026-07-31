@@ -110,10 +110,15 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
     });
   };
 
-  const filteredDefs = useMemo(
-    () => defs.filter((d) => d.label.toLowerCase().includes(search.toLowerCase())),
-    [defs, search]
-  );
+  const filteredDefs = useMemo(() => {
+    const allow = mode === "admin" || !allowedKeys ? null : new Set(allowedKeys);
+    return defs.filter(
+      (d) =>
+        (!allow || allow.has(d.key) || services.has(d.key)) &&
+        d.label.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [defs, search, mode, allowedKeys, services]);
+
   const filteredCompanies = useMemo(
     () => companies.filter((c) => c.name.toLowerCase().includes(companySearch.toLowerCase())),
     [companies, companySearch]
