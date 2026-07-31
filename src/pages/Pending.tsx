@@ -19,7 +19,7 @@ import { getApplicableServiceDefs } from "@/lib/steps";
 
 interface Company { id: string; name: string; type: string; branch_id: string | null; created_at?: string; emergency?: boolean | null; take_action?: boolean | null; }
 interface Branch { id: string; name: string; }
-interface StepRow { company_id: string; step_key: string; status: string; }
+interface StepRow { company_id: string; step_key: string; status: string; updated_at?: string | null; }
 
 export default function PendingPage() {
   const { role, branchId } = useAuth();
