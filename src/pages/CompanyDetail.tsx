@@ -1376,12 +1376,7 @@ export default function CompanyDetail() {
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {canEdit && <Button size="sm" onClick={() => saveStep(def.key)}>Save</Button>}
                 </div>
-                {(s as any).update_status_by && (
-                  <div className="text-right text-[11px] text-muted-foreground">
-                    Last updated by {(s as any).update_status_by}
-                    {(s as any).updated_at ? ` • ${fmtWhen((s as any).updated_at)}` : ""}
-                  </div>
-                )}
+
 
               </Card>
             );
