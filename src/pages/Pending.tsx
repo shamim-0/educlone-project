@@ -95,6 +95,17 @@ export default function PendingPage() {
     return m;
   }, [steps]);
 
+  // Map: company_id -> step_key -> updated_at (when the status was last set)
+  const stepDateMap = useMemo(() => {
+    const m = new Map<string, Map<string, string>>();
+    steps.forEach(r => {
+      if (!r.updated_at) return;
+      if (!m.has(r.company_id)) m.set(r.company_id, new Map());
+      m.get(r.company_id)!.set(r.step_key, r.updated_at);
+    });
+    return m;
+  }, [steps]);
+
   // Apply branch filter to companies first
   const branchScopedCompanies = useMemo(() => {
     if (branchFilter === "all") return companies;
