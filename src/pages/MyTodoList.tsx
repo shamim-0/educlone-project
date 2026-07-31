@@ -31,8 +31,10 @@ export default function MyTodoListPage() {
 
   useEffect(() => { document.title = "My To Do List | ISBI Tracker"; load(); }, [load]);
 
-  const adminTasks = useMemo(() => tasks.filter((t) => t.creator_role === "admin"), [tasks]);
-  const ownTasks = useMemo(() => tasks.filter((t) => t.creator_role === "editor"), [tasks]);
+  const active = useMemo(() => tasks.filter((t) => t.status !== "completed"), [tasks]);
+  const adminTasks = useMemo(() => active.filter((t) => t.creator_role === "admin"), [active]);
+  const ownTasks = useMemo(() => active.filter((t) => t.creator_role === "editor"), [active]);
+
 
   const openCreate = () => { setEditTask(null); setDialogOpen(true); };
   const openEdit = (t: TodoTaskCardData) => {
