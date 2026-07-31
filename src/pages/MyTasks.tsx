@@ -10,7 +10,7 @@ import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs, statusBadgeClass } from "@/lib/steps";
 import { cn } from "@/lib/utils";
 
-interface Company { id: string; name: string; type: string; branch_id: string | null; }
+interface Company { id: string; name: string; type: string; branch_id: string | null; emergency: boolean; take_action: boolean; }
 interface Branch { id: string; name: string; }
 interface StepRow { company_id: string; step_key: string; status: string; }
 
@@ -46,7 +46,7 @@ export default function MyTasksPage() {
       };
       const [a, c, b, s] = await Promise.all([
         supabase.from("user_service_assignments").select("service_key").eq("user_id", user.id),
-        supabase.from("companies").select("id,name,type,branch_id").order("name"),
+        supabase.from("companies").select("id,name,type,branch_id,emergency,take_action").order("name"),
         supabase.from("branches").select("id,name"),
         fetchAllSteps(),
       ]);
@@ -71,6 +71,24 @@ export default function MyTasksPage() {
 
   const assignedSet = useMemo(() => new Set(assigned), [assigned]);
 
+  const extractCode = (name: string) => {
+    const m = name.match(/ISBI[A-Z]*(\d+)/i);
+    return m ? parseInt(m[1], 10) : -1;
+  };
+
+  const defaultSort = (a: Company, b: Company) => {
+    const ae = a.emergency ? 0 : 1;
+    const be = b.emergency ? 0 : 1;
+    if (ae !== be) return ae - be;
+    const at = a.take_action ? 0 : 1;
+    const bt = b.take_action ? 0 : 1;
+    if (at !== bt) return at - bt;
+    const ac = extractCode(a.name);
+    const bc = extractCode(b.name);
+    if (ac !== bc) return bc - ac;
+    return b.name.localeCompare(a.name);
+  };
+
   const grouped = useMemo(() => {
     const out: { def: (typeof defs)[number]; items: { company: Company; status: string }[] }[] = [];
     defs.forEach((def) => {
@@ -83,6 +101,7 @@ export default function MyTasksPage() {
         if (st === "done" || st === "no_need") return;
         items.push({ company: co, status: st });
       });
+      items.sort((x, y) => defaultSort(x.company, y.company));
       out.push({ def, items });
     });
     return out;
