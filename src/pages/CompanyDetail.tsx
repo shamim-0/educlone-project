@@ -1317,7 +1317,7 @@ export default function CompanyDetail() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {canEdit && <Button size="sm" onClick={() => saveStep(def.key)}>Save</Button>}
+                    </div>
                   </div>
                 </div>
 
