@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfileNames } from "@/hooks/useProfileNames";
 import { auditTitle } from "@/lib/audit";
 
-type CompanyType = "entrepreneur" | "trading" | "services";
+type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license";
 interface Company {
   id: string;
   name: string;
@@ -37,6 +37,7 @@ const TYPES: { value: CompanyType; label: string }[] = [
   { value: "entrepreneur", label: "Entrepreneur" },
   { value: "trading", label: "Trading" },
   { value: "services", label: "Services" },
+  { value: "industrial_license", label: "Industrial License" },
 ];
 
 export default function CompanyPage() {
