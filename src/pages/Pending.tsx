@@ -204,14 +204,14 @@ export default function PendingPage() {
     doc.text(`Total: ${rows.length}`, 14, 22);
     autoTable(doc, {
       startY: 28,
-      head: [["#", "Company", "Type", "Branch", "Status", `${currentStatusLabel} Date`]],
+      head: [["#", "Company", "Type", "Branch", "Status", "Status Date"]],
       body: rows.map(r => [
         r["#"],
         r.Company,
         r.Type,
         r.Branch,
         r.Status,
-        r[`${r.Status} Date`] ?? "—",
+        r["Status Date"] ?? "—",
       ]),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [99, 102, 241] },
