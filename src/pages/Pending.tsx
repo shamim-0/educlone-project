@@ -180,7 +180,7 @@ export default function PendingPage() {
         "Type": co.type,
         "Branch": branchName(co.branch_id),
         "Status": label,
-        [`${label} Date`]: when
+        "Status Date": when
           ? new Date(when).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
           : "—",
       } as Record<string, string | number>;
