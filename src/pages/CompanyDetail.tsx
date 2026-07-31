@@ -28,7 +28,7 @@ import { STATUS_OPTS, statusBadgeClass, getApplicableServiceDefs, getStatusOptsF
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileNames } from "@/hooks/useProfileNames";
-import { auditTitle } from "@/lib/audit";
+import { auditTitle, fmtWhen } from "@/lib/audit";
 
 interface Branch { id: string; name: string }
 interface Company {
