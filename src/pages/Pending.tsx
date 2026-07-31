@@ -58,7 +58,7 @@ export default function PendingPage() {
         while (true) {
           const { data, error } = await supabase
             .from("company_steps")
-            .select("company_id,step_key,status")
+            .select("company_id,step_key,status,updated_at")
             .range(from, from + pageSize - 1);
           if (error) { toast.error(error.message); break; }
           const rows = (data ?? []) as StepRow[];
