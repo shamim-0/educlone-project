@@ -1317,7 +1317,6 @@ export default function CompanyDetail() {
                         ))}
                       </SelectContent>
                     </Select>
-                    </div>
                   </div>
                 </div>
 
