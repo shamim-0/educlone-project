@@ -1421,6 +1421,7 @@ export default function CompanyDetail() {
                     <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
                     <SelectItem value="trading">Trading</SelectItem>
                     <SelectItem value="services">Services</SelectItem>
+                    <SelectItem value="industrial_license">Industrial License</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
