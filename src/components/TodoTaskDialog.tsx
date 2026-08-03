@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { sortCompanies } from "@/lib/companySort";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
