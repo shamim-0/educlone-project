@@ -745,7 +745,7 @@ export default function CompanyDetail() {
                   // Window hasn't opened yet — hide banner (only relevant for offset > 0).
                   mcfBanner = null;
                   mcfDates = null;
-                } else if (s.status === "done") {
+                } else if (s.status === "done" || s.status === "no_need") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
                   mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `${rangeStr} তারিখের মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
@@ -776,7 +776,7 @@ export default function CompanyDetail() {
                 mcfDates = { start, target, remaining, passed, windowWD: totalDays };
                 const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
                 const rangeStr = `${fmt(start)} - ${fmt(target)}`;
-                if (s.status === "done") {
+                if (s.status === "done" || s.status === "no_need") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
                   mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী বুধবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
@@ -806,7 +806,7 @@ export default function CompanyDetail() {
                 mcfDates = { start, target, remaining, passed, windowWD: totalDays };
                 const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
                 const rangeStr = `${fmt(start)} - ${fmt(target)}`;
-                if (s.status === "done") {
+                if (s.status === "done" || s.status === "no_need") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
                   mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী রবিবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
@@ -837,7 +837,7 @@ export default function CompanyDetail() {
                 mcfDates = { start, target, remaining, passed, windowWD: totalDays };
                 const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
                 const rangeStr = `${fmt(start)} - ${fmt(target)}`;
-                if (s.status === "done") {
+                if (s.status === "done" || s.status === "no_need") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
                   mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী বৃহস্পতিবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
@@ -881,7 +881,9 @@ export default function CompanyDetail() {
                 const wdLeft = Math.max(0, 10 - passed);
                 return { phase, target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done, passed, startDate: start };
               };
-              if (s.status === "applied" && (s as any).updated_at) {
+              if (s.status === "no_need" && (s as any).updated_at) {
+                misaInfo = build(new Date((s as any).updated_at), "complete", true);
+              } else if (s.status === "applied" && (s as any).updated_at) {
                 misaInfo = build(new Date((s as any).updated_at), "complete", false);
               } else if (s.status === "done" && (s as any).updated_at) {
                 misaInfo = build(new Date((s as any).updated_at), "complete", true);
