@@ -169,7 +169,20 @@ export default function PendingPage() {
   const totalPending = Object.values(pendingByService).reduce((a, b) => a + b.length, 0);
 
   const exportRows = (def: typeof STEP_DEFS[number]) => {
-    const list = pendingByService[def.key] ?? [];
+    // Sort by the numeric part only (skips the ISBI / ISBIJ prefix)
+    const extractCode = (name: string) => {
+      const m = name.match(/ISBI[A-Z]*\s*(\d+)/i);
+      return m ? parseInt(m[1], 10) : -1;
+    };
+    const list = [...(pendingByService[def.key] ?? [])].sort((a, b) => {
+      const ae = a.emergency ? 0 : 1; const be = b.emergency ? 0 : 1;
+      if (ae !== be) return ae - be;
+      const at = a.take_action ? 0 : 1; const bt = b.take_action ? 0 : 1;
+      if (at !== bt) return at - bt;
+      const ac = extractCode(a.name); const bc = extractCode(b.name);
+      if (ac !== bc) return bc - ac;
+      return b.name.localeCompare(a.name);
+    });
     return list.map((co, i) => {
       const st = stepMap.get(co.id)?.get(def.key) ?? "not_started";
       const when = stepDateMap.get(co.id)?.get(def.key);
