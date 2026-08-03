@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ListTodo, Plus } from "lucide-react";
@@ -26,6 +26,8 @@ export default function TodoListPage() {
   }, []);
 
   useEffect(() => { document.title = "To Do List | ISBI Tracker"; load(); }, [load]);
+
+  const activeTasks = useMemo(() => tasks.filter((t) => t.status !== "completed"), [tasks]);
 
   const openCreate = () => { setEditTask(null); setDialogOpen(true); };
   const openEdit = (t: TodoTaskCardData) => {
@@ -56,7 +58,7 @@ export default function TodoListPage() {
       </Card>
 
       <TodoListView
-        tasks={tasks}
+        tasks={activeTasks}
         perspective="admin"
         loading={loading}
         onChanged={load}
