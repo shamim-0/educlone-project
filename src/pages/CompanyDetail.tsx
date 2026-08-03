@@ -811,7 +811,9 @@ export default function CompanyDetail() {
                 mcfDates = { start, target, remaining, passed, windowWD: totalDays };
                 const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
                 const rangeStr = `${fmt(start)} - ${fmt(target)}`;
-                if (s.status === "done" || s.status === "no_need") {
+                if (s.status === "no_need") {
+                  mcfBanner = null;
+                } else if (s.status === "done") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
                   mcfBanner = { tone: remaining <= 2 ? "warn" : "info", text: `আগামী রবিবার (${fmt(target)}) এর মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
