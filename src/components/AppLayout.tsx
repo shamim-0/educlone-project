@@ -15,6 +15,7 @@ import {
   ChevronDown,
   UserCheck,
   ListTodo,
+  TrendingDown,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +30,7 @@ const menu = [
   { to: "/company", label: "Company", icon: Building2 },
   { to: "/branch", label: "Branch", icon: GitBranch, adminOnly: true },
   { to: "/accounts", label: "Accounts", icon: Wallet, requiresAccounts: true },
+  { to: "/expenses", label: "Expenses", icon: TrendingDown, adminOnly: true },
   { to: "/pending", label: "Pending", icon: ClipboardList },
   { to: "/users", label: "Users", icon: Users, adminOnly: true },
   { to: "/services", label: "Services", icon: ListChecks, roles: ["admin", "sub_admin"] as string[] },
