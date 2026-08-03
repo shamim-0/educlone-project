@@ -26,6 +26,12 @@ export const STATUS_OPTS = [
   { value: "no_need", label: "No Need" },
 ];
 
+// Every status that can be assigned to a service from the Services page
+export const ALL_STATUS_OPTS = [
+  { value: "pending", label: "Pending" },
+  ...STATUS_OPTS,
+];
+
 // Service labels (case-insensitive) that support the "Applied" status
 const APPLIED_SUPPORTED_LABELS = [
   "mother company formation (bangladesh)",
@@ -45,7 +51,10 @@ export function supportsApplied(label?: string) {
   return APPLIED_SUPPORTED_LABELS.includes(label.trim().toLowerCase());
 }
 
-export function getStatusOptsFor(label?: string) {
+export function getStatusOptsFor(label?: string, allowedStatuses?: string[]) {
+  if (allowedStatuses && allowedStatuses.length > 0) {
+    return ALL_STATUS_OPTS.filter(o => allowedStatuses.includes(o.value));
+  }
   if (supportsApplied(label)) return STATUS_OPTS;
   return STATUS_OPTS.filter(o => o.value !== "applied");
 }
@@ -53,10 +62,12 @@ export function getStatusOptsFor(label?: string) {
 export function statusBadgeClass(s: string) {
   if (s === "done") return "bg-success text-success-foreground border-success";
   if (s === "processing") return "bg-primary text-primary-foreground border-primary";
+  if (s === "pending") return "bg-blue-600 text-white border-blue-600 hover:bg-blue-700";
   if (s === "applied") return "bg-blue-700 text-white border-blue-700 hover:bg-blue-800";
   if (s === "no_need") return "bg-white text-black border-border line-through";
   return "bg-destructive text-destructive-foreground border-destructive";
 }
+
 
 export function getApplicableServiceDefs<T extends { key: string }>(companyType: string, allDefs: T[]): T[] {
   if (companyType === "services") {
