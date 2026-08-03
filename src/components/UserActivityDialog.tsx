@@ -186,8 +186,14 @@ export function UserActivityDialog({ open, onOpenChange, userId, username }: Pro
           <Button variant="outline" size="sm" onClick={() => { setFrom(today()); setTo(today()); }}>Today</Button>
           <Button variant="outline" size="sm" onClick={() => { setFrom(daysAgo(7)); setTo(today()); }}>7 days</Button>
           <Button variant="outline" size="sm" onClick={() => { setFrom(daysAgo(30)); setTo(today()); }}>30 days</Button>
-          <div className="ml-auto text-sm text-muted-foreground">{items.length} actions</div>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{items.length} actions</span>
+            <Button size="sm" onClick={exportPdf} disabled={loading || items.length === 0}>
+              <FileDown className="mr-1 h-4 w-4" /> Export PDF
+            </Button>
+          </div>
         </div>
+
 
         <div className="max-h-[55vh] space-y-4 overflow-y-auto pr-1">
           {loading ? (
