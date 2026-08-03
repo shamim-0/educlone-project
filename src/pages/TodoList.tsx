@@ -27,6 +27,8 @@ export default function TodoListPage() {
 
   useEffect(() => { document.title = "To Do List | ISBI Tracker"; load(); }, [load]);
 
+  const activeTasks = useMemo(() => tasks.filter((t) => t.status !== "completed"), [tasks]);
+
   const openCreate = () => { setEditTask(null); setDialogOpen(true); };
   const openEdit = (t: TodoTaskCardData) => {
     setEditTask({
