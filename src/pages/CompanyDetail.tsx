@@ -1319,7 +1319,7 @@ export default function CompanyDetail() {
                     <Select value={s.status} onValueChange={(v) => { updateStep(def.key, { status: v }); saveStep(def.key, { status: v } as any); }} disabled={!canEdit}>
                       <SelectTrigger className={cn("w-[140px] h-8 text-xs font-medium border", statusBadgeClass(s.status))}><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {getStatusOptsFor(def.label).map(o => (
+                        {getStatusOptsFor(def.label, (def as any).allowedStatuses).map(o => (
                           <SelectItem key={o.value} value={o.value}>
                             <span className={cn("inline-block px-2 py-0.5 rounded border text-xs", statusBadgeClass(o.value))}>{o.label}</span>
                           </SelectItem>
