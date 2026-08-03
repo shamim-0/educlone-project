@@ -242,6 +242,59 @@ export type Database = {
           },
         ]
       }
+      company_expenses: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          expense_date: string | null
+          id: string
+          note: string | null
+          payment_method: string
+          purpose: string
+          updated_at: string
+          updated_by: string | null
+          voucher_no: number
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          expense_date?: string | null
+          id?: string
+          note?: string | null
+          payment_method?: string
+          purpose: string
+          updated_at?: string
+          updated_by?: string | null
+          voucher_no?: number
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          expense_date?: string | null
+          id?: string
+          note?: string | null
+          payment_method?: string
+          purpose?: string
+          updated_at?: string
+          updated_by?: string | null
+          voucher_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_expenses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_extra_deals: {
         Row: {
           amount: number
@@ -273,6 +326,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "company_extra_deals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_extra_expenses: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_extra_expenses_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
