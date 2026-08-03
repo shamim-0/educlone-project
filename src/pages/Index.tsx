@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { extractCompanyCode } from "@/lib/companySort";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Zap, Search } from "lucide-react";
@@ -243,10 +244,7 @@ export default function Index() {
     if (role !== null && serviceDefs.length > 0) load();
   }, [role, branchId, serviceDefs]);
 
-  const extractCode = (name: string) => {
-    const m = name.match(/ISBI[A-Z]*(\d+)/i);
-    return m ? parseInt(m[1], 10) : -1;
-  };
+  const extractCode = extractCompanyCode;
 
   const stats = useMemo(() => {
     const total = companies.length;

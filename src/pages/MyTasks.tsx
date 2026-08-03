@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { extractCompanyCode } from "@/lib/companySort";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -71,10 +72,7 @@ export default function MyTasksPage() {
 
   const assignedSet = useMemo(() => new Set(assigned), [assigned]);
 
-  const extractCode = (name: string) => {
-    const m = name.match(/ISBI[A-Z]*(\d+)/i);
-    return m ? parseInt(m[1], 10) : -1;
-  };
+  const extractCode = extractCompanyCode;
 
   const defaultSort = (a: Company, b: Company) => {
     const ac = extractCode(a.name);

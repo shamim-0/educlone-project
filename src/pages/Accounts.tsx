@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { extractCompanyCode } from "@/lib/companySort";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -179,10 +180,7 @@ export default function AccountsPage() {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [companies]);
 
-  const extractCode = (name: string) => {
-    const m = name.match(/ISBI[A-Z]*(\d+)/i);
-    return m ? parseInt(m[1], 10) : -1;
-  };
+  const extractCode = extractCompanyCode;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
