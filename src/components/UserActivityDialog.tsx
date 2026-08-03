@@ -138,6 +138,33 @@ export function UserActivityDialog({ open, onOpenChange, userId, username }: Pro
     return Array.from(m.entries());
   }, [items]);
 
+  const exportPdf = () => {
+    if (items.length === 0) { toast.error("No activity to export"); return; }
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`Activity Report — ${username ?? ""}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Period: ${format(new Date(from), "PP")} to ${format(new Date(to), "PP")}`, 14, 22);
+    doc.text(`Total actions: ${items.length}`, 14, 28);
+    autoTable(doc, {
+      startY: 34,
+      head: [["Date", "Time", "Type", "Company", "Detail"]],
+      body: items.map((i) => [
+        format(new Date(i.at), "PP"),
+        format(new Date(i.at), "p"),
+        i.kind,
+        i.company_name ?? "—",
+        i.detail,
+      ]),
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [59, 130, 246] },
+      columnStyles: { 4: { cellWidth: 60 } },
+    });
+    doc.save(`Activity - ${username ?? "user"} - ${from} to ${to}.pdf`);
+  };
+
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
