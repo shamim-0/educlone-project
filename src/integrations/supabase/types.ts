@@ -616,6 +616,7 @@ export type Database = {
       }
       services: {
         Row: {
+          allowed_statuses: string[]
           created_at: string
           followup_messages: string[]
           has_creds: boolean
@@ -628,6 +629,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allowed_statuses?: string[]
           created_at?: string
           followup_messages?: string[]
           has_creds?: boolean
@@ -640,6 +642,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allowed_statuses?: string[]
           created_at?: string
           followup_messages?: string[]
           has_creds?: boolean
