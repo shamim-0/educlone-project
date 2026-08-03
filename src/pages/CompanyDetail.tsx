@@ -890,9 +890,7 @@ export default function CompanyDetail() {
                 const wdLeft = Math.max(0, 10 - passed);
                 return { phase, target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done, passed, startDate: start };
               };
-              if (s.status === "no_need" && (s as any).updated_at) {
-                misaInfo = build(new Date((s as any).updated_at), "complete", true);
-              } else if (s.status === "applied" && (s as any).updated_at) {
+              if (s.status === "applied" && (s as any).updated_at) {
                 misaInfo = build(new Date((s as any).updated_at), "complete", false);
               } else if (s.status === "done" && (s as any).updated_at) {
                 misaInfo = build(new Date((s as any).updated_at), "complete", true);
