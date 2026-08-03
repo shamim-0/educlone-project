@@ -58,7 +58,7 @@ export default function TodoListPage() {
       </Card>
 
       <TodoListView
-        tasks={tasks}
+        tasks={activeTasks}
         perspective="admin"
         loading={loading}
         onChanged={load}
