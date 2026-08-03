@@ -741,11 +741,14 @@ export default function CompanyDetail() {
                 mcfDates = { start, target: targetDate, remaining, passed: Math.min(passed, TOTAL_WD), windowWD: TOTAL_WD };
                 const fmt = (dt: Date) => `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
                 const rangeStr = `${fmt(start)} - ${fmt(targetDate)}`;
-                if (today < start) {
+                if (s.status === "no_need") {
+                  mcfBanner = null;
+                  mcfDates = null;
+                } else if (today < start) {
                   // Window hasn't opened yet — hide banner (only relevant for offset > 0).
                   mcfBanner = null;
                   mcfDates = null;
-                } else if (s.status === "done" || s.status === "no_need") {
+                } else if (s.status === "done") {
                   mcfBanner = { tone: "success", text: `✓ সম্পন্ন হয়েছে` };
                 } else if (remaining > 0) {
                   mcfBanner = { tone: remaining <= 3 ? "warn" : "info", text: `${rangeStr} তারিখের মধ্যে শেষ করতে হবে — বাকি আছে ${remaining} দিন` };
