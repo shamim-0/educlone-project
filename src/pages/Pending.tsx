@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { extractCompanyCode } from "@/lib/companySort";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -170,10 +171,7 @@ export default function PendingPage() {
 
   const exportRows = (def: typeof STEP_DEFS[number]) => {
     // Sort by the numeric part only (skips the ISBI / ISBIJ prefix)
-    const extractCode = (name: string) => {
-      const m = name.match(/ISBI[A-Z]*\s*(\d+)/i);
-      return m ? parseInt(m[1], 10) : -1;
-    };
+    const extractCode = extractCompanyCode;
     const list = [...(pendingByService[def.key] ?? [])].sort((a, b) => {
       const ae = a.emergency ? 0 : 1; const be = b.emergency ? 0 : 1;
       if (ae !== be) return ae - be;
@@ -420,10 +418,7 @@ export default function PendingPage() {
                       </div>
                     ) : (
                       (() => {
-                        const extractCode = (name: string) => {
-                          const m = name.match(/ISBI[A-Z]*(\d+)/i);
-                          return m ? parseInt(m[1], 10) : -1;
-                        };
+                        const extractCode = extractCompanyCode;
                         const sortedList = [...list];
                         switch (companySortBy) {
                           case "name_asc": sortedList.sort((a, b) => a.name.localeCompare(b.name)); break;

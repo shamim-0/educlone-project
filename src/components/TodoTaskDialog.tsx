@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { sortCompanies } from "@/lib/companySort";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,8 +65,8 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const c = await supabase.from("companies").select("id,name").order("name");
-      setCompanies((c.data as Company[]) ?? []);
+      const c = await supabase.from("companies").select("id,name");
+      setCompanies(sortCompanies((c.data as Company[]) ?? []));
       if (mode === "admin") {
         setAllowedKeys(null);
         const r = await supabase.from("user_roles").select("user_id, role").in("role", ["editor", "sub_admin"]);
