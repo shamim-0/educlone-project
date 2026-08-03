@@ -9,7 +9,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Activity, Building2 } from "lucide-react";
+import { Activity, Building2, FileDown } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Props {
   open: boolean;
@@ -136,6 +138,33 @@ export function UserActivityDialog({ open, onOpenChange, userId, username }: Pro
     return Array.from(m.entries());
   }, [items]);
 
+  const exportPdf = () => {
+    if (items.length === 0) { toast.error("No activity to export"); return; }
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`Activity Report — ${username ?? ""}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Period: ${format(new Date(from), "PP")} to ${format(new Date(to), "PP")}`, 14, 22);
+    doc.text(`Total actions: ${items.length}`, 14, 28);
+    autoTable(doc, {
+      startY: 34,
+      head: [["Date", "Time", "Type", "Company", "Detail"]],
+      body: items.map((i) => [
+        format(new Date(i.at), "PP"),
+        format(new Date(i.at), "p"),
+        i.kind,
+        i.company_name ?? "—",
+        i.detail,
+      ]),
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [59, 130, 246] },
+      columnStyles: { 4: { cellWidth: 60 } },
+    });
+    doc.save(`Activity - ${username ?? "user"} - ${from} to ${to}.pdf`);
+  };
+
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -157,8 +186,14 @@ export function UserActivityDialog({ open, onOpenChange, userId, username }: Pro
           <Button variant="outline" size="sm" onClick={() => { setFrom(today()); setTo(today()); }}>Today</Button>
           <Button variant="outline" size="sm" onClick={() => { setFrom(daysAgo(7)); setTo(today()); }}>7 days</Button>
           <Button variant="outline" size="sm" onClick={() => { setFrom(daysAgo(30)); setTo(today()); }}>30 days</Button>
-          <div className="ml-auto text-sm text-muted-foreground">{items.length} actions</div>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{items.length} actions</span>
+            <Button size="sm" onClick={exportPdf} disabled={loading || items.length === 0}>
+              <FileDown className="mr-1 h-4 w-4" /> Export PDF
+            </Button>
+          </div>
         </div>
+
 
         <div className="max-h-[55vh] space-y-4 overflow-y-auto pr-1">
           {loading ? (
