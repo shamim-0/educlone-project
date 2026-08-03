@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { GripVertical, Save, Plus, Trash2, ListChecks, Pencil, X, Check, MessageSquare } from "lucide-react";
+import { GripVertical, Save, Plus, Trash2, ListChecks, Pencil, X, Check, MessageSquare, CircleDot } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ALL_STATUS_OPTS, statusBadgeClass } from "@/lib/steps";
 import { cn } from "@/lib/utils";
 import { refreshServiceDefs, type ServiceDef } from "@/hooks/useServiceDefs";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +19,7 @@ interface Row extends ServiceDef {
   id: string;
   sort_order: number;
   followupMessages?: string[];
+  allowedStatuses?: string[];
 }
 
 export default function ServicesPage() {
@@ -31,6 +34,9 @@ export default function ServicesPage() {
   const [msgRow, setMsgRow] = useState<Row | null>(null);
   const [msgs, setMsgs] = useState<string[]>(["", "", ""]);
   const [savingMsgs, setSavingMsgs] = useState(false);
+  const [statusRow, setStatusRow] = useState<Row | null>(null);
+  const [statusSel, setStatusSel] = useState<string[]>([]);
+  const [savingStatus, setSavingStatus] = useState(false);
 
   useEffect(() => {
     document.title = "Services | ISBI Tracker";
@@ -41,7 +47,7 @@ export default function ServicesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("services")
-      .select("id,key,label,tags,has_creds,sort_order,followup_messages")
+      .select("id,key,label,tags,has_creds,sort_order,followup_messages,allowed_statuses")
       .order("sort_order", { ascending: true });
     if (error) {
       toast.error(error.message);
@@ -55,10 +61,34 @@ export default function ServicesPage() {
           hasCreds: !!r.has_creds,
           sort_order: r.sort_order,
           followupMessages: r.followup_messages ?? [],
+          allowedStatuses: r.allowed_statuses ?? [],
         }))
       );
     }
     setLoading(false);
+  }
+
+  function openStatuses(r: Row) {
+    setStatusRow(r);
+    setStatusSel(r.allowedStatuses?.length ? [...r.allowedStatuses] : ALL_STATUS_OPTS.map((o) => o.value));
+  }
+
+  async function saveStatuses() {
+    if (!statusRow) return;
+    setSavingStatus(true);
+    const { error } = await supabase
+      .from("services")
+      .update({ allowed_statuses: statusSel } as any)
+      .eq("id", statusRow.id);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setRows((prev) => prev.map((r) => (r.id === statusRow.id ? { ...r, allowedStatuses: statusSel } : r)));
+      toast.success("Statuses saved");
+      await refreshServiceDefs();
+      setStatusRow(null);
+    }
+    setSavingStatus(false);
   }
 
   function openMsgs(r: Row) {
@@ -288,6 +318,10 @@ export default function ServicesPage() {
 
                 {!editing && (
                   <div className="flex items-center gap-1 shrink-0">
+                    <Button size="sm" variant="outline" title="Assign statuses for this service" onClick={() => openStatuses(r)}>
+                      <CircleDot className="h-4 w-4 mr-1" /> Status
+                    </Button>
+
                     {(r.key === "mother_company_formation_bd" || r.key === "misa_license" || r.key === "misa") && (
                       <Button
                         size="sm"
@@ -321,6 +355,39 @@ export default function ServicesPage() {
           })}
         </div>
       )}
+
+      <Dialog open={!!statusRow} onOpenChange={(o) => !o && setStatusRow(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Statuses — {statusRow?.label}</DialogTitle>
+            <DialogDescription>
+              Select which statuses will be available for this service on the company page.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border divide-y">
+            {ALL_STATUS_OPTS.map((o) => (
+              <label key={o.value} className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-muted/50">
+                <Checkbox
+                  checked={statusSel.includes(o.value)}
+                  onCheckedChange={() =>
+                    setStatusSel((prev) =>
+                      prev.includes(o.value) ? prev.filter((v) => v !== o.value) : [...prev, o.value]
+                    )
+                  }
+                />
+                <span className={cn("text-xs px-2 py-0.5 rounded border", statusBadgeClass(o.value))}>{o.label}</span>
+              </label>
+            ))}
+          </div>
+          <div className="text-xs text-muted-foreground">{statusSel.length} selected</div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setStatusRow(null)}>Cancel</Button>
+            <Button onClick={saveStatuses} disabled={savingStatus || statusSel.length === 0}>
+              {savingStatus ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!msgRow} onOpenChange={(o) => !o && setMsgRow(null)}>
         <DialogContent className="max-w-lg">

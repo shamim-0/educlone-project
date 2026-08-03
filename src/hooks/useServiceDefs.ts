@@ -11,6 +11,7 @@ export interface ServiceDef {
   subtasks?: string[];
   sort_order?: number;
   followupMessages?: string[];
+  allowedStatuses?: string[];
 }
 
 let cache: ServiceDef[] | null = null;
@@ -19,7 +20,7 @@ const listeners = new Set<(d: ServiceDef[]) => void>();
 async function load() {
   const { data, error } = await supabase
     .from("services")
-    .select("id,key,label,tags,has_creds,subtasks,sort_order,followup_messages")
+    .select("id,key,label,tags,has_creds,subtasks,sort_order,followup_messages,allowed_statuses")
     .order("sort_order", { ascending: true });
   if (error || !data || data.length === 0) {
     cache = FALLBACK;
@@ -33,8 +34,10 @@ async function load() {
       subtasks: r.subtasks ?? [],
       sort_order: r.sort_order,
       followupMessages: r.followup_messages ?? [],
+      allowedStatuses: r.allowed_statuses ?? [],
     }));
   }
+
   listeners.forEach((fn) => fn(cache!));
 }
 

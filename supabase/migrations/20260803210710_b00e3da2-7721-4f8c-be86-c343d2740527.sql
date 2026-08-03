@@ -1,0 +1,1 @@
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS allowed_statuses text[] NOT NULL DEFAULT '{}'::text[];
