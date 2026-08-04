@@ -30,7 +30,7 @@ const menu = [
   { to: "/company", label: "Company", icon: Building2 },
   { to: "/branch", label: "Branch", icon: GitBranch, adminOnly: true },
   { to: "/accounts", label: "Accounts", icon: Wallet, requiresAccounts: true },
-  { to: "/expenses", label: "Expenses", icon: TrendingDown, adminOnly: true },
+  { to: "/expenses", label: "Expenses", icon: TrendingDown, requiresExpenses: true },
   { to: "/pending", label: "Pending", icon: ClipboardList },
   { to: "/users", label: "Users", icon: Users, adminOnly: true },
   { to: "/services", label: "Services", icon: ListChecks, roles: ["admin", "sub_admin"] as string[] },
@@ -41,7 +41,7 @@ const menu = [
 ];
 
 export default function AppLayout() {
-  const { signOut, username, role, accountsAccess } = useAuth();
+  const { signOut, username, role, accountsAccess, expensesAccess } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
   const { theme, toggle } = useTheme();
@@ -60,6 +60,7 @@ export default function AppLayout() {
     if (m.adminOnly && role !== "admin") return false;
     if (m.roles && !m.roles.includes(role ?? "")) return false;
     if (m.requiresAccounts && role !== "admin" && !accountsAccess) return false;
+    if (m.requiresExpenses && role !== "admin" && !expensesAccess) return false;
     return true;
   });
   const currentStatus = new URLSearchParams(location.search).get("status") ?? "";
