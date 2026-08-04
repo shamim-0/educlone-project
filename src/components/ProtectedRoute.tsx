@@ -6,13 +6,15 @@ export const ProtectedRoute = ({
   requireRoles,
   requireAdmin,
   requireAccountsAccess,
+  requireExpensesAccess,
 }: {
   children: React.ReactNode;
   requireRoles?: AppRole[];
   requireAdmin?: boolean;
   requireAccountsAccess?: boolean;
+  requireExpensesAccess?: boolean;
 }) => {
-  const { user, role, accountsAccess, loading } = useAuth();
+  const { user, role, accountsAccess, expensesAccess, loading } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen grid place-items-center text-muted-foreground">Loading…</div>
@@ -26,6 +28,9 @@ export const ProtectedRoute = ({
     return <Navigate to="/" replace />;
   }
   if (requireAccountsAccess && role !== "admin" && !accountsAccess) {
+    return <Navigate to="/" replace />;
+  }
+  if (requireExpensesAccess && role !== "admin" && !expensesAccess) {
     return <Navigate to="/" replace />;
   }
   return <>{children}</>;

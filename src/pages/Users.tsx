@@ -17,7 +17,7 @@ import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
 import { UserActivityDialog } from "@/components/UserActivityDialog";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
@@ -32,7 +32,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false });
+  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false, expenses_access: false });
   const [pwdTarget, setPwdTarget] = useState<Profile | null>(null);
   const [assignTarget, setAssignTarget] = useState<Profile | null>(null);
   const [todoTarget, setTodoTarget] = useState<Profile | null>(null);
@@ -43,7 +43,7 @@ export default function UsersPage() {
   const load = async () => {
     setLoading(true);
     const [{ data: p }, { data: r }, { data: b }] = await Promise.all([
-      supabase.from("profiles").select("id, username, email, branch_id, accounts_access").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("branches").select("id, name").order("name"),
     ]);
@@ -85,6 +85,13 @@ export default function UsersPage() {
     setProfiles((s) => s.map((p) => p.id === userId ? { ...p, accounts_access: value } : p));
   };
 
+  const toggleExpensesAccess = async (userId: string, value: boolean) => {
+    const { error } = await supabase.from("profiles").update({ expenses_access: value } as any).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Expenses access updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, expenses_access: value } : p));
+  };
+
   const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name ?? "—";
 
   const createUser = async () => {
@@ -99,6 +106,7 @@ export default function UsersPage() {
         branch_id: form.branch_id || null,
         role: form.role,
         accounts_access: form.accounts_access,
+        expenses_access: form.expenses_access,
       },
     });
     setSubmitting(false);
@@ -108,7 +116,7 @@ export default function UsersPage() {
     }
     toast.success("User created");
     setOpen(false);
-    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false });
+    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false, expenses_access: false });
     load();
   };
 
@@ -135,14 +143,16 @@ export default function UsersPage() {
               <TableHead className="w-56">Branch</TableHead>
               <TableHead className="w-48">Role</TableHead>
               <TableHead className="w-40">Accounts Access</TableHead>
+              <TableHead className="w-40">Expenses Access</TableHead>
               {isAdmin && <TableHead className="w-64 text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : profiles.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+
             ) : profiles.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.username}{p.id === me?.id && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}</TableCell>
@@ -177,6 +187,13 @@ export default function UsersPage() {
                     <Switch checked={!!p.accounts_access} onCheckedChange={(v) => toggleAccountsAccess(p.id, v)} />
                   ) : (
                     <Badge variant="secondary">{p.accounts_access ? "Yes" : "No"}</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {isAdmin ? (
+                    <Switch checked={!!p.expenses_access} onCheckedChange={(v) => toggleExpensesAccess(p.id, v)} />
+                  ) : (
+                    <Badge variant="secondary">{p.expenses_access ? "Yes" : "No"}</Badge>
                   )}
                 </TableCell>
                 {isAdmin && (
@@ -248,6 +265,13 @@ export default function UsersPage() {
                 <p className="text-xs text-muted-foreground">Allow this user to open the Accounts page.</p>
               </div>
               <Switch checked={form.accounts_access} onCheckedChange={(v) => setForm({ ...form, accounts_access: v })} />
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label>Expenses Access</Label>
+                <p className="text-xs text-muted-foreground">Allow this user to open the Expenses page.</p>
+              </div>
+              <Switch checked={form.expenses_access} onCheckedChange={(v) => setForm({ ...form, expenses_access: v })} />
             </div>
           </div>
           <DialogFooter>
