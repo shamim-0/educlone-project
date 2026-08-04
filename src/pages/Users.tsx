@@ -266,6 +266,13 @@ export default function UsersPage() {
               </div>
               <Switch checked={form.accounts_access} onCheckedChange={(v) => setForm({ ...form, accounts_access: v })} />
             </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label>Expenses Access</Label>
+                <p className="text-xs text-muted-foreground">Allow this user to open the Expenses page.</p>
+              </div>
+              <Switch checked={form.expenses_access} onCheckedChange={(v) => setForm({ ...form, expenses_access: v })} />
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={createUser} disabled={submitting}>{submitting ? "Creating…" : "Create User"}</Button>
