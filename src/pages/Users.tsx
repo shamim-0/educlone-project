@@ -85,6 +85,13 @@ export default function UsersPage() {
     setProfiles((s) => s.map((p) => p.id === userId ? { ...p, accounts_access: value } : p));
   };
 
+  const toggleExpensesAccess = async (userId: string, value: boolean) => {
+    const { error } = await supabase.from("profiles").update({ expenses_access: value } as any).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Expenses access updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, expenses_access: value } : p));
+  };
+
   const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name ?? "—";
 
   const createUser = async () => {
