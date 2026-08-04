@@ -32,7 +32,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false });
+  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false, expenses_access: false });
   const [pwdTarget, setPwdTarget] = useState<Profile | null>(null);
   const [assignTarget, setAssignTarget] = useState<Profile | null>(null);
   const [todoTarget, setTodoTarget] = useState<Profile | null>(null);
