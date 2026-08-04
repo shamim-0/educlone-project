@@ -116,7 +116,7 @@ export default function UsersPage() {
     }
     toast.success("User created");
     setOpen(false);
-    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false });
+    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false, expenses_access: false });
     load();
   };
 
