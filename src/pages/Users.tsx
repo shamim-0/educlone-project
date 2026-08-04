@@ -189,6 +189,13 @@ export default function UsersPage() {
                     <Badge variant="secondary">{p.accounts_access ? "Yes" : "No"}</Badge>
                   )}
                 </TableCell>
+                <TableCell>
+                  {isAdmin ? (
+                    <Switch checked={!!p.expenses_access} onCheckedChange={(v) => toggleExpensesAccess(p.id, v)} />
+                  ) : (
+                    <Badge variant="secondary">{p.expenses_access ? "Yes" : "No"}</Badge>
+                  )}
+                </TableCell>
                 {isAdmin && (
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
