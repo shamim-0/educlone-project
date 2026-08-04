@@ -106,6 +106,7 @@ export default function UsersPage() {
         branch_id: form.branch_id || null,
         role: form.role,
         accounts_access: form.accounts_access,
+        expenses_access: form.expenses_access,
       },
     });
     setSubmitting(false);
