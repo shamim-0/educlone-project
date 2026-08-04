@@ -143,14 +143,16 @@ export default function UsersPage() {
               <TableHead className="w-56">Branch</TableHead>
               <TableHead className="w-48">Role</TableHead>
               <TableHead className="w-40">Accounts Access</TableHead>
+              <TableHead className="w-40">Expenses Access</TableHead>
               {isAdmin && <TableHead className="w-64 text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : profiles.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+
             ) : profiles.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.username}{p.id === me?.id && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}</TableCell>
