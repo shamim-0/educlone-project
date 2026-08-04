@@ -17,7 +17,7 @@ import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
 import { UserActivityDialog } from "@/components/UserActivityDialog";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
