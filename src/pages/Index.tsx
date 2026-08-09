@@ -11,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs } from "@/lib/steps";
+import { isCompanyOverdue } from "@/lib/overdue";
+
+const extractCode = extractCompanyCode;
+
 
 
 interface Company {
