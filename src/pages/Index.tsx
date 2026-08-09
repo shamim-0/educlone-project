@@ -452,20 +452,39 @@ export default function Index() {
           { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
           { id: "emergency", value: stats.emergency, label: "Emergency", color: "text-destructive" },
         ].map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setCardTab(s.id)}
-            className={cn(
-              "rounded-lg border bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elegant",
-              cardTab === s.id && "border-primary ring-2 ring-primary/30 bg-primary/5"
+          <div key={s.id} className="relative">
+            <button
+              type="button"
+              onClick={() => setCardTab(s.id)}
+              className={cn(
+                "w-full h-full rounded-lg border bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elegant",
+                cardTab === s.id && "border-primary ring-2 ring-primary/30 bg-primary/5"
+              )}
+            >
+              <div className={cn("text-lg font-bold", s.color)}>{s.value}</div>
+              <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
+                {s.icon && <Zap className="h-3 w-3" />} {s.label}
+              </div>
+            </button>
+            {s.id === "overdue" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Overdue options"
+                    className="absolute top-1 right-1 rounded-md p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="z-50 bg-popover">
+                  <DropdownMenuItem onClick={generateOverdueReport}>
+                    <FileDown className="h-4 w-4 mr-2" /> Generate Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-          >
-            <div className={cn("text-lg font-bold", s.color)}>{s.value}</div>
-            <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
-              {s.icon && <Zap className="h-3 w-3" />} {s.label}
-            </div>
-          </button>
+          </div>
         ))}
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-foreground">{stats.avgProgress}%</div>
