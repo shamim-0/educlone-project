@@ -202,8 +202,8 @@ export default function AccountsPage() {
       case "name_asc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case "name_desc": return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case "due_desc": return sorted.sort((a, b) => {
-        const ad = (dealOf(a) - Number(a.discount||0)) - (receivedByCompany[a.id] ?? 0);
-        const bd = (dealOf(b) - Number(b.discount||0)) - (receivedByCompany[b.id] ?? 0);
+        const ad = (dealOf(a) - Number(a.discount||0)) - (allTimeReceivedByCompany[a.id] ?? 0);
+        const bd = (dealOf(b) - Number(b.discount||0)) - (allTimeReceivedByCompany[b.id] ?? 0);
         return bd - ad;
       });
       case "received_desc": return sorted.sort((a, b) => (receivedByCompany[b.id] ?? 0) - (receivedByCompany[a.id] ?? 0));
