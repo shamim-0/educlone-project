@@ -60,3 +60,32 @@ export function isCompanyOverdue(
     return today > target;
   });
 }
+
+/** List of overdue services for a company, with their deadline dates and current status. */
+export function getOverdueServices(
+  applicableKeys: string[],
+  statuses: Record<string, string>,
+  allPapersAt: string | null
+): { key: string; status: string; target: Date; daysOver: number }[] {
+  if (!allPapersAt) return [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const out: { key: string; status: string; target: Date; daysOver: number }[] = [];
+  applicableKeys.forEach((key) => {
+    const cfg = COUNTDOWN_CONFIG[key];
+    if (!cfg) return;
+    const st = statuses[key] ?? "not_started";
+    if (st === "done" || st === "no_need") return;
+    const { start, target } = serviceWindow(allPapersAt, cfg);
+    if (today < start) return;
+    if (today > target) {
+      out.push({
+        key,
+        status: st,
+        target,
+        daysOver: Math.floor((today.getTime() - target.getTime()) / 86400000),
+      });
+    }
+  });
+  return out;
+}

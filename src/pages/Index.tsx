@@ -2,16 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { extractCompanyCode } from "@/lib/companySort";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Zap, Search } from "lucide-react";
+import { Zap, Search, MoreVertical, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs } from "@/lib/steps";
-import { isCompanyOverdue } from "@/lib/overdue";
+import { isCompanyOverdue, getOverdueServices } from "@/lib/overdue";
 
 const extractCode = extractCompanyCode;
 
@@ -387,6 +388,48 @@ export default function Index() {
     }
   }, [filtered, sortBy, stepCounts]);
 
+  const generateOverdueReport = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const labelOf = (key: string) =>
+      serviceDefs.find((d) => d.key === key)?.label ?? key;
+    const rows: string[][] = [];
+    const list = companies
+      .filter((c) => overdueIds.has(c.id))
+      .sort((a, b) => extractCode(b.name) - extractCode(a.name));
+    list.forEach((c) => {
+      const keys = getApplicableServiceDefs(c.type, serviceDefs).map((d) => d.key);
+      const items = getOverdueServices(keys, stepStatuses[c.id] ?? {}, allPapersAt[c.id] ?? null);
+      items.forEach((it, i) => {
+        rows.push([
+          i === 0 ? c.name : "",
+          i === 0 ? (c.branches?.name ?? "—") : "",
+          labelOf(it.key),
+          it.status.replace(/_/g, " "),
+          it.target.toLocaleDateString("en-GB"),
+          `${it.daysOver} days`,
+        ]);
+      });
+    });
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(16);
+    doc.text("Overdue Services Report", 14, 16);
+    doc.setFontSize(10);
+    doc.text(
+      `Generated: ${new Date().toLocaleString("en-GB")}  |  Companies: ${list.length}  |  Overdue services: ${rows.length}`,
+      14,
+      23
+    );
+    autoTable(doc, {
+      startY: 28,
+      head: [["Company", "Branch", "Service", "Status", "Deadline", "Overdue By"]],
+      body: rows,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [220, 38, 38] },
+    });
+    doc.save(`overdue-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-end justify-between">
@@ -409,20 +452,39 @@ export default function Index() {
           { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
           { id: "emergency", value: stats.emergency, label: "Emergency", color: "text-destructive" },
         ].map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setCardTab(s.id)}
-            className={cn(
-              "rounded-lg border bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elegant",
-              cardTab === s.id && "border-primary ring-2 ring-primary/30 bg-primary/5"
+          <div key={s.id} className="relative">
+            <button
+              type="button"
+              onClick={() => setCardTab(s.id)}
+              className={cn(
+                "w-full h-full rounded-lg border bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elegant",
+                cardTab === s.id && "border-primary ring-2 ring-primary/30 bg-primary/5"
+              )}
+            >
+              <div className={cn("text-lg font-bold", s.color)}>{s.value}</div>
+              <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
+                {s.icon && <Zap className="h-3 w-3" />} {s.label}
+              </div>
+            </button>
+            {s.id === "overdue" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Overdue options"
+                    className="absolute top-1 right-1 rounded-md p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="z-50 bg-popover">
+                  <DropdownMenuItem onClick={generateOverdueReport}>
+                    <FileDown className="h-4 w-4 mr-2" /> Generate Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-          >
-            <div className={cn("text-lg font-bold", s.color)}>{s.value}</div>
-            <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
-              {s.icon && <Zap className="h-3 w-3" />} {s.label}
-            </div>
-          </button>
+          </div>
         ))}
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-foreground">{stats.avgProgress}%</div>
