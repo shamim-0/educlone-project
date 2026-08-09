@@ -11,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs } from "@/lib/steps";
+import { isCompanyOverdue } from "@/lib/overdue";
+
+const extractCode = extractCompanyCode;
+
 
 
 interface Company {
@@ -181,6 +185,8 @@ export default function Index() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("default");
+  const [cardTab, setCardTab] = useState<string>("total");
+
 
   useEffect(() => {
     document.title = "Dashboard | ISBI Tracker";
@@ -244,7 +250,24 @@ export default function Index() {
     if (role !== null && serviceDefs.length > 0) load();
   }, [role, branchId, serviceDefs]);
 
-  const extractCode = extractCompanyCode;
+
+  const overdueIds = useMemo(() => {
+    const set = new Set<string>();
+    companies.forEach((c) => {
+      const keys = getApplicableServiceDefs(c.type, serviceDefs).map((d) => d.key);
+      if (isCompanyOverdue(keys, stepStatuses[c.id] ?? {}, allPapersAt[c.id] ?? null)) set.add(c.id);
+    });
+    return set;
+  }, [companies, serviceDefs, stepStatuses, allPapersAt]);
+
+  const completedIds = useMemo(() => {
+    const set = new Set<string>();
+    companies.forEach((c) => {
+      const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
+      if ((stepCounts[c.id]?.done ?? 0) >= applicableTotal) set.add(c.id);
+    });
+    return set;
+  }, [companies, serviceDefs, stepCounts]);
 
   const stats = useMemo(() => {
     const total = companies.length;
@@ -252,12 +275,10 @@ export default function Index() {
     const trading = companies.filter((c) => c.type === "trading").length;
     const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
     const industrial = companies.filter((c) => c.type === "industrial_license").length;
-    const completed = companies.filter((c) => {
-      const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
-      return (stepCounts[c.id]?.done ?? 0) >= applicableTotal;
-    }).length;
+    const completed = completedIds.size;
     const takeAction = companies.filter((c) => c.take_action).length;
     const emergency = companies.filter((c) => c.emergency).length;
+    const overdue = overdueIds.size;
     const avgProgress =
       total > 0
         ? Math.round(
@@ -267,8 +288,9 @@ export default function Index() {
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, avgProgress };
-  }, [companies, stepCounts, serviceDefs]);
+    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress };
+  }, [companies, stepCounts, serviceDefs, completedIds, overdueIds]);
+
 
 
   const branchTabs = useMemo(() => {
@@ -291,9 +313,32 @@ export default function Index() {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
       if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      switch (cardTab) {
+        case "services":
+        case "trading":
+        case "entrepreneur":
+        case "industrial_license":
+          if (c.type !== cardTab) return false;
+          break;
+        case "completed":
+          if (!completedIds.has(c.id)) return false;
+          break;
+        case "take_action":
+          if (!c.take_action) return false;
+          break;
+        case "emergency":
+          if (!c.emergency) return false;
+          break;
+        case "overdue":
+          if (!overdueIds.has(c.id)) return false;
+          break;
+        default:
+          break;
+      }
       return true;
     });
-  }, [companies, branchFilter, typeFilter, search]);
+  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds]);
+
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -339,46 +384,39 @@ export default function Index() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3">
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-foreground">{stats.total}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.service}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Service</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.trading}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Trading</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.entrepreneur}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Entrepreneur</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.industrial}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Industrial</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-success">{stats.completed}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">সম্পন্ন</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-[rgb(234,88,12)]">{stats.takeAction}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
-            <Zap className="h-3 w-3" /> Take Action
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-destructive">{stats.emergency}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Emergency</div>
-        </div>
+      {/* Stats — clickable tabs */}
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-10 gap-3">
+        {[
+          { id: "total", value: stats.total, label: "Total", color: "text-foreground" },
+          { id: "services", value: stats.service, label: "Service", color: "text-primary" },
+          { id: "trading", value: stats.trading, label: "Trading", color: "text-primary" },
+          { id: "entrepreneur", value: stats.entrepreneur, label: "Entrepreneur", color: "text-primary" },
+          { id: "industrial_license", value: stats.industrial, label: "Industrial", color: "text-primary" },
+          { id: "completed", value: stats.completed, label: "সম্পন্ন", color: "text-success" },
+          { id: "overdue", value: stats.overdue, label: "Overdue", color: "text-destructive" },
+          { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
+          { id: "emergency", value: stats.emergency, label: "Emergency", color: "text-destructive" },
+        ].map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => setCardTab(s.id)}
+            className={cn(
+              "rounded-lg border bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elegant",
+              cardTab === s.id && "border-primary ring-2 ring-primary/30 bg-primary/5"
+            )}
+          >
+            <div className={cn("text-lg font-bold", s.color)}>{s.value}</div>
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
+              {s.icon && <Zap className="h-3 w-3" />} {s.label}
+            </div>
+          </button>
+        ))}
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-foreground">{stats.avgProgress}%</div>
           <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Avg Progress</div>
         </div>
+
       </div>
 
       {/* Branch tabs */}
