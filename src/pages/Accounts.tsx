@@ -252,7 +252,8 @@ export default function AccountsPage() {
     ? adminTitle((openCompany as any).discount_updated_by, (openCompany as any).discount_updated_at)
     : undefined;
   const oNet = oDeal - oDisc;
-  const oRecv = openCompany ? (receivedByCompany[openCompany.id] ?? 0) : 0;
+  const oRecvAllTime = openCompany ? (allTimeReceivedByCompany[openCompany.id] ?? 0) : 0;
+  const oRecv = oRecvAllTime;
   const oDue = oNet - oRecv;
   const oPct = oNet > 0 ? Math.min(100, Math.round((oRecv / oNet) * 100)) : 0;
 
