@@ -226,7 +226,7 @@ export default function AccountsPage() {
     const periodReceived = filtered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
     const allTimeReceived = filtered.reduce((s, c) => s + (allTimeReceivedByCompany[c.id] ?? 0), 0);
     const net = deal - discount;
-    return { deal, discount, received: periodReceived, net, due: net - allTimeReceived, extras };
+    return { deal, discount, received: periodReceived, allTimeReceived, net, due: net - allTimeReceived, extras };
   }, [filtered, receivedByCompany, extrasByCompany, allTimeReceivedByCompany]);
 
   const companyInstallments = useMemo(
