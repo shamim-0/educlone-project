@@ -139,6 +139,13 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         </span>
       </div>
 
+      {c.note && (
+        <div className="mt-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">Note / Condition:</span>{" "}
+          <span className="line-clamp-2">{c.note}</span>
+        </div>
+      )}
+
 
       {/* Days status */}
       <div className="mt-4 pt-4 border-t flex items-center gap-2 text-xs">
