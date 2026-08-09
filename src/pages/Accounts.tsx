@@ -163,6 +163,12 @@ export default function AccountsPage() {
     return map;
   }, [periodInstallments]);
 
+  const allTimeReceivedByCompany = useMemo(() => {
+    const map: Record<string, number> = {};
+    installments.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
+    return map;
+  }, [installments]);
+
   const extrasByCompany = useMemo(() => {
     const map: Record<string, number> = {};
     extraDeals.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
@@ -196,8 +202,8 @@ export default function AccountsPage() {
       case "name_asc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case "name_desc": return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case "due_desc": return sorted.sort((a, b) => {
-        const ad = (dealOf(a) - Number(a.discount||0)) - (receivedByCompany[a.id] ?? 0);
-        const bd = (dealOf(b) - Number(b.discount||0)) - (receivedByCompany[b.id] ?? 0);
+        const ad = (dealOf(a) - Number(a.discount||0)) - (allTimeReceivedByCompany[a.id] ?? 0);
+        const bd = (dealOf(b) - Number(b.discount||0)) - (allTimeReceivedByCompany[b.id] ?? 0);
         return bd - ad;
       });
       case "received_desc": return sorted.sort((a, b) => (receivedByCompany[b.id] ?? 0) - (receivedByCompany[a.id] ?? 0));
@@ -210,17 +216,18 @@ export default function AccountsPage() {
           return b.name.localeCompare(a.name);
         });
     }
-  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany, dateFilterActive, periodInstallments]);
+  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany, dateFilterActive, periodInstallments, allTimeReceivedByCompany]);
 
   const totals = useMemo(() => {
     const baseDeal = filtered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
     const extras = filtered.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
     const deal = baseDeal + extras;
     const discount = filtered.reduce((s, c) => s + Number(c.discount || 0), 0);
-    const received = filtered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
+    const periodReceived = filtered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
+    const allTimeReceived = filtered.reduce((s, c) => s + (allTimeReceivedByCompany[c.id] ?? 0), 0);
     const net = deal - discount;
-    return { deal, discount, received, net, due: net - received, extras };
-  }, [filtered, receivedByCompany, extrasByCompany]);
+    return { deal, discount, received: periodReceived, allTimeReceived, net, due: net - allTimeReceived, extras };
+  }, [filtered, receivedByCompany, extrasByCompany, allTimeReceivedByCompany]);
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
@@ -245,11 +252,12 @@ export default function AccountsPage() {
     ? adminTitle((openCompany as any).discount_updated_by, (openCompany as any).discount_updated_at)
     : undefined;
   const oNet = oDeal - oDisc;
-  const oRecv = openCompany ? (receivedByCompany[openCompany.id] ?? 0) : 0;
+  const oRecvAllTime = openCompany ? (allTimeReceivedByCompany[openCompany.id] ?? 0) : 0;
+  const oRecv = oRecvAllTime;
   const oDue = oNet - oRecv;
   const oPct = oNet > 0 ? Math.min(100, Math.round((oRecv / oNet) * 100)) : 0;
 
-  const collectedPct = totals.net > 0 ? Math.min(100, Math.round((totals.received / totals.net) * 100)) : 0;
+  const collectedPct = totals.net > 0 ? Math.min(100, Math.round((totals.allTimeReceived / totals.net) * 100)) : 0;
 
   function openManage(c: Company) {
     setOpenCompany(c);
@@ -627,9 +635,10 @@ export default function AccountsPage() {
                 const deal = baseDeal + extra;
                 const disc = Number(c.discount || 0);
                 const net = deal - disc;
-                const received = receivedByCompany[c.id] ?? 0;
-                const due = net - received;
-                const pct = net > 0 ? Math.min(100, Math.round((received / net) * 100)) : 0;
+                const periodReceived = receivedByCompany[c.id] ?? 0;
+                const allTimeReceived = allTimeReceivedByCompany[c.id] ?? 0;
+                const due = net - allTimeReceived;
+                const pct = net > 0 ? Math.min(100, Math.round((allTimeReceived / net) * 100)) : 0;
                 return (
                   <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
@@ -649,7 +658,7 @@ export default function AccountsPage() {
                     <TableCell className="text-right font-medium text-amber-600 dark:text-amber-400 tabular-nums">
                       {disc > 0 ? `− ${fmt(disc)}` : "—"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(received)}</TableCell>
+                    <TableCell className="text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(periodReceived)}</TableCell>
                     <TableCell className={`text-right font-semibold tabular-nums ${due > 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(due)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
