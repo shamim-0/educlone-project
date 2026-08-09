@@ -25,6 +25,7 @@ interface Company {
   created_at: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
+  note?: string | null;
   branches?: { name: string } | null;
 }
 
@@ -138,6 +139,13 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         </span>
       </div>
 
+      {c.note && (
+        <div className="mt-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">Note / Condition:</span>{" "}
+          <span className="line-clamp-2">{c.note}</span>
+        </div>
+      )}
+
 
       {/* Days status */}
       <div className="mt-4 pt-4 border-t flex items-center gap-2 text-xs">
@@ -197,7 +205,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, type, branch_id, created_at, emergency, take_action, branches!companies_branch_id_fkey(name)")
+        .select("id, name, type, branch_id, created_at, emergency, take_action, note, branches!companies_branch_id_fkey(name)")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
