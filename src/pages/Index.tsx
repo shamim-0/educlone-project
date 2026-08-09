@@ -25,6 +25,7 @@ interface Company {
   created_at: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
+  note?: string | null;
   branches?: { name: string } | null;
 }
 
