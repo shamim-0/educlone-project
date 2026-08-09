@@ -163,6 +163,12 @@ export default function AccountsPage() {
     return map;
   }, [periodInstallments]);
 
+  const allTimeReceivedByCompany = useMemo(() => {
+    const map: Record<string, number> = {};
+    installments.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
+    return map;
+  }, [installments]);
+
   const extrasByCompany = useMemo(() => {
     const map: Record<string, number> = {};
     extraDeals.forEach((x) => { map[x.company_id] = (map[x.company_id] ?? 0) + Number(x.amount || 0); });
