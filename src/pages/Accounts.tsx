@@ -257,7 +257,7 @@ export default function AccountsPage() {
   const oDue = oNet - oRecv;
   const oPct = oNet > 0 ? Math.min(100, Math.round((oRecv / oNet) * 100)) : 0;
 
-  const collectedPct = totals.net > 0 ? Math.min(100, Math.round((totals.received / totals.net) * 100)) : 0;
+  const collectedPct = totals.net > 0 ? Math.min(100, Math.round((totals.allTimeReceived / totals.net) * 100)) : 0;
 
   function openManage(c: Company) {
     setOpenCompany(c);
