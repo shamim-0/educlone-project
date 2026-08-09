@@ -216,7 +216,7 @@ export default function AccountsPage() {
           return b.name.localeCompare(a.name);
         });
     }
-  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany, dateFilterActive, periodInstallments]);
+  }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany, dateFilterActive, periodInstallments, allTimeReceivedByCompany]);
 
   const totals = useMemo(() => {
     const baseDeal = filtered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
