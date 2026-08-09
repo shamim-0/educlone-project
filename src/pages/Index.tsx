@@ -43,10 +43,13 @@ function deriveProgress(startAt: string | null, done: number, processing: number
 
 function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses, startAt }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string>; startAt: string | null }) {
   const p = deriveProgress(startAt, done, processing, totalSteps);
+  const applicableKeys = applicableDefs.map((d) => d.key);
+  const isCompanyOverdueNow = isCompanyOverdue(applicableKeys, stepStatuses, startAt);
 
   const branchName = c.branches?.name ?? "—";
   const isEmergency = !!c.emergency;
   const isTakeAction = !!c.take_action;
+  const isOverdue = isCompanyOverdueNow;
 
   return (
     <Link to={`/company/${c.id}`} className="block">
