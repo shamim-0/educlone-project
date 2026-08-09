@@ -384,46 +384,39 @@ export default function Index() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3">
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-foreground">{stats.total}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.service}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Service</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.trading}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Trading</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.entrepreneur}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Entrepreneur</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-primary">{stats.industrial}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Industrial</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-success">{stats.completed}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">সম্পন্ন</div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-[rgb(234,88,12)]">{stats.takeAction}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
-            <Zap className="h-3 w-3" /> Take Action
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center shadow-card">
-          <div className="text-lg font-bold text-destructive">{stats.emergency}</div>
-          <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Emergency</div>
-        </div>
+      {/* Stats — clickable tabs */}
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-10 gap-3">
+        {[
+          { id: "total", value: stats.total, label: "Total", color: "text-foreground" },
+          { id: "services", value: stats.service, label: "Service", color: "text-primary" },
+          { id: "trading", value: stats.trading, label: "Trading", color: "text-primary" },
+          { id: "entrepreneur", value: stats.entrepreneur, label: "Entrepreneur", color: "text-primary" },
+          { id: "industrial_license", value: stats.industrial, label: "Industrial", color: "text-primary" },
+          { id: "completed", value: stats.completed, label: "সম্পন্ন", color: "text-success" },
+          { id: "overdue", value: stats.overdue, label: "Overdue", color: "text-destructive" },
+          { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
+          { id: "emergency", value: stats.emergency, label: "Emergency", color: "text-destructive" },
+        ].map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => setCardTab(s.id)}
+            className={cn(
+              "rounded-lg border bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elegant",
+              cardTab === s.id && "border-primary ring-2 ring-primary/30 bg-primary/5"
+            )}
+          >
+            <div className={cn("text-lg font-bold", s.color)}>{s.value}</div>
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
+              {s.icon && <Zap className="h-3 w-3" />} {s.label}
+            </div>
+          </button>
+        ))}
         <div className="rounded-lg border bg-card p-3 text-center shadow-card">
           <div className="text-lg font-bold text-foreground">{stats.avgProgress}%</div>
           <div className="text-[11px] text-muted-foreground uppercase tracking-wide">Avg Progress</div>
         </div>
+
       </div>
 
       {/* Branch tabs */}
