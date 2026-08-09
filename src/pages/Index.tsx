@@ -313,9 +313,32 @@ export default function Index() {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
       if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      switch (cardTab) {
+        case "services":
+        case "trading":
+        case "entrepreneur":
+        case "industrial_license":
+          if (c.type !== cardTab) return false;
+          break;
+        case "completed":
+          if (!completedIds.has(c.id)) return false;
+          break;
+        case "take_action":
+          if (!c.take_action) return false;
+          break;
+        case "emergency":
+          if (!c.emergency) return false;
+          break;
+        case "overdue":
+          if (!overdueIds.has(c.id)) return false;
+          break;
+        default:
+          break;
+      }
       return true;
     });
-  }, [companies, branchFilter, typeFilter, search]);
+  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds]);
+
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
