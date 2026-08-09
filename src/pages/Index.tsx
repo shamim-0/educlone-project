@@ -246,7 +246,24 @@ export default function Index() {
     if (role !== null && serviceDefs.length > 0) load();
   }, [role, branchId, serviceDefs]);
 
-  const extractCode = extractCompanyCode;
+
+  const overdueIds = useMemo(() => {
+    const set = new Set<string>();
+    companies.forEach((c) => {
+      const keys = getApplicableServiceDefs(c.type, serviceDefs).map((d) => d.key);
+      if (isCompanyOverdue(keys, stepStatuses[c.id] ?? {}, allPapersAt[c.id] ?? null)) set.add(c.id);
+    });
+    return set;
+  }, [companies, serviceDefs, stepStatuses, allPapersAt]);
+
+  const completedIds = useMemo(() => {
+    const set = new Set<string>();
+    companies.forEach((c) => {
+      const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
+      if ((stepCounts[c.id]?.done ?? 0) >= applicableTotal) set.add(c.id);
+    });
+    return set;
+  }, [companies, serviceDefs, stepCounts]);
 
   const stats = useMemo(() => {
     const total = companies.length;
@@ -254,12 +271,10 @@ export default function Index() {
     const trading = companies.filter((c) => c.type === "trading").length;
     const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
     const industrial = companies.filter((c) => c.type === "industrial_license").length;
-    const completed = companies.filter((c) => {
-      const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
-      return (stepCounts[c.id]?.done ?? 0) >= applicableTotal;
-    }).length;
+    const completed = completedIds.size;
     const takeAction = companies.filter((c) => c.take_action).length;
     const emergency = companies.filter((c) => c.emergency).length;
+    const overdue = overdueIds.size;
     const avgProgress =
       total > 0
         ? Math.round(
@@ -269,8 +284,9 @@ export default function Index() {
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, avgProgress };
-  }, [companies, stepCounts, serviceDefs]);
+    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress };
+  }, [companies, stepCounts, serviceDefs, completedIds, overdueIds]);
+
 
 
   const branchTabs = useMemo(() => {
