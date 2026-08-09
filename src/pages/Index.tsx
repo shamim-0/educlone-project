@@ -2,16 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { extractCompanyCode } from "@/lib/companySort";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Zap, Search } from "lucide-react";
+import { Zap, Search, MoreVertical, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs } from "@/lib/steps";
-import { isCompanyOverdue } from "@/lib/overdue";
+import { isCompanyOverdue, getOverdueServices } from "@/lib/overdue";
 
 const extractCode = extractCompanyCode;
 
