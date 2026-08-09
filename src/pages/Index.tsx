@@ -181,6 +181,8 @@ export default function Index() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("default");
+  const [cardTab, setCardTab] = useState<string>("total");
+
 
   useEffect(() => {
     document.title = "Dashboard | ISBI Tracker";
