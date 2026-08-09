@@ -58,10 +58,10 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant cursor-pointer hover:-translate-y-0.5 border-2",
         isEmergency && "border-destructive animate-border-pulse-red",
         !isEmergency && isTakeAction && "border-[rgb(249,115,22)] animate-border-pulse-orange",
-        !isEmergency && !isTakeAction && p.overdue && "border-[rgb(249,115,22)] animate-border-pulse-orange"
+        !isEmergency && !isTakeAction && isOverdue && "border-[rgb(249,115,22)] animate-border-pulse-orange"
       )}
     >
-      {(isEmergency || isTakeAction || p.overdue) && (
+      {(isEmergency || isTakeAction || isOverdue) && (
         <div className={cn(
           "-mx-5 -mt-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider",
           isEmergency ? "bg-destructive/15 border-destructive/40 text-destructive"
