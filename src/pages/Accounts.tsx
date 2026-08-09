@@ -633,9 +633,10 @@ export default function AccountsPage() {
                 const deal = baseDeal + extra;
                 const disc = Number(c.discount || 0);
                 const net = deal - disc;
-                const received = receivedByCompany[c.id] ?? 0;
-                const due = net - received;
-                const pct = net > 0 ? Math.min(100, Math.round((received / net) * 100)) : 0;
+                const periodReceived = receivedByCompany[c.id] ?? 0;
+                const allTimeReceived = allTimeReceivedByCompany[c.id] ?? 0;
+                const due = net - allTimeReceived;
+                const pct = net > 0 ? Math.min(100, Math.round((allTimeReceived / net) * 100)) : 0;
                 return (
                   <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
@@ -655,7 +656,7 @@ export default function AccountsPage() {
                     <TableCell className="text-right font-medium text-amber-600 dark:text-amber-400 tabular-nums">
                       {disc > 0 ? `− ${fmt(disc)}` : "—"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(received)}</TableCell>
+                    <TableCell className="text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(periodReceived)}</TableCell>
                     <TableCell className={`text-right font-semibold tabular-nums ${due > 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(due)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
