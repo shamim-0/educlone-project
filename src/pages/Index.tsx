@@ -55,17 +55,18 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant cursor-pointer hover:-translate-y-0.5 border-2",
         isEmergency && "border-destructive animate-border-pulse-red",
         !isEmergency && isTakeAction && "border-[rgb(249,115,22)] animate-border-pulse-orange",
-        !isEmergency && !isTakeAction && p.overdue && "border-destructive/40 ring-1 ring-destructive/30"
+        !isEmergency && !isTakeAction && p.overdue && "border-[rgb(249,115,22)] animate-border-pulse-orange"
       )}
     >
-      {(isEmergency || isTakeAction) && (
+      {(isEmergency || isTakeAction || p.overdue) && (
         <div className={cn(
           "-mx-5 -mt-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider",
           isEmergency ? "bg-destructive/15 border-destructive/40 text-destructive"
+            : isTakeAction ? "bg-[rgb(249,115,22)]/15 border-[rgb(249,115,22)]/40 text-[rgb(234,88,12)]"
             : "bg-[rgb(249,115,22)]/15 border-[rgb(249,115,22)]/40 text-[rgb(234,88,12)]"
         )}>
           <Zap className="h-3.5 w-3.5 fill-current" />
-          {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : "TAKE ACTION REQUIRED"}
+          {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : isTakeAction ? "TAKE ACTION REQUIRED" : "OVERDUE — ACTION REQUIRED"}
         </div>
       )}
 
