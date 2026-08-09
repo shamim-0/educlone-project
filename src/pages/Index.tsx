@@ -388,6 +388,48 @@ export default function Index() {
     }
   }, [filtered, sortBy, stepCounts]);
 
+  const generateOverdueReport = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const labelOf = (key: string) =>
+      serviceDefs.find((d) => d.key === key)?.label ?? key;
+    const rows: string[][] = [];
+    const list = companies
+      .filter((c) => overdueIds.has(c.id))
+      .sort((a, b) => extractCode(b.name) - extractCode(a.name));
+    list.forEach((c) => {
+      const keys = getApplicableServiceDefs(c.type, serviceDefs).map((d) => d.key);
+      const items = getOverdueServices(keys, stepStatuses[c.id] ?? {}, allPapersAt[c.id] ?? null);
+      items.forEach((it, i) => {
+        rows.push([
+          i === 0 ? c.name : "",
+          i === 0 ? (c.branches?.name ?? "—") : "",
+          labelOf(it.key),
+          it.status.replace(/_/g, " "),
+          it.target.toLocaleDateString("en-GB"),
+          `${it.daysOver} days`,
+        ]);
+      });
+    });
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(16);
+    doc.text("Overdue Services Report", 14, 16);
+    doc.setFontSize(10);
+    doc.text(
+      `Generated: ${new Date().toLocaleString("en-GB")}  |  Companies: ${list.length}  |  Overdue services: ${rows.length}`,
+      14,
+      23
+    );
+    autoTable(doc, {
+      startY: 28,
+      head: [["Company", "Branch", "Service", "Status", "Deadline", "Overdue By"]],
+      body: rows,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [220, 38, 38] },
+    });
+    doc.save(`overdue-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-end justify-between">
