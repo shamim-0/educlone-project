@@ -78,7 +78,7 @@ export default function CompanyDetail() {
   const profileNames = useProfileNames();
   const isAdmin = role === "admin";
   const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
-    isAdmin ? auditTitle(name, at, verb) : undefined;
+    auditTitle(name, at, verb);
 
   const STEP_DEFS = useServiceDefs();
 

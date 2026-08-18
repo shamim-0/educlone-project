@@ -79,7 +79,7 @@ export default function ExpensesPage() {
   const { role, username: myUsername } = useAuth();
   const profileNames = useProfileNames();
   const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
-    role === "admin" ? auditTitle(name, at, verb) : undefined;
+    auditTitle(name, at, verb);
   const canWrite = role === "admin";
 
   const [companies, setCompanies] = useState<Company[]>([]);
