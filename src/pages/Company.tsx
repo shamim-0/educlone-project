@@ -258,11 +258,9 @@ export default function CompanyPage() {
             key: "name",
             header: "Company Name",
             render: (r) => {
-              const title = isAdmin
-                ? (r.update_by
-                    ? auditTitle(r.update_by, r.updated_at, "Last updated by")
-                    : auditTitle(profileNames[r.created_by ?? ""], r.created_at, "Added by"))
-                : undefined;
+              const title = r.update_by
+                  ? auditTitle(r.update_by, r.updated_at, "Last updated by")
+                  : auditTitle(profileNames[r.created_by ?? ""], r.created_at, "Added by");
               return <span title={title}>{r.name}</span>;
             },
           },

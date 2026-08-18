@@ -79,7 +79,7 @@ export default function AccountsPage() {
   const { role, accountsAccess, branchId, username: myUsername } = useAuth();
   const profileNames = useProfileNames();
   const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
-    role === "admin" ? auditTitle(name, at, verb) : undefined;
+    auditTitle(name, at, verb);
   // Admin always writes. Editor writes only if accounts access is granted. Viewer is read-only.
   const canWrite = role === "admin" || ((role === "editor" || role === "sub_admin") && accountsAccess);
   const [companies, setCompanies] = useState<Company[]>([]);
