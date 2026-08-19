@@ -292,7 +292,7 @@ export default function CompanyPage() {
               return (
                 <div className="flex items-center gap-1">
                   <Badge className={cn("border", cur.cls)}>{cur.label}</Badge>
-                  {(role === "admin" || role === "sub_admin") && (
+                  {(role === "admin" || role === "sub_admin" || role === "editor") && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="icon" variant="ghost" className="h-7 w-7">
@@ -314,7 +314,7 @@ export default function CompanyPage() {
           },
         ]}
         onAdd={role === "admin" || role === "sub_admin" ? openAdd : undefined}
-        onEdit={role === "admin" || role === "sub_admin" ? openEdit : undefined}
+        onEdit={role === "admin" || role === "sub_admin" || role === "editor" ? openEdit : undefined}
         onDelete={role === "admin" ? onDelete : undefined}
       />
 
