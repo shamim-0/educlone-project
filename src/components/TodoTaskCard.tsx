@@ -167,7 +167,7 @@ export function TodoTaskCard({ task, perspective, onChanged, onEdit }: Props) {
         {task.admin_note && (
           <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
             <div className="text-xs font-semibold uppercase text-primary">
-              {task.creator_role === "admin" ? "Admin Note" : "Creator Note"}
+              {task.creator_role === "editor" ? "Creator Note" : "Admin Note"}
             </div>
             <p className="mt-1 whitespace-pre-wrap text-sm">{task.admin_note}</p>
           </div>
