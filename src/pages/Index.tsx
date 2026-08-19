@@ -341,11 +341,53 @@ export default function Index() {
     return Array.from(s).sort();
   }, [companies]);
 
+  const addedRange = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    switch (addedFilter) {
+      case "today":
+        return { from: start, to: end };
+      case "last7":
+        return { from: new Date(start.getTime() - 6 * 86400000), to: end };
+      case "last10":
+        return { from: new Date(start.getTime() - 9 * 86400000), to: end };
+      case "last30":
+        return { from: new Date(start.getTime() - 29 * 86400000), to: end };
+      case "this_month":
+        return { from: new Date(start.getFullYear(), start.getMonth(), 1), to: end };
+      case "last_month": {
+        const f = new Date(start.getFullYear(), start.getMonth() - 1, 1);
+        const t = new Date(start.getFullYear(), start.getMonth(), 0, 23, 59, 59, 999);
+        return { from: f, to: t };
+      }
+      case "custom": {
+        if (!fromDate && !toDate) return null;
+        const f = fromDate ? new Date(`${fromDate}T00:00:00`) : new Date(0);
+        const t = toDate ? new Date(`${toDate}T23:59:59`) : end;
+        return { from: f, to: t };
+      }
+      default:
+        return null;
+    }
+  }, [addedFilter, fromDate, toDate]);
+
+  const addedRangeLabel = useMemo(() => {
+    if (!addedRange) return "All time";
+    return `${addedRange.from.toLocaleDateString("en-GB")} – ${addedRange.to.toLocaleDateString("en-GB")}`;
+  }, [addedRange]);
+
   const filtered = useMemo(() => {
     return companies.filter((c) => {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
       if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      if (addedRange) {
+        const t = new Date(c.created_at).getTime();
+        if (t < addedRange.from.getTime() || t > addedRange.to.getTime()) return false;
+      }
+
       switch (cardTab) {
         case "services":
         case "trading":
