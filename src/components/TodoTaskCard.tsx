@@ -21,7 +21,7 @@ export interface TodoTaskCardData {
   assigned_to_username: string;
   created_by: string;
   created_by_username: string;
-  creator_role: "admin" | "editor";
+  creator_role: "admin" | "sub_admin" | "editor";
   deadline: string | null;
   admin_note: string | null;
   editor_note: string | null;
