@@ -79,7 +79,7 @@ export function AccountsDueDropdown() {
     <div className="min-w-[260px] max-w-xs rounded-lg border border-border bg-popover p-3 shadow-elegant">
       <div className="mb-2 flex items-center justify-between border-b border-border pb-2">
         <div className="flex items-center gap-1.5 text-sm font-semibold text-popover-foreground">
-          <AlertCircle className="h-4 w-4 text-rose-500" />
+          <AlertCircle className="h-4 w-4 text-destructive" />
           Due List
         </div>
         <div className="text-xs font-medium text-muted-foreground">
@@ -92,9 +92,9 @@ export function AccountsDueDropdown() {
         <div className="py-3 text-center text-xs text-muted-foreground">No outstanding dues.</div>
       ) : (
         <div className="max-h-[320px] overflow-y-auto pr-1">
-          <div className="mb-2 flex items-center justify-between rounded-md bg-rose-50 px-2 py-1.5 dark:bg-rose-950/30">
-            <span className="text-xs font-medium text-rose-600 dark:text-rose-400">Total Due</span>
-            <span className="text-xs font-bold text-rose-600 dark:text-rose-400">{fmt(total)}</span>
+          <div className="mb-2 flex items-center justify-between rounded-md bg-destructive/10 px-2 py-1.5">
+            <span className="text-xs font-medium text-destructive">Total Due</span>
+            <span className="text-xs font-bold text-destructive">{fmt(total)}</span>
           </div>
           <ul className="space-y-1">
             {items.map((c) => (
@@ -106,7 +106,7 @@ export function AccountsDueDropdown() {
                 )}
               >
                 <span className="truncate font-medium text-popover-foreground">{c.name}</span>
-                <span className="shrink-0 text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+                <span className="shrink-0 text-xs font-semibold tabular-nums text-destructive">
                   {fmt(c.due)}
                 </span>
               </li>
