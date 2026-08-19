@@ -11,7 +11,7 @@ import { fetchTodoTasks } from "@/lib/todoTasks";
 import type { TodoTaskCardData } from "@/components/TodoTaskCard";
 
 export default function MyTodoListPage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [tasks, setTasks] = useState<TodoTaskCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -97,7 +97,7 @@ export default function MyTodoListPage() {
       <TodoTaskDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        mode="editor"
+        mode={(role as any) ?? "editor"}
         editTask={editTask}
         onSaved={load}
       />
