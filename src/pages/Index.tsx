@@ -416,7 +416,7 @@ export default function Index() {
       }
       return true;
     });
-  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds]);
+  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds, addedRange]);
 
 
   const sorted = useMemo(() => {
