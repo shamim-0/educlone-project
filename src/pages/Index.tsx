@@ -496,6 +496,39 @@ export default function Index() {
     doc.save(`overdue-report-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
+  const generateNewCompaniesReport = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const list = [...filtered].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("New Companies Report", 14, 16);
+    doc.setFontSize(10);
+    doc.text(
+      `Period: ${addedRangeLabel}  |  Total: ${list.length}  |  Generated: ${new Date().toLocaleString("en-GB")}`,
+      14,
+      23
+    );
+    autoTable(doc, {
+      startY: 28,
+      head: [["#", "Company", "Branch", "Type", "Added On"]],
+      body: list.map((c, i) => [
+        String(i + 1),
+        c.name,
+        c.branches?.name ?? "—",
+        (c.type ?? "—").replace(/_/g, " "),
+        new Date(c.created_at).toLocaleDateString("en-GB"),
+      ]),
+      styles: { fontSize: 9, cellPadding: 2 },
+      headStyles: { fillColor: [37, 99, 235] },
+    });
+    doc.save(`new-companies-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+
+
   return (
     <div>
       <div className="mb-6 flex items-end justify-between">
