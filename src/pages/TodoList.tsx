@@ -130,7 +130,8 @@ export default function TodoListPage() {
       <TodoTaskDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        mode="admin"
+        mode={(role as any) ?? "admin"}
+        fullAccess={true}
         editTask={editTask}
         onSaved={load}
       />
