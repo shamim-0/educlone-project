@@ -23,7 +23,6 @@ import { useOverdueTodos } from "@/hooks/useOverdueTodos";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
-import { AccountsDueDropdown } from "@/components/AccountsDueDropdown";
 import { cn } from "@/lib/utils";
 
 const menu = [
@@ -242,7 +241,28 @@ export default function AppLayout() {
                         accountsHover ? "block" : "hidden"
                       )}
                     >
-                      <AccountsDueDropdown />
+                      <div className="min-w-[190px] rounded-lg border border-border bg-popover p-1.5 shadow-elegant">
+                        {[
+                          { to: "/accounts", label: "Accounts" },
+                          { to: "/due-list", label: "Due List" },
+                        ].map((s) => (
+                          <button
+                            key={s.to}
+                            onClick={() => {
+                              setAccountsHover(false);
+                              nav(s.to);
+                            }}
+                            className={cn(
+                              "w-full rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
+                              location.pathname === s.to
+                                ? "bg-primary text-primary-foreground"
+                                : "text-popover-foreground hover:bg-secondary"
+                            )}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );
