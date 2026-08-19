@@ -23,6 +23,7 @@ import { useOverdueTodos } from "@/hooks/useOverdueTodos";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
+import { AccountsDueDropdown } from "@/components/AccountsDueDropdown";
 import { cn } from "@/lib/utils";
 
 const menu = [
@@ -47,6 +48,7 @@ export default function AppLayout() {
   const { theme, toggle } = useTheme();
   const { mine: overdueMine, all: overdueAll } = useOverdueTodos();
   const [pwdOpen, setPwdOpen] = useState(false);
+  const [accountsHover, setAccountsHover] = useState(false);
 
   const pendingStatusItems = [
     { value: "", label: "🕐 Pending (default)" },
@@ -203,6 +205,44 @@ export default function AppLayout() {
                           );
                         })}
                       </div>
+                    </div>
+                  </div>
+                );
+              }
+              if (m.to === "/accounts") {
+                const accountsLinkEl = (
+                  <NavLink
+                    to={m.to}
+                    end={m.end}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-all whitespace-nowrap",
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-elegant"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      )
+                    }
+                  >
+                    <m.icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{m.label}</span>
+                    <ChevronDown className="h-3.5 w-3.5 opacity-75" />
+                  </NavLink>
+                );
+                return (
+                  <div
+                    key={m.to}
+                    className="relative"
+                    onMouseEnter={() => setAccountsHover(true)}
+                    onMouseLeave={() => setAccountsHover(false)}
+                  >
+                    {accountsLinkEl}
+                    <div
+                      className={cn(
+                        "absolute left-0 top-full z-50 pt-2",
+                        accountsHover ? "block" : "hidden"
+                      )}
+                    >
+                      <AccountsDueDropdown />
                     </div>
                   </div>
                 );
