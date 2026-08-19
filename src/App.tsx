@@ -12,6 +12,7 @@ import Company from "./pages/Company";
 import CompanyDetail from "./pages/CompanyDetail";
 import Branch from "./pages/Branch";
 import Accounts from "./pages/Accounts";
+import DueList from "./pages/DueList";
 import Expenses from "./pages/Expenses";
 import Pending from "./pages/Pending";
 import MyTasks from "./pages/MyTasks";
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/company/:id" element={<CompanyDetail />} />
               <Route path="/branch" element={<ProtectedRoute requireAdmin><Branch /></ProtectedRoute>} />
               <Route path="/accounts" element={<ProtectedRoute requireAccountsAccess><Accounts /></ProtectedRoute>} />
+              <Route path="/due-list" element={<ProtectedRoute requireAccountsAccess><DueList /></ProtectedRoute>} />
               <Route path="/expenses" element={<ProtectedRoute requireExpensesAccess><Expenses /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
               <Route path="/my-tasks" element={<ProtectedRoute requireRoles={["editor","sub_admin"]}><MyTasks /></ProtectedRoute>} />
