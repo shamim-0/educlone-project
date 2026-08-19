@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs } from "@/lib/steps";
 import { isCompanyOverdue, getOverdueServices } from "@/lib/overdue";
+import { auditTitle, fmtWhen } from "@/lib/audit";
 
 const extractCode = extractCompanyCode;
 
@@ -43,7 +44,7 @@ function deriveProgress(startAt: string | null, done: number, processing: number
   return { days, remaining, done: cappedDone, processing, percent, overdue, total: safeTotal, started };
 }
 
-function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses, startAt }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string>; startAt: string | null }) {
+function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses, startAt, lastUpdate }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string>; startAt: string | null; lastUpdate?: { label: string; by: string | null; at: string } | null }) {
   const p = deriveProgress(startAt, done, processing, totalSteps);
   const applicableKeys = applicableDefs.map((d) => d.key);
   const isCompanyOverdueNow = isCompanyOverdue(applicableKeys, stepStatuses, startAt);
@@ -90,6 +91,15 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         <Badge className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 capitalize">
           {c.type}
         </Badge>
+        {lastUpdate && (
+          <Badge
+            variant="outline"
+            className="font-normal text-[11px] max-w-full truncate"
+            title={auditTitle(lastUpdate.by, lastUpdate.at, `Last updated: ${lastUpdate.label} by`)}
+          >
+            {lastUpdate.label} · {lastUpdate.by || "—"} · {fmtWhen(lastUpdate.at)}
+          </Badge>
+        )}
       </div>
 
       {/* Step name chips — green=done, blue=processing, white=no_need, red=not_started */}
@@ -216,12 +226,12 @@ export default function Index() {
       const fetchAllSteps = async () => {
         const pageSize = 1000;
         let from = 0;
-        const all: { company_id: string; step_key: string; status: string; updated_at: string }[] = [];
+        const all: { company_id: string; step_key: string; status: string; updated_at: string; update_status_by: string | null }[] = [];
         // eslint-disable-next-line no-constant-condition
         while (true) {
           const { data, error } = await supabase
             .from("company_steps")
-            .select("company_id, step_key, status, updated_at")
+            .select("company_id, step_key, status, updated_at, update_status_by")
             .range(from, from + pageSize - 1);
           if (error || !data) break;
           all.push(...(data as any));
@@ -236,9 +246,16 @@ export default function Index() {
       const counts: Record<string, { done: number; processing: number; seen: Set<string> }> = {};
       const statuses: Record<string, Record<string, string>> = {};
       const papersAt: Record<string, string | null> = {};
+      const lastUpd: Record<string, { step_key: string; by: string | null; at: string }> = {};
       sRows.forEach((r) => {
         if (r.step_key === "all_papers_recieved" && r.status === "done") {
           papersAt[r.company_id] = r.updated_at;
+        }
+        if (r.updated_at && (r.update_status_by || "").trim()) {
+          const prev = lastUpd[r.company_id];
+          if (!prev || new Date(r.updated_at).getTime() > new Date(prev.at).getTime()) {
+            lastUpd[r.company_id] = { step_key: r.step_key, by: r.update_status_by, at: r.updated_at };
+          }
         }
         const co = companyMap.get(r.company_id);
         const applicable = getApplicableServiceDefs(co?.type ?? "", serviceDefs);
@@ -258,6 +275,7 @@ export default function Index() {
       setStepCounts(stripped);
       setStepStatuses(statuses);
       setAllPapersAt(papersAt);
+      setLastStepUpdate(lastUpd);
       setLoading(false);
     };
 
@@ -577,6 +595,12 @@ export default function Index() {
                 applicableDefs={applicable}
                 stepStatuses={stepStatuses[c.id] ?? {}}
                 startAt={allPapersAt[c.id] ?? null}
+                lastUpdate={(() => {
+                  const lu = lastStepUpdate[c.id];
+                  if (!lu) return null;
+                  const def = serviceDefs.find((d) => d.key === lu.step_key);
+                  return { label: def?.label ?? lu.step_key, by: lu.by, at: lu.at };
+                })()}
               />
             );
           })}
