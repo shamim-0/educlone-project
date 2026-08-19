@@ -25,7 +25,8 @@ export default function BranchPage() {
 
     const { data: companies } = await supabase
       .from("companies")
-      .select("branch_id");
+      .select("branch_id")
+      .eq("status", "active");
 
     const counts: Record<string, number> = {};
     for (const c of (companies ?? [])) {

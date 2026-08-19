@@ -117,6 +117,7 @@ export default function ExpensesPage() {
       supabase
         .from("companies")
         .select("id, name, type, branch_id, branches!companies_branch_id_fkey(name)")
+        .eq("status", "active")
         .order("name"),
       db.from("company_expenses").select("*"),
       db.from("company_extra_expenses").select("*").order("created_at", { ascending: false }),

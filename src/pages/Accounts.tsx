@@ -122,6 +122,7 @@ export default function AccountsPage() {
     let cq = supabase
       .from("companies")
       .select("id, name, type, total_deal, discount, deal_updated_by, deal_updated_at, discount_updated_by, discount_updated_at, branch_id, created_by, update_by, updated_at, created_at, branches!companies_branch_id_fkey(name)")
+      .eq("status", "active")
       .order("name");
     if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
     const [c, i, e] = await Promise.all([
