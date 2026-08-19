@@ -192,6 +192,7 @@ export default function Index() {
   const [stepCounts, setStepCounts] = useState<Record<string, { done: number; processing: number }>>({});
   const [stepStatuses, setStepStatuses] = useState<Record<string, Record<string, string>>>({});
   const [allPapersAt, setAllPapersAt] = useState<Record<string, string | null>>({});
+  const [lastStepUpdate, setLastStepUpdate] = useState<Record<string, { step_key: string; by: string | null; at: string }>>({});
 
   const [loading, setLoading] = useState(true);
   const [branchFilter, setBranchFilter] = useState<string>("all");
