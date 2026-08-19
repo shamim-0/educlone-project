@@ -210,6 +210,10 @@ export default function Index() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("default");
   const [cardTab, setCardTab] = useState<string>("total");
+  const [addedFilter, setAddedFilter] = useState<string>("all");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
 
 
   useEffect(() => {
