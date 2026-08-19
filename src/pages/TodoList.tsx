@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ListTodo, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Folder, ListTodo, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { TodoListView } from "@/components/TodoListView";
 import { TodoTaskDialog, type TodoTaskEditPayload } from "@/components/TodoTaskDialog";
@@ -13,6 +14,7 @@ export default function TodoListPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<TodoTaskEditPayload | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,6 +30,18 @@ export default function TodoListPage() {
   useEffect(() => { document.title = "To Do List | ISBI Tracker"; load(); }, [load]);
 
   const activeTasks = useMemo(() => tasks.filter((t) => t.status !== "completed"), [tasks]);
+
+  const groups = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; tasks: TodoTaskCardData[] }>();
+    activeTasks.forEach((t) => {
+      const key = t.assigned_to;
+      if (!map.has(key)) map.set(key, { id: key, name: t.assigned_to_username ?? "—", tasks: [] });
+      map.get(key)!.tasks.push(t);
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [activeTasks]);
+
+  const current = groups.find((g) => g.id === selectedUser) ?? null;
 
   const openCreate = () => { setEditTask(null); setDialogOpen(true); };
   const openEdit = (t: TodoTaskCardData) => {
@@ -57,14 +71,59 @@ export default function TodoListPage() {
         </div>
       </Card>
 
-      <TodoListView
-        tasks={activeTasks}
-        perspective="admin"
-        loading={loading}
-        onChanged={load}
-        onEdit={openEdit}
-        empty="No tasks yet. Create one to get started."
-      />
+      {!current ? (
+        loading ? (
+          <Card className="p-8 text-center text-muted-foreground">Loading…</Card>
+        ) : groups.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">No tasks yet. Create one to get started.</Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {groups.map((g) => {
+              const overdueCount = g.tasks.filter(
+                (t) => t.deadline && new Date(t.deadline) < new Date(new Date().toDateString())
+              ).length;
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => setSelectedUser(g.id)}
+                  className="text-left"
+                >
+                  <Card className="flex items-center gap-3 p-4 transition-colors hover:border-primary/50 hover:bg-muted/40">
+                    <div className="rounded-lg bg-primary/10 p-3">
+                      <Folder className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-semibold">{g.name}</div>
+                      <div className="text-xs text-muted-foreground">{g.tasks.length} active task{g.tasks.length === 1 ? "" : "s"}</div>
+                    </div>
+                    {overdueCount > 0 && (
+                      <Badge variant="destructive">{overdueCount} overdue</Badge>
+                    )}
+                  </Card>
+                </button>
+              );
+            })}
+          </div>
+        )
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setSelectedUser(null)}>
+              <ArrowLeft className="h-4 w-4" /> All Users
+            </Button>
+            <h2 className="font-display text-lg font-semibold">{current.name}</h2>
+            <Badge variant="secondary">{current.tasks.length}</Badge>
+          </div>
+          <TodoListView
+            tasks={current.tasks}
+            perspective="admin"
+            loading={false}
+            onChanged={load}
+            onEdit={openEdit}
+            empty="No tasks for this user."
+          />
+        </div>
+      )}
 
       <TodoTaskDialog
         open={dialogOpen}
