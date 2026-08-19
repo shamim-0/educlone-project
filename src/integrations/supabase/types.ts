@@ -106,6 +106,7 @@ export type Database = {
           passport_iqama: string | null
           phone: string | null
           slug: string | null
+          status: string
           take_action: boolean
           total_deal: number | null
           type: Database["public"]["Enums"]["company_type"]
@@ -138,6 +139,7 @@ export type Database = {
           passport_iqama?: string | null
           phone?: string | null
           slug?: string | null
+          status?: string
           take_action?: boolean
           total_deal?: number | null
           type?: Database["public"]["Enums"]["company_type"]
@@ -170,6 +172,7 @@ export type Database = {
           passport_iqama?: string | null
           phone?: string | null
           slug?: string | null
+          status?: string
           take_action?: boolean
           total_deal?: number | null
           type?: Database["public"]["Enums"]["company_type"]

@@ -69,7 +69,7 @@ export default function PendingPage() {
         }
         return all;
       };
-      let cq = supabase.from("companies").select("id,name,type,branch_id,created_at,emergency,take_action").order("name");
+      let cq = supabase.from("companies").select("id,name,type,branch_id,created_at,emergency,take_action").eq("status", "active").order("name");
       if (role !== "admin" && branchId) cq = cq.eq("branch_id", branchId);
       const [c, b, s] = await Promise.all([
         cq,

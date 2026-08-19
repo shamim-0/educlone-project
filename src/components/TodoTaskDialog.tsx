@@ -65,7 +65,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const c = await supabase.from("companies").select("id,name");
+      const c = await supabase.from("companies").select("id,name").eq("status", "active");
       setCompanies(sortCompanies((c.data as Company[]) ?? []));
       if (mode === "admin") {
         setAllowedKeys(null);

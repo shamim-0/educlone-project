@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { Search, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +30,7 @@ interface Company {
   created_by?: string | null;
   update_by?: string | null;
   updated_at?: string | null;
+  status?: string | null;
   branches?: { name: string } | null;
 }
 interface Branch { id: string; name: string; }
@@ -67,7 +69,7 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, branches!companies_branch_id_fkey(name)")
+      .select("id, name, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
@@ -120,6 +122,22 @@ export default function CompanyPage() {
     if (!confirm(`Delete "${row.name}"?`)) return;
     const { error } = await supabase.from("companies").delete().eq("id", row.id);
     if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
+  };
+
+  const STATUS_OPTS: { value: string; label: string; cls: string }[] = [
+    { value: "active", label: "Active", cls: "bg-success text-success-foreground border-success" },
+    { value: "paused", label: "Paused", cls: "bg-amber-500 text-white border-amber-500" },
+    { value: "inactive", label: "Inactive", cls: "bg-destructive text-destructive-foreground border-destructive" },
+  ];
+
+  const setStatus = async (row: Company, status: string) => {
+    const { error } = await supabase
+      .from("companies")
+      .update({ status, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any)
+      .eq("id", row.id);
+    if (error) { toast.error(error.message); return; }
+    setRows((prev) => prev.map((c) => (c.id === row.id ? { ...c, status } : c)));
+    toast.success(`Status set to ${status}`);
   };
 
   const onPackageChange = (v: string) => {
@@ -266,6 +284,34 @@ export default function CompanyPage() {
           },
           { key: "branch", header: "Branch", render: (r) => r.branches?.name ?? "—" },
           { key: "type", header: "Type", render: (r) => <Badge variant="secondary" className="capitalize">{r.type}</Badge> },
+          {
+            key: "status",
+            header: "Status",
+            render: (r) => {
+              const cur = STATUS_OPTS.find((o) => o.value === (r.status ?? "active")) ?? STATUS_OPTS[0];
+              return (
+                <div className="flex items-center gap-1">
+                  <Badge className={cn("border", cur.cls)}>{cur.label}</Badge>
+                  {(role === "admin" || role === "sub_admin") && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-7 w-7">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        {STATUS_OPTS.map((o) => (
+                          <DropdownMenuItem key={o.value} onClick={() => setStatus(r, o.value)}>
+                            {o.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              );
+            },
+          },
         ]}
         onAdd={role === "admin" || role === "sub_admin" ? openAdd : undefined}
         onEdit={role === "admin" || role === "sub_admin" ? openEdit : undefined}

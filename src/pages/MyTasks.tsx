@@ -47,7 +47,7 @@ export default function MyTasksPage() {
       };
       const [a, c, b, s] = await Promise.all([
         supabase.from("user_service_assignments").select("service_key").eq("user_id", user.id),
-        supabase.from("companies").select("id,name,type,branch_id,emergency,take_action").order("name"),
+        supabase.from("companies").select("id,name,type,branch_id,emergency,take_action").eq("status", "active").order("name"),
         supabase.from("branches").select("id,name"),
         fetchAllSteps(),
       ]);
