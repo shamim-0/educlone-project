@@ -50,7 +50,7 @@ const App = () => (
               <Route path="/expenses" element={<ProtectedRoute requireExpensesAccess><Expenses /></ProtectedRoute>} />
               <Route path="/pending" element={<Pending />} />
               <Route path="/my-tasks" element={<ProtectedRoute requireRoles={["editor","sub_admin"]}><MyTasks /></ProtectedRoute>} />
-              <Route path="/todo-list" element={<ProtectedRoute requireAdmin><TodoList /></ProtectedRoute>} />
+              <Route path="/todo-list" element={<ProtectedRoute requireRoles={["admin","sub_admin","editor"]}><TodoList /></ProtectedRoute>} />
               <Route path="/my-todo-list" element={<ProtectedRoute requireRoles={["editor","sub_admin","admin"]}><MyTodoList /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
               <Route path="/services" element={<ProtectedRoute requireRoles={["admin","sub_admin"]}><Services /></ProtectedRoute>} />
