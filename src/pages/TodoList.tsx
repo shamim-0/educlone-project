@@ -11,6 +11,7 @@ import { fetchTodoTasks } from "@/lib/todoTasks";
 import type { TodoTaskCardData } from "@/components/TodoTaskCard";
 
 export default function TodoListPage() {
+  const { role } = useAuth();
   const [tasks, setTasks] = useState<TodoTaskCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
