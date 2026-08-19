@@ -64,7 +64,7 @@ export default function TodoListPage() {
               <ListTodo className="h-6 w-6 text-primary" /> To Do List
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Assign tasks with deadlines to editors and track progress.
+              Assign tasks with deadlines to editors and sub-admins and track progress.
             </p>
           </div>
           <Button onClick={openCreate} className="gap-2">
