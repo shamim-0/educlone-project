@@ -210,6 +210,10 @@ export default function Index() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("default");
   const [cardTab, setCardTab] = useState<string>("total");
+  const [addedFilter, setAddedFilter] = useState<string>("all");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
 
 
   useEffect(() => {
@@ -341,11 +345,53 @@ export default function Index() {
     return Array.from(s).sort();
   }, [companies]);
 
+  const addedRange = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    switch (addedFilter) {
+      case "today":
+        return { from: start, to: end };
+      case "last7":
+        return { from: new Date(start.getTime() - 6 * 86400000), to: end };
+      case "last10":
+        return { from: new Date(start.getTime() - 9 * 86400000), to: end };
+      case "last30":
+        return { from: new Date(start.getTime() - 29 * 86400000), to: end };
+      case "this_month":
+        return { from: new Date(start.getFullYear(), start.getMonth(), 1), to: end };
+      case "last_month": {
+        const f = new Date(start.getFullYear(), start.getMonth() - 1, 1);
+        const t = new Date(start.getFullYear(), start.getMonth(), 0, 23, 59, 59, 999);
+        return { from: f, to: t };
+      }
+      case "custom": {
+        if (!fromDate && !toDate) return null;
+        const f = fromDate ? new Date(`${fromDate}T00:00:00`) : new Date(0);
+        const t = toDate ? new Date(`${toDate}T23:59:59`) : end;
+        return { from: f, to: t };
+      }
+      default:
+        return null;
+    }
+  }, [addedFilter, fromDate, toDate]);
+
+  const addedRangeLabel = useMemo(() => {
+    if (!addedRange) return "All time";
+    return `${addedRange.from.toLocaleDateString("en-GB")} – ${addedRange.to.toLocaleDateString("en-GB")}`;
+  }, [addedRange]);
+
   const filtered = useMemo(() => {
     return companies.filter((c) => {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
       if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      if (addedRange) {
+        const t = new Date(c.created_at).getTime();
+        if (t < addedRange.from.getTime() || t > addedRange.to.getTime()) return false;
+      }
+
       switch (cardTab) {
         case "services":
         case "trading":
@@ -370,7 +416,7 @@ export default function Index() {
       }
       return true;
     });
-  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds]);
+  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds, addedRange]);
 
 
   const sorted = useMemo(() => {
@@ -449,6 +495,39 @@ export default function Index() {
     });
     doc.save(`overdue-report-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
+
+  const generateNewCompaniesReport = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const list = [...filtered].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("New Companies Report", 14, 16);
+    doc.setFontSize(10);
+    doc.text(
+      `Period: ${addedRangeLabel}  |  Total: ${list.length}  |  Generated: ${new Date().toLocaleString("en-GB")}`,
+      14,
+      23
+    );
+    autoTable(doc, {
+      startY: 28,
+      head: [["#", "Company", "Branch", "Type", "Added On"]],
+      body: list.map((c, i) => [
+        String(i + 1),
+        c.name,
+        c.branches?.name ?? "—",
+        (c.type ?? "—").replace(/_/g, " "),
+        new Date(c.created_at).toLocaleDateString("en-GB"),
+      ]),
+      styles: { fontSize: 9, cellPadding: 2 },
+      headStyles: { fillColor: [37, 99, 235] },
+    });
+    doc.save(`new-companies-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+
 
   return (
     <div>
@@ -574,6 +653,42 @@ export default function Index() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Added-date filter + report */}
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
+        <span className="text-sm font-semibold text-foreground">Added:</span>
+        <Select value={addedFilter} onValueChange={setAddedFilter}>
+          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All time</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="last7">Last 7 days</SelectItem>
+            <SelectItem value="last10">Last 10 days</SelectItem>
+            <SelectItem value="last30">Last 30 days</SelectItem>
+            <SelectItem value="this_month">This month</SelectItem>
+            <SelectItem value="last_month">Last month</SelectItem>
+            <SelectItem value="custom">Custom range</SelectItem>
+          </SelectContent>
+        </Select>
+        {addedFilter === "custom" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" />
+            <span className="text-muted-foreground text-sm">to</span>
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" />
+          </div>
+        )}
+        <span className="text-sm text-muted-foreground">
+          {filtered.length} companies · {addedRangeLabel}
+        </span>
+        <button
+          type="button"
+          onClick={generateNewCompaniesReport}
+          className="ml-auto inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:opacity-90"
+        >
+          <FileDown className="h-4 w-4" /> Generate Report
+        </button>
+      </div>
+
 
       {loading ? (
         <p className="text-muted-foreground text-center py-12">Loading…</p>
