@@ -11,7 +11,7 @@ import { fetchTodoTasks } from "@/lib/todoTasks";
 import type { TodoTaskCardData } from "@/components/TodoTaskCard";
 
 export default function MyTodoListPage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [tasks, setTasks] = useState<TodoTaskCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,8 +32,8 @@ export default function MyTodoListPage() {
   useEffect(() => { document.title = "My To Do List | ISBI Tracker"; load(); }, [load]);
 
   const active = useMemo(() => tasks.filter((t) => t.status !== "completed"), [tasks]);
-  const adminTasks = useMemo(() => active.filter((t) => t.creator_role === "admin"), [active]);
-  const ownTasks = useMemo(() => active.filter((t) => t.creator_role === "editor"), [active]);
+  const adminTasks = useMemo(() => active.filter((t) => t.created_by !== user?.id && t.creator_role !== "editor"), [active, user?.id]);
+  const ownTasks = useMemo(() => active.filter((t) => t.created_by === user?.id), [active, user?.id]);
 
 
   const openCreate = () => { setEditTask(null); setDialogOpen(true); };
@@ -97,7 +97,7 @@ export default function MyTodoListPage() {
       <TodoTaskDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        mode="editor"
+        mode={(role as any) ?? "editor"}
         editTask={editTask}
         onSaved={load}
       />

@@ -27,7 +27,7 @@ export function useOverdueTodos() {
       if (cancelled) return;
       setMine(mineRes?.count ?? 0);
 
-      if (role === "admin") {
+      if (role === "admin" || role === "sub_admin" || role === "editor") {
         const allRes = await supabase
           .from("todo_tasks")
           .select("id", { count: "exact", head: true })

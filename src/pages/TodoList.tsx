@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Folder, ListTodo, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 import { TodoListView } from "@/components/TodoListView";
 import { TodoTaskDialog, type TodoTaskEditPayload } from "@/components/TodoTaskDialog";
 import { fetchTodoTasks } from "@/lib/todoTasks";
 import type { TodoTaskCardData } from "@/components/TodoTaskCard";
 
 export default function TodoListPage() {
+  const { role } = useAuth();
   const [tasks, setTasks] = useState<TodoTaskCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -62,7 +64,7 @@ export default function TodoListPage() {
               <ListTodo className="h-6 w-6 text-primary" /> To Do List
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Assign tasks with deadlines to editors and track progress.
+              Assign tasks with deadlines to editors and sub-admins and track progress.
             </p>
           </div>
           <Button onClick={openCreate} className="gap-2">
@@ -128,7 +130,8 @@ export default function TodoListPage() {
       <TodoTaskDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        mode="admin"
+        mode={(role as any) ?? "admin"}
+        fullAccess={true}
         editTask={editTask}
         onSaved={load}
       />

@@ -36,15 +36,17 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSaved?: () => void;
-  /** admin => admin creator; editor => editor self-create */
-  mode: "admin" | "editor";
-  /** Optional preselected assignee (admin mode from Users page) */
+  /** actual role stored in creator_role */
+  mode: "admin" | "sub_admin" | "editor";
+  /** if true, behaves like admin: assign to any editor/sub_admin, all services, edit all fields */
+  fullAccess?: boolean;
+  /** Optional preselected assignee (full-access mode from Users page) */
   presetAssignee?: { id: string; username: string };
   /** If provided, dialog is in edit mode */
   editTask?: TodoTaskEditPayload | null;
 }
 
-export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssignee, editTask }: Props) {
+export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, fullAccess = false, presetAssignee, editTask }: Props) {
   const { user } = useAuth();
   const defs = useServiceDefs();
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -59,7 +61,6 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-
   const isEdit = !!editTask;
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
     (async () => {
       const c = await supabase.from("companies").select("id,name").eq("status", "active");
       setCompanies(sortCompanies((c.data as Company[]) ?? []));
-      if (mode === "admin") {
+      if (fullAccess) {
         setAllowedKeys(null);
         const r = await supabase.from("user_roles").select("user_id, role").in("role", ["editor", "sub_admin"]);
         const ids = Array.from(new Set(((r.data as any[]) ?? []).map((x) => x.user_id)));
@@ -82,8 +83,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
         setAllowedKeys(((a.data as any[]) ?? []).map((r) => r.service_key));
       }
     })();
-  }, [open, mode, user?.id]);
-
+  }, [open, fullAccess, user?.id]);
 
   useEffect(() => {
     if (!open) return;
@@ -91,17 +91,17 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
       setCompanyId(editTask.company_id);
       setAssignedTo(editTask.assigned_to);
       setDeadline(editTask.deadline ? new Date(editTask.deadline) : undefined);
-      setNote(mode === "admin" ? (editTask.admin_note ?? "") : (editTask.admin_note ?? ""));
+      setNote(editTask.admin_note ?? "");
       setServices(new Set(editTask.services));
     } else {
       setCompanyId("");
-      setAssignedTo(presetAssignee?.id ?? (mode === "editor" ? user?.id ?? "" : ""));
+      setAssignedTo(presetAssignee?.id ?? (fullAccess ? "" : (user?.id ?? "")));
       setDeadline(undefined);
       setNote("");
       setServices(new Set());
     }
     setSearch("");
-  }, [open, editTask, presetAssignee, mode, user?.id]);
+  }, [open, editTask, presetAssignee, fullAccess, user?.id]);
 
   const toggle = (key: string) => {
     setServices((prev) => {
@@ -112,13 +112,13 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
   };
 
   const filteredDefs = useMemo(() => {
-    const allow = mode === "admin" || !allowedKeys ? null : new Set(allowedKeys);
+    const allow = fullAccess || !allowedKeys ? null : new Set(allowedKeys);
     return defs.filter(
       (d) =>
         (!allow || allow.has(d.key) || services.has(d.key)) &&
         d.label.toLowerCase().includes(search.toLowerCase())
     );
-  }, [defs, search, mode, allowedKeys, services]);
+  }, [defs, search, fullAccess, allowedKeys, services]);
 
   const filteredCompanies = useMemo(
     () => companies.filter((c) => c.name.toLowerCase().includes(companySearch.toLowerCase())),
@@ -137,11 +137,11 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
         company_id: companyId,
         deadline: deadline ? format(deadline, "yyyy-MM-dd") : null,
       };
-      if (mode === "admin") {
+      if (fullAccess) {
         update.assigned_to = assignedTo;
         update.admin_note = note || null;
       } else {
-        update.admin_note = note || null; // editor-created stores their own note in admin_note field
+        update.admin_note = note || null;
       }
       const { error } = await supabase.from("todo_tasks").update(update).eq("id", editTask.id);
       if (error) { setSaving(false); return toast.error(error.message); }
@@ -211,11 +211,11 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
             </Select>
           </div>
 
-          {mode === "admin" && !presetAssignee && (
+          {fullAccess && !presetAssignee && (
             <div>
               <Label>Assign To</Label>
               <Select value={assignedTo} onValueChange={setAssignedTo}>
-                <SelectTrigger><SelectValue placeholder="Select editor" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select editor / sub-admin" /></SelectTrigger>
                 <SelectContent>
                   {editors.map((e) => (
                     <SelectItem key={e.id} value={e.id}>{e.username}</SelectItem>
@@ -244,7 +244,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, presetAssign
           </div>
 
           <div>
-            <Label>{mode === "admin" ? "Admin Note" : "Note"}</Label>
+            <Label>{mode === "editor" ? "Note" : "Admin Note"}</Label>
             <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Optional notes..." />
           </div>
 
