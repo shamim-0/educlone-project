@@ -48,6 +48,7 @@ export default function AppLayout() {
   const { theme, toggle } = useTheme();
   const { mine: overdueMine, all: overdueAll } = useOverdueTodos();
   const [pwdOpen, setPwdOpen] = useState(false);
+  const [accountsHover, setAccountsHover] = useState(false);
 
   const pendingStatusItems = [
     { value: "", label: "🕐 Pending (default)" },
