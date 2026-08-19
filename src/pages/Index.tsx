@@ -654,6 +654,42 @@ export default function Index() {
         </Select>
       </div>
 
+      {/* Added-date filter + report */}
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
+        <span className="text-sm font-semibold text-foreground">Added:</span>
+        <Select value={addedFilter} onValueChange={setAddedFilter}>
+          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All time</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="last7">Last 7 days</SelectItem>
+            <SelectItem value="last10">Last 10 days</SelectItem>
+            <SelectItem value="last30">Last 30 days</SelectItem>
+            <SelectItem value="this_month">This month</SelectItem>
+            <SelectItem value="last_month">Last month</SelectItem>
+            <SelectItem value="custom">Custom range</SelectItem>
+          </SelectContent>
+        </Select>
+        {addedFilter === "custom" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" />
+            <span className="text-muted-foreground text-sm">to</span>
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" />
+          </div>
+        )}
+        <span className="text-sm text-muted-foreground">
+          {filtered.length} companies · {addedRangeLabel}
+        </span>
+        <button
+          type="button"
+          onClick={generateNewCompaniesReport}
+          className="ml-auto inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:opacity-90"
+        >
+          <FileDown className="h-4 w-4" /> Generate Report
+        </button>
+      </div>
+
+
       {loading ? (
         <p className="text-muted-foreground text-center py-12">Loading…</p>
       ) : sorted.length === 0 ? (
