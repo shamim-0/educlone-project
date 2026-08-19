@@ -4,12 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { sortCompanies } from "@/lib/companySort";
 
 interface DueItem {
   id: string;
   name: string;
-  code: string | null;
   due: number;
   deal: number;
   received: number;
@@ -31,7 +29,7 @@ export default function DueList() {
       const restrictToBranch = role !== "admin" && !!branchId;
       let cq = supabase
         .from("companies")
-        .select("id, name, isbi_code, total_deal, discount, branch_id")
+        .select("id, name, total_deal, discount, branch_id")
         .eq("status", "active");
       if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
 
@@ -71,7 +69,6 @@ export default function DueList() {
           return {
             id: x.id,
             name: x.name,
-            code: x.isbi_code ?? null,
             deal: net,
             received,
             due: net - received,
@@ -92,8 +89,7 @@ export default function DueList() {
       items.filter(
         (i) =>
           !q ||
-          i.name.toLowerCase().includes(q.toLowerCase()) ||
-          (i.code ?? "").toLowerCase().includes(q.toLowerCase())
+          i.name.toLowerCase().includes(q.toLowerCase())
       ),
     [items, q]
   );
@@ -119,7 +115,7 @@ export default function DueList() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search company or ISBI code…"
+          placeholder="Search company…"
           className="pl-9"
         />
       </div>
@@ -156,7 +152,6 @@ export default function DueList() {
                   className="cursor-pointer border-t border-border transition-colors hover:bg-secondary/50"
                 >
                   <td className="px-4 py-3 font-medium text-foreground">
-                    {c.code ? <span className="text-muted-foreground">{c.code} · </span> : null}
                     {c.name}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmt(c.deal)}</td>
