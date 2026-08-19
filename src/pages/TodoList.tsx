@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Folder, ListTodo, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 import { TodoListView } from "@/components/TodoListView";
 import { TodoTaskDialog, type TodoTaskEditPayload } from "@/components/TodoTaskDialog";
 import { fetchTodoTasks } from "@/lib/todoTasks";
