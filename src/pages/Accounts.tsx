@@ -144,6 +144,18 @@ export default function AccountsPage() {
 
   useEffect(() => { document.title = "Accounts | ISBI Tracker"; load(); }, []);
 
+  /** deep-link: /accounts?manage=<companyId> opens the manage dialog */
+  useEffect(() => {
+    const id = searchParams.get("manage");
+    if (!id || openCompany) return;
+    const c = companies.find((x) => x.id === id);
+    if (c) {
+      openManage(c);
+      searchParams.delete("manage");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [companies, searchParams]);
+
   /** installments limited to the selected day / month (payment_date based) */
   const dateFilterActive = !!dayFilter || !!monthFilter || !!fromDate || !!toDate;
   const periodInstallments = useMemo(() => {
