@@ -215,6 +215,7 @@ export default function DueList() {
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
+            <SelectItem value="default">🔢 Default (Company order)</SelectItem>
             <SelectItem value="due_desc">💰 Highest Due</SelectItem>
             <SelectItem value="name_asc">A–Z</SelectItem>
             <SelectItem value="name_desc">Z–A</SelectItem>
