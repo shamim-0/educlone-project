@@ -133,7 +133,8 @@ export default function DueList() {
         case "name_desc": return b.name.localeCompare(a.name);
         case "received_desc": return b.received - a.received;
         case "deal_desc": return b.deal - a.deal;
-        default: return b.due - a.due;
+        case "due_desc": return b.due - a.due;
+        default: return compareCompanies(a, b);
       }
     });
     return arr;
