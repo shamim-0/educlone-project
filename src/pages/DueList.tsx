@@ -9,6 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { compareCompanies } from "@/lib/companySort";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
@@ -33,7 +34,7 @@ export default function DueList() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [branchFilter, setBranchFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("due_desc");
+  const [sortBy, setSortBy] = useState<string>("default");
   const [dayFilter, setDayFilter] = useState<string>("");
   const [monthFilter, setMonthFilter] = useState<string>("");
   const [fromDate, setFromDate] = useState<string>("");
@@ -133,7 +134,8 @@ export default function DueList() {
         case "name_desc": return b.name.localeCompare(a.name);
         case "received_desc": return b.received - a.received;
         case "deal_desc": return b.deal - a.deal;
-        default: return b.due - a.due;
+        case "due_desc": return b.due - a.due;
+        default: return compareCompanies(a, b);
       }
     });
     return arr;
@@ -213,6 +215,7 @@ export default function DueList() {
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
+            <SelectItem value="default">🔢 Default (Company order)</SelectItem>
             <SelectItem value="due_desc">💰 Highest Due</SelectItem>
             <SelectItem value="name_asc">A–Z</SelectItem>
             <SelectItem value="name_desc">Z–A</SelectItem>
@@ -302,7 +305,7 @@ export default function DueList() {
               filtered.map((c) => (
                 <tr
                   key={c.id}
-                  onClick={() => nav(`/company/${c.id}`)}
+                  onClick={() => nav(`/accounts?manage=${c.id}`)}
                   className="cursor-pointer border-t border-border transition-colors hover:bg-secondary/50"
                 >
                   <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>

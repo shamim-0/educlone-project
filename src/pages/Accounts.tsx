@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { extractCompanyCode } from "@/lib/companySort";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -93,6 +94,7 @@ export default function AccountsPage() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
   const [editingSetup, setEditingSetup] = useState(false);
@@ -142,6 +144,18 @@ export default function AccountsPage() {
   };
 
   useEffect(() => { document.title = "Accounts | ISBI Tracker"; load(); }, []);
+
+  /** deep-link: /accounts?manage=<companyId> opens the manage dialog */
+  useEffect(() => {
+    const id = searchParams.get("manage");
+    if (!id || openCompany) return;
+    const c = companies.find((x) => x.id === id);
+    if (c) {
+      openManage(c);
+      searchParams.delete("manage");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [companies, searchParams]);
 
   /** installments limited to the selected day / month (payment_date based) */
   const dateFilterActive = !!dayFilter || !!monthFilter || !!fromDate || !!toDate;
