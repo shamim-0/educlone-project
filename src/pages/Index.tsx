@@ -460,9 +460,7 @@ export default function Index() {
     const labelOf = (key: string) =>
       serviceDefs.find((d) => d.key === key)?.label ?? key;
     const rows: string[][] = [];
-    const list = companies
-      .filter((c) => overdueIds.has(c.id))
-      .sort((a, b) => extractCode(b.name) - extractCode(a.name));
+    const list = sorted.filter((c) => overdueIds.has(c.id));
     list.forEach((c) => {
       const keys = getApplicableServiceDefs(c.type, serviceDefs).map((d) => d.key);
       const items = getOverdueServices(keys, stepStatuses[c.id] ?? {}, allPapersAt[c.id] ?? null);
@@ -499,9 +497,7 @@ export default function Index() {
   const generateNewCompaniesReport = async () => {
     const { default: jsPDF } = await import("jspdf");
     const autoTable = (await import("jspdf-autotable")).default;
-    const list = [...filtered].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
+    const list = [...sorted];
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text("New Companies Report", 14, 16);
