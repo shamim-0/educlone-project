@@ -94,6 +94,7 @@ export default function AccountsPage() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
   const [editingSetup, setEditingSetup] = useState(false);
