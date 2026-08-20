@@ -34,7 +34,7 @@ export default function DueList() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [branchFilter, setBranchFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("due_desc");
+  const [sortBy, setSortBy] = useState<string>("default");
   const [dayFilter, setDayFilter] = useState<string>("");
   const [monthFilter, setMonthFilter] = useState<string>("");
   const [fromDate, setFromDate] = useState<string>("");
