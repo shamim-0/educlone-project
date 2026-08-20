@@ -305,7 +305,7 @@ export default function DueList() {
               filtered.map((c) => (
                 <tr
                   key={c.id}
-                  onClick={() => nav(`/company/${c.id}`)}
+                  onClick={() => nav(`/accounts?manage=${c.id}`)}
                   className="cursor-pointer border-t border-border transition-colors hover:bg-secondary/50"
                 >
                   <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
