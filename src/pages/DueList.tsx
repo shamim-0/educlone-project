@@ -49,7 +49,7 @@ export default function DueList() {
       const restrictToBranch = role !== "admin" && !!branchId;
       let cq = supabase
         .from("companies")
-        .select("id, name, total_deal, discount, branch_id, branches(name)")
+        .select("id, name, total_deal, discount, branch_id, branches!companies_branch_id_fkey(name)")
         .eq("status", "active");
       if (restrictToBranch) cq = cq.eq("branch_id", branchId as string);
 
