@@ -1,83 +1,23 @@
-## To Do List Feature — Plan
+# Separate "status change date" from "last update date"
 
-A new task management system separate from the existing "Assign Task" (service assignments). Admin creates tasks with deadlines & notes; editors act on them and can create their own.
+## Problem
+Every service step keeps only one timestamp (`updated_at`). Saving a note later overwrites it, so the Applied/Done/Processing date moves forward and all countdowns (MISA 10 working days, CR, Saudi Embassy, etc.) become wrong.
 
-### 1. Database (new migration)
+## Solution
+Add a second timestamp on each service step that changes **only** when the status changes.
 
-**Table: `todo_tasks`**
-- `id` uuid PK
-- `company_id` uuid → companies
-- `assigned_to` uuid → auth.users (the editor)
-- `created_by` uuid → auth.users (admin or editor themselves)
-- `creator_role` text ('admin' | 'editor') — determines edit/delete permissions
-- `deadline` date
-- `admin_note` text
-- `editor_note` text
-- `status` text ('pending' | 'in_progress' | 'completed') default 'pending'
-- `created_at`, `updated_at`
+- New column `status_changed_at` on the service-steps table.
+- Backfill it with the existing `updated_at` value for all existing rows, so no historical date is lost (both dates identical for now, exactly as requested).
+- A database trigger updates `status_changed_at` only when the status value actually changes; note/credential/subtask edits leave it untouched.
 
-**Table: `todo_task_services`** (many-to-many)
-- `id` uuid PK
-- `task_id` uuid → todo_tasks (cascade)
-- `service_key` text
-- unique(task_id, service_key)
+## What changes in the app
+- All deadline/countdown logic (MISA two-phase 10 working days, CR, Saudi Embassy, Saudi Qiwa/Absher, Mother Company Formation, overdue detection) reads the status-change date instead of the last-update date.
+- Each service card shows both:
+  - Status line: "Applied on <status change date>"
+  - Below: "Last updated by <user> • <last update date>" (unchanged behaviour)
+- Overdue calculations on the dashboard and the overdue report use the status-change date too.
 
-**RLS policies:**
-- Admin (`has_role(uid,'admin')`) → full CRUD on both tables
-- Editor → SELECT tasks where `assigned_to = auth.uid()`
-- Editor → UPDATE tasks where `assigned_to = auth.uid()`:
-  - if `creator_role='admin'`: only status & editor_note (enforced via trigger checking OLD vs NEW on other fields)
-  - if `creator_role='editor' AND created_by=auth.uid()`: all fields
-- Editor → INSERT tasks where `created_by=auth.uid() AND assigned_to=auth.uid() AND creator_role='editor'`
-- Editor → DELETE tasks where `created_by=auth.uid() AND creator_role='editor'`
-- Grants: `authenticated` (SELECT/INSERT/UPDATE/DELETE), `service_role` ALL
-
-### 2. New Components
-
-**`src/components/TodoTaskDialog.tsx`** — Create/edit dialog
-- Fields: Company (searchable select), Services (multi-checkbox using existing service defs), Deadline (shadcn DatePicker), Note (textarea)
-- For admin: also picks target editor (user select filtered to editors)
-- Reused for both admin-create and editor-create with mode prop
-
-**`src/components/TodoTaskCard.tsx`** — Task card
-- Header: Company name + status badge (color by status: pending=blue, in_progress=amber, completed=green)
-- Assigned By, Assigned To, Services list (chips)
-- Deadline with warning color (≤3 days = amber, overdue = red)
-- Company progress bar (computed from `company_steps` — % of `done` steps for the selected services)
-- Admin Note (read-only for editor), Editor Note (editable for assigned editor)
-- Status selector, Save button
-- Edit/Delete buttons shown based on permission rules
-
-### 3. New Pages
-
-**`src/pages/TodoList.tsx`** — Admin page (route `/todo-list`, admin only)
-- Header with "Create Task" button → TodoTaskDialog
-- Filters: search (company/service), status filter, sort by deadline
-- Grid of TodoTaskCards (all tasks visible)
-
-**`src/pages/MyTodoList.tsx`** — Editor page (route `/my-todo-list`, editor only)
-- Two tabs: "Admin Assigned" | "My Tasks"
-- "My Tasks" tab has "Create Task" button
-- Same filter/sort controls
-- Cards render with appropriate permission mode
-
-### 4. Modifications
-
-**`src/pages/Users.tsx`** — Add "To Do List" button next to "Assign Task" (admin only, for editor rows). Opens TodoTaskDialog pre-filled with that editor as `assigned_to`.
-
-**`src/components/AppLayout.tsx`** — Add two menu items:
-- "To Do List" → `/todo-list` (admin only, icon: `ListTodo`)
-- "To Do List" → `/my-todo-list` (editor only, icon: `ListTodo`)
-
-**`src/App.tsx`** — Register both new routes with proper `ProtectedRoute` guards.
-
-### 5. Design tokens
-
-Reuse existing semantic tokens from `index.css`. Status colors mapped via existing badge variants; deadline warning uses `text-amber-*` / `text-destructive` classes gated to semantic tokens where available. Progress bar uses shadcn `Progress` component with animated transition.
-
-### Out of scope
-- Notifications / email on new task
-- Task comments/history log
-- Bulk operations
-
-Ready to implement on approval.
+## Technical notes
+- Migration: `ALTER TABLE public.company_steps ADD COLUMN status_changed_at timestamptz NOT NULL DEFAULT now();` then `UPDATE public.company_steps SET status_changed_at = updated_at;` plus a `BEFORE UPDATE` trigger `SET NEW.status_changed_at = CASE WHEN NEW.status IS DISTINCT FROM OLD.status THEN now() ELSE OLD.status_changed_at END`.
+- `saveStep` in `src/pages/CompanyDetail.tsx` stops sending a manual timestamp for the status date; the trigger owns it. On insert the default `now()` applies.
+- Replace `updated_at` reads in countdown blocks of `src/pages/CompanyDetail.tsx` and in `src/lib/overdue.ts` with `status_changed_at`.
