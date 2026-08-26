@@ -1329,12 +1329,18 @@ export default function CompanyDetail() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {stAt(s) && (
+                      <div className="text-right text-[11px] font-medium text-foreground/80 capitalize">
+                        {(s.status ?? "not_started").replace("_", " ")} on {fmtWhen(stAt(s))}
+                      </div>
+                    )}
                     {(s as any).update_status_by && (
                       <div className="text-right text-[11px] text-muted-foreground">
                         Last updated by {(s as any).update_status_by}
                         {(s as any).updated_at ? ` • ${fmtWhen((s as any).updated_at)}` : ""}
                       </div>
                     )}
+
                   </div>
                 </div>
 
