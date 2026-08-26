@@ -71,6 +71,8 @@ const DOC_CATEGORIES = [
   { key: "other", title: "Any Other Supporting Documents", subtitle: "", flag: "📁", color: "border-border" },
 ] as const;
 
+const stAt = (st: any): string | null => (st?.status_changed_at ?? st?.updated_at ?? null);
+
 export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -187,7 +189,8 @@ export default function CompanyDetail() {
     const done = applicable.filter(d => steps[d.key]?.status === "done").length;
     const target = 45;
     const allPapers = steps["all_papers_recieved"] as any;
-    const startAt = allPapers && allPapers.status === "done" && allPapers.updated_at ? new Date(allPapers.updated_at) : null;
+    const apAt = allPapers ? (allPapers.status_changed_at ?? allPapers.updated_at) : null;
+    const startAt = allPapers && allPapers.status === "done" && apAt ? new Date(apAt) : null;
     const started = !!startAt;
     const days = started ? Math.floor((Date.now() - startAt!.getTime()) / 86400000) : 0;
     const overdue = started && days > target;
@@ -694,8 +697,8 @@ export default function CompanyDetail() {
             const cdCfg = COUNTDOWN_CONFIG[def.key];
             if (cdCfg) {
               const ap = steps["all_papers_recieved"] as any;
-              if (ap?.status === "done" && ap?.updated_at) {
-                const apDay = new Date(ap.updated_at);
+              if (ap?.status === "done" && stAt(ap)) {
+                const apDay = new Date(stAt(ap)!);
                 apDay.setHours(0, 0, 0, 0);
                 const isWorkingDay = (dt: Date) => {
                   const d = dt.getDay();
@@ -763,8 +766,8 @@ export default function CompanyDetail() {
             // Saudi Employee Hiring — must be done by the next Wednesday after CR (Commercial Registration) is done.
             if (def.key === "saudi_employee_hiring") {
               const cr = steps["cr_commercial_registration"] as any;
-              if (cr?.status === "done" && cr?.updated_at) {
-                const start = new Date(cr.updated_at);
+              if (cr?.status === "done" && stAt(cr)) {
+                const start = new Date(stAt(cr)!);
                 start.setHours(0, 0, 0, 0);
                 // Next Wednesday strictly after start (if start is Wed, add 7).
                 const target = new Date(start);
@@ -796,8 +799,8 @@ export default function CompanyDetail() {
             // Saudization Quota Allocation — must be done by the next Sunday after Saudi Employee Hiring is done.
             if (def.key === "saudization_quota_allocation") {
               const seh = steps["saudi_employee_hiring"] as any;
-              if (seh?.status === "done" && seh?.updated_at) {
-                const start = new Date(seh.updated_at);
+              if (seh?.status === "done" && stAt(seh)) {
+                const start = new Date(stAt(seh)!);
                 start.setHours(0, 0, 0, 0);
                 const target = new Date(start);
                 const daysUntilSun = ((0 - target.getDay() + 7) % 7) || 7;
@@ -829,8 +832,8 @@ export default function CompanyDetail() {
             // Visa Wakala, Visa Issuance, Employee Kafala Transfer — must be done by next Thursday after Saudization Quota Allocation is done.
             if (def.key === "visa_wakala" || def.key === "visa_issuance" || def.key === "employee_kafala_transfer") {
               const sqa = steps["saudization_quota_allocation"] as any;
-              if (sqa?.status === "done" && sqa?.updated_at) {
-                const start = new Date(sqa.updated_at);
+              if (sqa?.status === "done" && stAt(sqa)) {
+                const start = new Date(stAt(sqa)!);
                 start.setHours(0, 0, 0, 0);
                 const target = new Date(start);
                 const daysUntilThu = ((4 - target.getDay() + 7) % 7) || 7;
@@ -890,14 +893,14 @@ export default function CompanyDetail() {
                 const wdLeft = Math.max(0, 10 - passed);
                 return { phase, target, deadline, msLeft, msToTarget, wdLeft, overdue: !done && msLeft <= 0, done, passed, startDate: start };
               };
-              if (s.status === "applied" && (s as any).updated_at) {
-                misaInfo = build(new Date((s as any).updated_at), "complete", false);
-              } else if (s.status === "done" && (s as any).updated_at) {
-                misaInfo = build(new Date((s as any).updated_at), "complete", true);
+              if (s.status === "applied" && stAt(s)) {
+                misaInfo = build(new Date(stAt(s)!), "complete", false);
+              } else if (s.status === "done" && stAt(s)) {
+                misaInfo = build(new Date(stAt(s)!), "complete", true);
               } else {
                 const ap = steps["all_papers_recieved"] as any;
-                if (ap?.status === "done" && ap?.updated_at) {
-                  misaInfo = build(new Date(ap.updated_at), "apply", false);
+                if (ap?.status === "done" && stAt(ap)) {
+                  misaInfo = build(new Date(stAt(ap)!), "apply", false);
                 }
               }
             }
@@ -1326,12 +1329,18 @@ export default function CompanyDetail() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {stAt(s) && (
+                      <div className="text-right text-[11px] font-medium text-foreground/80 capitalize">
+                        {(s.status ?? "not_started").replace("_", " ")} on {fmtWhen(stAt(s))}
+                      </div>
+                    )}
                     {(s as any).update_status_by && (
                       <div className="text-right text-[11px] text-muted-foreground">
                         Last updated by {(s as any).update_status_by}
                         {(s as any).updated_at ? ` • ${fmtWhen((s as any).updated_at)}` : ""}
                       </div>
                     )}
+
                   </div>
                 </div>
 

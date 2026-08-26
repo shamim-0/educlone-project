@@ -231,12 +231,12 @@ export default function Index() {
       const fetchAllSteps = async () => {
         const pageSize = 1000;
         let from = 0;
-        const all: { company_id: string; step_key: string; status: string; updated_at: string; update_status_by: string | null }[] = [];
+        const all: { company_id: string; step_key: string; status: string; updated_at: string; status_changed_at: string | null; update_status_by: string | null }[] = [];
         // eslint-disable-next-line no-constant-condition
         while (true) {
           const { data, error } = await supabase
             .from("company_steps")
-            .select("company_id, step_key, status, updated_at, update_status_by")
+            .select("company_id, step_key, status, updated_at, status_changed_at, update_status_by")
             .range(from, from + pageSize - 1);
           if (error || !data) break;
           all.push(...(data as any));
@@ -254,7 +254,7 @@ export default function Index() {
       const lastUpd: Record<string, { step_key: string; by: string | null; at: string }> = {};
       sRows.forEach((r) => {
         if (r.step_key === "all_papers_recieved" && r.status === "done") {
-          papersAt[r.company_id] = r.updated_at;
+          papersAt[r.company_id] = r.status_changed_at ?? r.updated_at;
         }
         if (r.updated_at && (r.update_status_by || "").trim()) {
           const prev = lastUpd[r.company_id];

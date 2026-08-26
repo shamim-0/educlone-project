@@ -539,6 +539,7 @@ export type Database = {
           note: string | null
           password: string | null
           status: string
+          status_changed_at: string
           step_key: string
           subtasks_done: string[]
           update_status_by: string | null
@@ -555,6 +556,7 @@ export type Database = {
           note?: string | null
           password?: string | null
           status?: string
+          status_changed_at?: string
           step_key: string
           subtasks_done?: string[]
           update_status_by?: string | null
@@ -571,6 +573,7 @@ export type Database = {
           note?: string | null
           password?: string | null
           status?: string
+          status_changed_at?: string
           step_key?: string
           subtasks_done?: string[]
           update_status_by?: string | null
