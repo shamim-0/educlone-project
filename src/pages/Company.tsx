@@ -59,6 +59,8 @@ export default function CompanyPage() {
   const [branchId2, setBranchId] = useState<string>("");
   const [packageId, setPackageId] = useState<string>("");
   const [deal, setDeal] = useState<string>("");
+  const [prefix, setPrefix] = useState<"ISBI" | "ISBIJ">("ISBIJ");
+  const [nextNum, setNextNum] = useState<number | null>(null);
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
