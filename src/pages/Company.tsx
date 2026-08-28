@@ -356,9 +356,25 @@ export default function CompanyPage() {
                 </SelectContent>
               </Select>
             </div>
+            {!editing && (
+              <div>
+                <Label>Tracking ID</Label>
+                <div className="flex gap-2">
+                  <Select value={prefix} onValueChange={(v) => setPrefix(v as "ISBI" | "ISBIJ")}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ISBI">ISBI</SelectItem>
+                      <SelectItem value="ISBIJ">ISBIJ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input value={trackingCode || "Generating..."} readOnly className="font-mono" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Auto-generated and added before the company name.</p>
+              </div>
+            )}
             <div>
               <Label htmlFor="name">Company Name</Label>
-              <Input id="name" name="name" defaultValue={editing?.name} required maxLength={120} />
+              <Input id="name" name="name" defaultValue={editing?.name} required maxLength={120} placeholder={editing ? undefined : "e.g. Kamruzzaman (Trading Project)"} />
             </div>
             <div>
               <Label>Type</Label>
