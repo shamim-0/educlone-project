@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
 
     const { data: company, error: cErr } = await supabase
       .from("companies")
-      .select("id, name, status, branch_id")
+      .select("id, name, status, branch_id, type")
       .eq("id", companyId)
       .maybeSingle();
 
@@ -55,21 +55,33 @@ Deno.serve(async (req) => {
         .from("company_steps")
         .select("step_key, status, status_changed_at, updated_at, update_status_by, subtasks_done")
         .eq("company_id", companyId),
-      supabase.from("services").select("key, label").order("sort_order"),
+      supabase.from("services").select("key, label, sort_order").order("sort_order"),
     ]);
 
-    const labelMap = new Map((services ?? []).map((s: any) => [s.key, s.label]));
+    const stepMap = new Map((steps ?? []).map((s: any) => [s.step_key, s]));
+
+    // Services-type companies exclude USA/Canada formation steps
+    const excludedKeys =
+      (company as any).type === "services"
+        ? new Set(["usa_company_formation", "canada_company_formation"])
+        : new Set<string>();
+
+    // Build steps in service sort order; include missing steps as not_started
+    const workflowSteps = (services ?? [])
+      .filter((svc: any) => !excludedKeys.has(svc.key))
+      .map((svc: any) => {
+        const step = stepMap.get(svc.key);
+        return {
+          key: svc.key,
+          label: svc.label ?? svc.key,
+          status: step?.status ?? "not_started",
+          status_changed_at: step?.status_changed_at ?? null,
+          updated_at: step?.updated_at ?? null,
+          updated_by: step?.update_status_by ?? null,
+        };
+      });
 
     const doneStatuses = ["done", "no_need"];
-    const workflowSteps = (steps ?? []).map((s: any) => ({
-      key: s.step_key,
-      label: labelMap.get(s.step_key) ?? s.step_key,
-      status: s.status,
-      status_changed_at: s.status_changed_at,
-      updated_at: s.updated_at,
-      updated_by: s.update_status_by,
-    }));
-
     const total = workflowSteps.length;
     const done = workflowSteps.filter((s: any) => doneStatuses.includes(s.status)).length;
     const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
