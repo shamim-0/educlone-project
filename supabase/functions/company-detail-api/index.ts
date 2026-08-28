@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
 
     const { data: company, error: cErr } = await supabase
       .from("companies")
-      .select("id, name, status, branch_id")
+      .select("id, name, status, branch_id, type")
       .eq("id", companyId)
       .maybeSingle();
 
