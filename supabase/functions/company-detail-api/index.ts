@@ -28,15 +28,25 @@ Deno.serve(async (req) => {
 
     const { data: company, error: cErr } = await supabase
       .from("companies")
-      .select("id, name, status, branches(name)")
+      .select("id, name, status, branch_id")
       .eq("id", companyId)
       .maybeSingle();
 
     if (cErr || !company) {
       return new Response(
-        JSON.stringify({ error: "Company not found" }),
+        JSON.stringify({ error: "Company not found", detail: cErr?.message ?? null }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    let branchName: string | null = null;
+    if ((company as any).branch_id) {
+      const { data: branch } = await supabase
+        .from("branches")
+        .select("name")
+        .eq("id", (company as any).branch_id)
+        .maybeSingle();
+      branchName = branch?.name ?? null;
     }
 
     const [{ data: steps }, { data: services }] = await Promise.all([
