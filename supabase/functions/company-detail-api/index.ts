@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         name: company.name,
-        branch: (company as any).branches?.name ?? null,
+        branch: branchName,
         status: company.status,
         percentage,
         workflow_steps: workflowSteps,
