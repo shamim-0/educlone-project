@@ -20,6 +20,7 @@ type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license
 interface Company {
   id: string;
   name: string;
+  tracking_id?: string | null;
   type: CompanyType;
   branch_id: string | null;
   package_id?: string | null;
@@ -58,6 +59,8 @@ export default function CompanyPage() {
   const [branchId2, setBranchId] = useState<string>("");
   const [packageId, setPackageId] = useState<string>("");
   const [deal, setDeal] = useState<string>("");
+  const [prefix, setPrefix] = useState<"ISBI" | "ISBIJ">("ISBIJ");
+  const [nextNum, setNextNum] = useState<number | null>(null);
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -93,6 +96,8 @@ export default function CompanyPage() {
   };
   useEffect(() => { document.title = "Company | ISBI Tracker"; if (role !== null) load(); }, [role, branchId]);
 
+  const trackingCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -101,14 +106,19 @@ export default function CompanyPage() {
       toast.error("Deal amount is required");
       return;
     }
+    const rawName = String(fd.get("name") ?? "").trim();
+    if (!rawName) { toast.error("Company name required"); return; }
     const payload: Record<string, unknown> = {
-      name: String(fd.get("name") ?? "").trim(),
+      name: editing ? rawName : `${trackingCode} ${rawName}`.trim(),
       type,
       branch_id: branchId2 || null,
       package_id: packageId || null,
       total_deal: dealAmount,
     };
-    if (!payload.name) { toast.error("Company name required"); return; }
+    if (!editing) {
+      if (!trackingCode) { toast.error("Tracking ID not ready, please retry"); return; }
+      payload.tracking_id = trackingCode;
+    }
     const { data: authData } = await supabase.auth.getUser();
     const { error } = editing
       ? await supabase.from("companies").update({ ...payload, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any).eq("id", editing.id)
@@ -147,7 +157,18 @@ export default function CompanyPage() {
     if (pkg) setDeal(String(pkg.price));
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setOpen(true); };
+  const loadNextNumber = async () => {
+    setNextNum(null);
+    const { data } = await supabase.from("companies").select("tracking_id, name");
+    let max = 0;
+    (data ?? []).forEach((r: any) => {
+      const n = extractCompanyCode(r.tracking_id ?? r.name ?? "");
+      if (n > max) max = n;
+    });
+    setNextNum(max + 1);
+  };
+
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setPrefix("ISBIJ"); loadNextNumber(); setOpen(true); };
   const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setDeal(r.total_deal != null ? String(r.total_deal) : ""); setOpen(true); };
 
 
@@ -335,9 +356,25 @@ export default function CompanyPage() {
                 </SelectContent>
               </Select>
             </div>
+            {!editing && (
+              <div>
+                <Label>Tracking ID</Label>
+                <div className="flex gap-2">
+                  <Select value={prefix} onValueChange={(v) => setPrefix(v as "ISBI" | "ISBIJ")}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ISBI">ISBI</SelectItem>
+                      <SelectItem value="ISBIJ">ISBIJ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input value={trackingCode || "Generating..."} readOnly className="font-mono" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Auto-generated and added before the company name.</p>
+              </div>
+            )}
             <div>
               <Label htmlFor="name">Company Name</Label>
-              <Input id="name" name="name" defaultValue={editing?.name} required maxLength={120} />
+              <Input id="name" name="name" defaultValue={editing?.name} required maxLength={120} placeholder={editing ? undefined : "e.g. Kamruzzaman (Trading Project)"} />
             </div>
             <div>
               <Label>Type</Label>

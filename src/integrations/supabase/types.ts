@@ -109,6 +109,7 @@ export type Database = {
           status: string
           take_action: boolean
           total_deal: number | null
+          tracking_id: string | null
           type: Database["public"]["Enums"]["company_type"]
           update_by: string | null
           updated_at: string
@@ -142,6 +143,7 @@ export type Database = {
           status?: string
           take_action?: boolean
           total_deal?: number | null
+          tracking_id?: string | null
           type?: Database["public"]["Enums"]["company_type"]
           update_by?: string | null
           updated_at?: string
@@ -175,6 +177,7 @@ export type Database = {
           status?: string
           take_action?: boolean
           total_deal?: number | null
+          tracking_id?: string | null
           type?: Database["public"]["Enums"]["company_type"]
           update_by?: string | null
           updated_at?: string
