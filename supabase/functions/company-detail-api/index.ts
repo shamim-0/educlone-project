@@ -14,10 +14,11 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const companyId = url.searchParams.get("company_id") || url.searchParams.get("id");
+    const trackingId = url.searchParams.get("tracking_id");
 
-    if (!companyId) {
+    if (!companyId && !trackingId) {
       return new Response(
-        JSON.stringify({ error: "company_id query parameter is required" }),
+        JSON.stringify({ error: "company_id or tracking_id query parameter is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -27,11 +28,15 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: company, error: cErr } = await supabase
+    let companyQuery = supabase
       .from("companies")
-      .select("id, name, status, branch_id, type")
-      .eq("id", companyId)
-      .maybeSingle();
+      .select("id, name, status, branch_id, type, tracking_id");
+    if (trackingId) {
+      companyQuery = companyQuery.eq("tracking_id", trackingId.toUpperCase().replace(/\s+/g, ""));
+    } else {
+      companyQuery = companyQuery.eq("id", companyId!);
+    }
+    const { data: company, error: cErr } = await companyQuery.maybeSingle();
 
     if (cErr || !company) {
       return new Response(
@@ -88,6 +93,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        tracking_id: (company as any).tracking_id ?? null,
         name: company.name,
         branch: branchName,
         status: company.status,
