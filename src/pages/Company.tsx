@@ -157,7 +157,18 @@ export default function CompanyPage() {
     if (pkg) setDeal(String(pkg.price));
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setOpen(true); };
+  const loadNextNumber = async () => {
+    setNextNum(null);
+    const { data } = await supabase.from("companies").select("tracking_id, name");
+    let max = 0;
+    (data ?? []).forEach((r: any) => {
+      const n = extractCompanyCode(r.tracking_id ?? r.name ?? "");
+      if (n > max) max = n;
+    });
+    setNextNum(max + 1);
+  };
+
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setPrefix("ISBIJ"); loadNextNumber(); setOpen(true); };
   const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setDeal(r.total_deal != null ? String(r.total_deal) : ""); setOpen(true); };
 
 
