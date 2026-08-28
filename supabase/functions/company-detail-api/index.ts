@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
         };
       });
 
+    const doneStatuses = ["done", "no_need"];
     const total = workflowSteps.length;
     const done = workflowSteps.filter((s: any) => doneStatuses.includes(s.status)).length;
     const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
