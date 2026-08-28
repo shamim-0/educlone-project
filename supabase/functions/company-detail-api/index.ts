@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       supabase
         .from("company_steps")
         .select("step_key, status, status_changed_at, updated_at, update_status_by, subtasks_done")
-        .eq("company_id", companyId),
+        .eq("company_id", (company as any).id),
       supabase.from("services").select("key, label, sort_order").order("sort_order"),
     ]);
 
