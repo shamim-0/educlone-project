@@ -96,6 +96,8 @@ export default function CompanyPage() {
   };
   useEffect(() => { document.title = "Company | ISBI Tracker"; if (role !== null) load(); }, [role, branchId]);
 
+  const trackingCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -104,14 +106,19 @@ export default function CompanyPage() {
       toast.error("Deal amount is required");
       return;
     }
+    const rawName = String(fd.get("name") ?? "").trim();
+    if (!rawName) { toast.error("Company name required"); return; }
     const payload: Record<string, unknown> = {
-      name: String(fd.get("name") ?? "").trim(),
+      name: editing ? rawName : `${trackingCode} ${rawName}`.trim(),
       type,
       branch_id: branchId2 || null,
       package_id: packageId || null,
       total_deal: dealAmount,
     };
-    if (!payload.name) { toast.error("Company name required"); return; }
+    if (!editing) {
+      if (!trackingCode) { toast.error("Tracking ID not ready, please retry"); return; }
+      payload.tracking_id = trackingCode;
+    }
     const { data: authData } = await supabase.auth.getUser();
     const { error } = editing
       ? await supabase.from("companies").update({ ...payload, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any).eq("id", editing.id)
