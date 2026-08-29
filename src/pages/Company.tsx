@@ -20,6 +20,7 @@ type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license
 interface Company {
   id: string;
   name: string;
+  company_code?: string | null;
   tracking_id?: string | null;
   type: CompanyType;
   branch_id: string | null;
@@ -43,6 +44,14 @@ const TYPES: { value: CompanyType; label: string }[] = [
   { value: "services", label: "Services" },
   { value: "industrial_license", label: "Industrial License" },
 ];
+
+/** Company name without its leading company code. */
+const cleanName = (r: { name: string; company_code?: string | null }) => {
+  if (!r.company_code) return r.name;
+  const stripped = r.name.replace(new RegExp(`^\\s*${r.company_code}\\s*`, "i"), "").trim();
+  return stripped || r.name;
+};
+
 
 export default function CompanyPage() {
   const { role, branchId, username: myUsername } = useAuth();
@@ -72,7 +81,7 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, branches!companies_branch_id_fkey(name)")
+      .select("id, name, company_code, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
@@ -96,7 +105,15 @@ export default function CompanyPage() {
   };
   useEffect(() => { document.title = "Company | ISBI Tracker"; if (role !== null) load(); }, [role, branchId]);
 
-  const trackingCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+  const companyCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+
+  /** 6-char uppercase alphanumeric suffix for the tracking ID. */
+  const randomSuffix = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const buf = new Uint32Array(6);
+    crypto.getRandomValues(buf);
+    return Array.from(buf, (n) => chars[n % chars.length]).join("");
+  };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -109,15 +126,16 @@ export default function CompanyPage() {
     const rawName = String(fd.get("name") ?? "").trim();
     if (!rawName) { toast.error("Company name required"); return; }
     const payload: Record<string, unknown> = {
-      name: editing ? rawName : `${trackingCode} ${rawName}`.trim(),
+      name: editing ? `${editing.company_code ?? ""} ${rawName}`.trim() : `${companyCode} ${rawName}`.trim(),
       type,
       branch_id: branchId2 || null,
       package_id: packageId || null,
       total_deal: dealAmount,
     };
     if (!editing) {
-      if (!trackingCode) { toast.error("Tracking ID not ready, please retry"); return; }
-      payload.tracking_id = trackingCode;
+      if (!companyCode) { toast.error("Company code not ready, please retry"); return; }
+      payload.company_code = companyCode;
+      payload.tracking_id = `${companyCode}-${randomSuffix()}`;
     }
     const { data: authData } = await supabase.auth.getUser();
     const { error } = editing
@@ -159,10 +177,10 @@ export default function CompanyPage() {
 
   const loadNextNumber = async () => {
     setNextNum(null);
-    const { data } = await supabase.from("companies").select("tracking_id, name");
+    const { data } = await supabase.from("companies").select("company_code, name");
     let max = 0;
     (data ?? []).forEach((r: any) => {
-      const n = extractCompanyCode(r.tracking_id ?? r.name ?? "");
+      const n = extractCompanyCode(r.company_code ?? r.name ?? "");
       if (n > max) max = n;
     });
     setNextNum(max + 1);
@@ -294,6 +312,11 @@ export default function CompanyPage() {
         showIndex
         columns={[
           {
+            key: "company_code",
+            header: "Company Code",
+            render: (r) => <span className="font-mono text-xs">{r.company_code ?? "—"}</span>,
+          },
+          {
             key: "tracking_id",
             header: "Tracking ID",
             render: (r) => <span className="font-mono text-xs">{r.tracking_id ?? "—"}</span>,
@@ -305,7 +328,7 @@ export default function CompanyPage() {
               const title = r.update_by
                   ? auditTitle(r.update_by, r.updated_at, "Last updated by")
                   : auditTitle(profileNames[r.created_by ?? ""], r.created_at, "Added by");
-              return <span title={title}>{r.name}</span>;
+              return <span title={title}>{cleanName(r)}</span>;
             },
           },
           { key: "branch", header: "Branch", render: (r) => r.branches?.name ?? "—" },
@@ -361,9 +384,9 @@ export default function CompanyPage() {
                 </SelectContent>
               </Select>
             </div>
-            {!editing && (
+            {!editing ? (
               <div>
-                <Label>Tracking ID</Label>
+                <Label>Company Code</Label>
                 <div className="flex gap-2">
                   <Select value={prefix} onValueChange={(v) => setPrefix(v as "ISBI" | "ISBIJ")}>
                     <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
@@ -372,14 +395,24 @@ export default function CompanyPage() {
                       <SelectItem value="ISBIJ">ISBIJ</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input value={trackingCode || "Generating..."} readOnly className="font-mono" />
+                  <Input value={companyCode || "Generating..."} readOnly className="font-mono" />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Auto-generated and added before the company name.</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tracking ID: <span className="font-mono">{companyCode ? `${companyCode}-XXXXXX` : "—"}</span> (6-digit random code auto-generated)
+                </p>
+              </div>
+            ) : (
+              <div>
+                <Label>Company Code</Label>
+                <Input value={editing.company_code ?? "—"} readOnly className="font-mono" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tracking ID: <span className="font-mono">{editing.tracking_id ?? "—"}</span>
+                </p>
               </div>
             )}
             <div>
               <Label htmlFor="name">Company Name</Label>
-              <Input id="name" name="name" defaultValue={editing?.name} required maxLength={120} placeholder={editing ? undefined : "e.g. Kamruzzaman (Trading Project)"} />
+              <Input id="name" name="name" defaultValue={editing ? cleanName(editing) : undefined} required maxLength={120} placeholder={editing ? undefined : "e.g. Kamruzzaman (Trading Project)"} />
             </div>
             <div>
               <Label>Type</Label>

@@ -15,10 +15,11 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const companyId = url.searchParams.get("company_id") || url.searchParams.get("id");
     const trackingId = url.searchParams.get("tracking_id");
+    const companyCode = url.searchParams.get("company_code") || url.searchParams.get("code");
 
-    if (!companyId && !trackingId) {
+    if (!companyId && !trackingId && !companyCode) {
       return new Response(
-        JSON.stringify({ error: "company_id or tracking_id query parameter is required" }),
+        JSON.stringify({ error: "company_id, tracking_id or company_code query parameter is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -30,9 +31,11 @@ Deno.serve(async (req) => {
 
     let companyQuery = supabase
       .from("companies")
-      .select("id, name, status, branch_id, type, tracking_id");
+      .select("id, name, status, branch_id, type, tracking_id, company_code");
     if (trackingId) {
       companyQuery = companyQuery.eq("tracking_id", trackingId.toUpperCase().replace(/\s+/g, ""));
+    } else if (companyCode) {
+      companyQuery = companyQuery.eq("company_code", companyCode.toUpperCase().replace(/\s+/g, ""));
     } else {
       companyQuery = companyQuery.eq("id", companyId!);
     }
@@ -93,8 +96,12 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        company_code: (company as any).company_code ?? null,
         tracking_id: (company as any).tracking_id ?? null,
-        name: company.name,
+        name: (company as any).company_code
+          ? String(company.name).replace(new RegExp(`^\\s*${(company as any).company_code}\\s*`, "i"), "").trim() || company.name
+          : company.name,
+        full_name: company.name,
         branch: branchName,
         status: company.status,
         percentage,
