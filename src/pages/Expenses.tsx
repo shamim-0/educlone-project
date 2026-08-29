@@ -76,11 +76,11 @@ function AnimatedProgress({ value, className = "", barClassName = "bg-primary" }
 }
 
 export default function ExpensesPage() {
-  const { role, username: myUsername, expensesBranchId } = useAuth();
+  const { role, username: myUsername, expensesBranchId, expensesAccess } = useAuth();
   const profileNames = useProfileNames();
   const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
     auditTitle(name, at, verb);
-  const canWrite = role === "admin";
+  const canWrite = role === "admin" || expensesAccess;
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
