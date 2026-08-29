@@ -180,26 +180,37 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
 
       {/* Days status */}
       <div className="mt-4 pt-4 border-t flex items-center gap-2 text-xs">
-        <span
-          className={cn(
-            "h-2 w-2 rounded-full",
-            !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
-          )}
-        />
-        {!p.started ? (
-          <span className="text-muted-foreground">
-            <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
-          </span>
-        ) : p.overdue ? (
-          <span className="text-foreground">
-            <span className="font-semibold text-destructive">{p.days} দিন হয়ে গেছে</span>
-            {" "}— <span className="text-destructive">{Math.abs(p.remaining)} দিন অতিরিক্ত</span>
-          </span>
+        {notActive ? (
+          <>
+            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+            <span className="text-muted-foreground">
+              <span className="font-semibold">Day count বন্ধ আছে</span> — Company {c.status === "paused" ? "Paused" : "Inactive"}
+            </span>
+          </>
         ) : (
-          <span className="text-foreground">
-            <span className="font-semibold text-primary">{p.days} দিন</span>
-            {" "}— <span className="text-muted-foreground">{p.remaining} দিন বাকি আছে</span>
-          </span>
+          <>
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full",
+                !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
+              )}
+            />
+            {!p.started ? (
+              <span className="text-muted-foreground">
+                <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
+              </span>
+            ) : p.overdue ? (
+              <span className="text-foreground">
+                <span className="font-semibold text-destructive">{p.days} দিন হয়ে গেছে</span>
+                {" "}— <span className="text-destructive">{Math.abs(p.remaining)} দিন অতিরিক্ত</span>
+              </span>
+            ) : (
+              <span className="text-foreground">
+                <span className="font-semibold text-primary">{p.days} দিন</span>
+                {" "}— <span className="text-muted-foreground">{p.remaining} দিন বাকি আছে</span>
+              </span>
+            )}
+          </>
         )}
       </div>
 
@@ -241,8 +252,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, branches!companies_branch_id_fkey(name)")
-        .eq("status", "active")
+        .select("id, name, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, branches!companies_branch_id_fkey(name)")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
