@@ -218,7 +218,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         Created at: {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
       </div>
 
-      {p.overdue && (
+      {!notActive && p.overdue && (
         <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন All Papers Recieved এর পর</p>
       )}
     </Card>
@@ -321,6 +321,7 @@ export default function Index() {
   const overdueIds = useMemo(() => {
     const set = new Set<string>();
     companies.forEach((c) => {
+      if (c.status && c.status !== "active") return;
       const keys = getApplicableServiceDefs(c.type, serviceDefs).map((d) => d.key);
       if (isCompanyOverdue(keys, stepStatuses[c.id] ?? {}, allPapersAt[c.id] ?? null)) set.add(c.id);
     });
