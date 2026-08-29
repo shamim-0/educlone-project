@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
 
     let companyQuery = supabase
       .from("companies")
-      .select("id, name, status, branch_id, type, tracking_id, company_code");
+      .select("id, name, status, branch_id, type, tracking_id, company_code, note, warning, warning_note");
     if (trackingId) {
       companyQuery = companyQuery.eq("tracking_id", trackingId.toUpperCase().replace(/\s+/g, ""));
     } else if (companyCode) {
@@ -104,6 +104,9 @@ Deno.serve(async (req) => {
         full_name: company.name,
         branch: branchName,
         status: company.status,
+        note: (company as any).note ?? null,
+        warning: (company as any).warning ?? false,
+        warning_note: (company as any).warning_note ?? null,
         percentage,
         workflow_steps: workflowSteps,
       }),
