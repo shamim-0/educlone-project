@@ -71,8 +71,18 @@ export default function CompanyPage() {
   const [branchId2, setBranchId] = useState<string>("");
   const [packageId, setPackageId] = useState<string>("");
   const [deal, setDeal] = useState<string>("");
-  const [prefix, setPrefix] = useState<"ISBI" | "ISBIJ">("ISBIJ");
   const [nextNum, setNextNum] = useState<number | null>(null);
+
+  /** Derives the company-code prefix from the selected branch name. */
+  const prefixForBranch = (branchName: string | undefined | null): string => {
+    const n = (branchName ?? "").toLowerCase();
+    if (n.includes("dammam")) return "ISBID";
+    if (n.includes("madina")) return "ISBIM";
+    if (n.includes("jeddah")) return "ISBIJ";
+    return "ISBI"; // Dhaka, Jahid vai Makkah, Riyadh, default
+  };
+
+  const selectedPrefix = prefixForBranch(branches.find((b) => b.id === branchId2)?.name);
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
