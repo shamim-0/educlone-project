@@ -22,6 +22,8 @@ const extractCode = extractCompanyCode;
 interface Company {
   id: string;
   name: string;
+  company_code?: string | null;
+  tracking_id?: string | null;
   type: string;
   branch_id: string | null;
   created_at: string;
@@ -252,7 +254,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, branches!companies_branch_id_fkey(name)")
+        .select("id, name, company_code, tracking_id, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, branches!companies_branch_id_fkey(name)")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
@@ -420,7 +422,8 @@ export default function Index() {
     return companies.filter((c) => {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
-      if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      const query = search.trim().toLowerCase();
+      if (query && ![c.name, c.company_code, c.tracking_id].some((value) => value?.toLowerCase().includes(query))) return false;
       if (addedRange) {
         const t = new Date(c.created_at).getTime();
         if (t < addedRange.from.getTime() || t > addedRange.to.getTime()) return false;
@@ -462,15 +465,15 @@ export default function Index() {
   const sorted = useMemo(() => {
     const arr = [...filtered];
     const defaultSort = (a: Company, b: Company) => {
+      const ac = extractCode(a);
+      const bc = extractCode(b);
+      if (ac !== bc) return bc - ac;
       const ae = a.emergency ? 0 : 1;
       const be = b.emergency ? 0 : 1;
       if (ae !== be) return ae - be;
       const at = a.take_action ? 0 : 1;
       const bt = b.take_action ? 0 : 1;
       if (at !== bt) return at - bt;
-      const ac = extractCode(a.name);
-      const bc = extractCode(b.name);
-      if (ac !== bc) return bc - ac;
       return b.name.localeCompare(a.name);
     };
     switch (sortBy) {

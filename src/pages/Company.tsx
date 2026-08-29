@@ -266,7 +266,8 @@ export default function CompanyPage() {
     return rows.filter((c) => {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
-      if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      const query = search.trim().toLowerCase();
+      if (query && ![c.name, c.company_code, c.tracking_id].some((value) => value?.toLowerCase().includes(query))) return false;
       return true;
     });
   }, [rows, branchFilter, typeFilter, search]);
@@ -274,15 +275,15 @@ export default function CompanyPage() {
   const sorted = useMemo(() => {
     const arr = [...filtered];
     const defaultSort = (a: Company, b: Company) => {
+      const ac = extractCode(a);
+      const bc = extractCode(b);
+      if (ac !== bc) return bc - ac;
       const ae = a.emergency ? 0 : 1;
       const be = b.emergency ? 0 : 1;
       if (ae !== be) return ae - be;
       const at = a.take_action ? 0 : 1;
       const bt = b.take_action ? 0 : 1;
       if (at !== bt) return at - bt;
-      const ac = extractCode(a.name);
-      const bc = extractCode(b.name);
-      if (ac !== bc) return bc - ac;
       return b.name.localeCompare(a.name);
     };
     switch (sortBy) {
@@ -333,7 +334,7 @@ export default function CompanyPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search company by name..."
+            placeholder="Search by name, company code or tracking ID..."
             className="pl-9"
           />
         </div>
