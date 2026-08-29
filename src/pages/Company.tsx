@@ -126,7 +126,7 @@ export default function CompanyPage() {
     const rawName = String(fd.get("name") ?? "").trim();
     if (!rawName) { toast.error("Company name required"); return; }
     const payload: Record<string, unknown> = {
-      name: editing ? rawName : `${companyCode} ${rawName}`.trim(),
+      name: editing ? `${editing.company_code ?? ""} ${rawName}`.trim() : `${companyCode} ${rawName}`.trim(),
       type,
       branch_id: branchId2 || null,
       package_id: packageId || null,
