@@ -164,6 +164,25 @@ export default function CompanyPage() {
   const [statusDialog, setStatusDialog] = useState<{ row: Company; status: string } | null>(null);
   const [statusNote, setStatusNote] = useState("");
 
+  // Warning state
+  const [warningDialog, setWarningDialog] = useState<Company | null>(null);
+  const [warningNote, setWarningNote] = useState("");
+
+  const applyWarning = async (row: Company, on: boolean, note: string | null) => {
+    const { error } = await supabase
+      .from("companies")
+      .update({ warning: on, warning_note: note, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any)
+      .eq("id", row.id);
+    if (error) { toast.error(error.message); return; }
+    setRows((prev) => prev.map((c) => (c.id === row.id ? { ...c, warning: on, warning_note: note } : c)));
+    toast.success(on ? "Warning turned on" : "Warning turned off");
+  };
+
+  const openWarning = (row: Company) => {
+    setWarningNote(row.warning_note ?? "");
+    setWarningDialog(row);
+  };
+
   const applyStatus = async (row: Company, status: string, note: string | null) => {
     const { error } = await supabase
       .from("companies")
