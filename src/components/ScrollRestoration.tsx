@@ -49,7 +49,13 @@ export default function ScrollRestoration() {
   // and the browser may apply its own native scroll, so keep re-applying
   // until the document is tall enough to hold the saved position.
   useLayoutEffect(() => {
-    if (navigationType !== "POP") return;
+    // A normal link click opens the destination at the top. The scroll
+    // listener on the previous route has already saved where the user was,
+    // so a later Back action can still restore that exact position.
+    if (navigationType !== "POP") {
+      window.scrollTo(0, 0);
+      return;
+    }
     const saved = readSaved(location.pathname);
     if (saved === undefined) return;
 
