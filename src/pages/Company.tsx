@@ -33,6 +33,7 @@ interface Company {
   update_by?: string | null;
   updated_at?: string | null;
   status?: string | null;
+  status_note?: string | null;
   branches?: { name: string } | null;
 }
 interface Branch { id: string; name: string; }
@@ -81,7 +82,7 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, company_code, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, branches!companies_branch_id_fkey(name)")
+      .select("id, name, company_code, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, status_note, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
