@@ -464,7 +464,7 @@ export default function CompanyDetail() {
         </div>
       )}
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
         </Button>
         <Button variant="outline" size="sm" onClick={() => window.print()}>
