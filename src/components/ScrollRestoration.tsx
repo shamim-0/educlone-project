@@ -10,6 +10,7 @@ import { useLocation, useNavigationType } from "react-router-dom";
 const scrollPositions = new Map<string, number>();
 
 const storageKey = (pathname: string) => `sr-pos:${pathname}`;
+const pendingRestoreKey = "sr-pending-path";
 
 const readSaved = (pathname: string): number | undefined => {
   if (scrollPositions.has(pathname)) return scrollPositions.get(pathname);
@@ -49,15 +50,32 @@ export default function ScrollRestoration() {
   // and the browser may apply its own native scroll, so keep re-applying
   // until the document is tall enough to hold the saved position.
   useLayoutEffect(() => {
+    let pendingPath: string | null = null;
+    try {
+      pendingPath = sessionStorage.getItem(pendingRestoreKey);
+    } catch {
+      /* storage unavailable */
+    }
+
     // A normal link click opens the destination at the top. The scroll
     // listener on the previous route has already saved where the user was,
     // so a later Back action can still restore that exact position.
-    if (navigationType !== "POP") {
+    if (navigationType !== "POP" && pendingPath !== location.pathname) {
       window.scrollTo(0, 0);
       return;
     }
     const saved = readSaved(location.pathname);
     if (saved === undefined) return;
+
+    // Keep this marker in session storage until restoration finishes. In
+    // this app a browser Back can reload and briefly remount the auth tree;
+    // the next mount must continue restoring instead of treating it as a
+    // fresh visit and resetting the page to the top.
+    try {
+      sessionStorage.setItem(pendingRestoreKey, location.pathname);
+    } catch {
+      /* storage unavailable */
+    }
 
 const apply = () => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -80,6 +98,13 @@ apply();
 const stop = setTimeout(() => {
       clearInterval(timer);
       restoring = false;
+      try {
+        if (sessionStorage.getItem(pendingRestoreKey) === location.pathname) {
+          sessionStorage.removeItem(pendingRestoreKey);
+        }
+      } catch {
+        /* storage unavailable */
+      }
     }, 8000);
     return () => {
       clearInterval(timer);
