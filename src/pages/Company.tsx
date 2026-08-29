@@ -45,6 +45,14 @@ const TYPES: { value: CompanyType; label: string }[] = [
   { value: "industrial_license", label: "Industrial License" },
 ];
 
+/** Company name without its leading company code. */
+const cleanName = (r: { name: string; company_code?: string | null }) => {
+  if (!r.company_code) return r.name;
+  const stripped = r.name.replace(new RegExp(`^\\s*${r.company_code}\\s*`, "i"), "").trim();
+  return stripped || r.name;
+};
+
+
 export default function CompanyPage() {
   const { role, branchId, username: myUsername } = useAuth();
   const profileNames = useProfileNames();
