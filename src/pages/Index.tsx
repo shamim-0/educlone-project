@@ -338,11 +338,14 @@ export default function Index() {
   }, [companies, serviceDefs, stepCounts]);
 
   const stats = useMemo(() => {
-    const total = companies.length;
-    const service = companies.filter((c) => c.type === "services").length;
-    const trading = companies.filter((c) => c.type === "trading").length;
-    const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
-    const industrial = companies.filter((c) => c.type === "industrial_license").length;
+    const active = companies.filter((c) => !c.status || c.status === "active");
+    const paused = companies.filter((c) => c.status === "paused").length;
+    const inactive = companies.filter((c) => c.status === "inactive").length;
+    const total = active.length;
+    const service = active.filter((c) => c.type === "services").length;
+    const trading = active.filter((c) => c.type === "trading").length;
+    const entrepreneur = active.filter((c) => c.type === "entrepreneur").length;
+    const industrial = active.filter((c) => c.type === "industrial_license").length;
     const completed = completedIds.size;
     const takeAction = companies.filter((c) => c.take_action).length;
     const emergency = companies.filter((c) => c.emergency).length;
