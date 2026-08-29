@@ -118,7 +118,7 @@ export default function CompanyPage() {
   };
   useEffect(() => { document.title = "Company | ISBI Tracker"; if (role !== null) load(); }, [role, branchId]);
 
-  const companyCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+  const companyCode = nextNum != null ? `${selectedPrefix}${String(nextNum).padStart(5, "0")}` : "";
 
   /** 6-char uppercase alphanumeric suffix for the tracking ID. */
   const randomSuffix = () => {
@@ -219,18 +219,27 @@ export default function CompanyPage() {
     if (pkg) setDeal(String(pkg.price));
   };
 
-  const loadNextNumber = async () => {
+  const loadNextNumber = async (pfx: string) => {
     setNextNum(null);
     const { data } = await supabase.from("companies").select("company_code, name");
+    const re = new RegExp(`^${pfx}(\\d+)`, "i");
     let max = 0;
     (data ?? []).forEach((r: any) => {
-      const n = extractCompanyCode(r.company_code ?? r.name ?? "");
-      if (n > max) max = n;
+      const m = (r.company_code ?? r.name ?? "").trim().match(re);
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (Number.isFinite(n) && n > max) max = n;
+      }
     });
     setNextNum(max + 1);
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setPrefix("ISBIJ"); loadNextNumber(); setOpen(true); };
+  const onBranchChange = (id: string) => {
+    setBranchId(id);
+    if (!editing) loadNextNumber(prefixForBranch(branches.find((b) => b.id === id)?.name));
+  };
+
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); loadNextNumber(prefixForBranch(undefined)); setOpen(true); };
   const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setDeal(r.total_deal != null ? String(r.total_deal) : ""); setOpen(true); };
 
 
