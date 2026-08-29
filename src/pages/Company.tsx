@@ -550,6 +550,62 @@ export default function CompanyPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Warning dialog */}
+      <Dialog open={!!warningDialog} onOpenChange={(o) => !o && setWarningDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Warning — "{warningDialog?.row ? "" : ""}{warningDialog?.name}"
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <p className="text-sm font-medium">Warning {warningDialog?.warning ? "On" : "Off"}</p>
+                <p className="text-xs text-muted-foreground">Toggle to enable or disable the warning for this company</p>
+              </div>
+              <Button
+                variant={warningDialog?.warning ? "destructive" : "default"}
+                size="sm"
+                onClick={() => {
+                  if (!warningDialog) return;
+                  if (warningDialog.warning) {
+                    applyWarning(warningDialog, false, warningDialog.warning_note ?? null);
+                  } else {
+                    applyWarning(warningDialog, true, warningNote.trim() || null);
+                  }
+                }}
+              >
+                Turn {warningDialog?.warning ? "Off" : "On"}
+              </Button>
+            </div>
+            <div>
+              <Label htmlFor="warning_note">Warning Message</Label>
+              <Input
+                id="warning_note"
+                value={warningNote}
+                onChange={(e) => setWarningNote(e.target.value)}
+                placeholder="Write the warning message..."
+                maxLength={300}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setWarningDialog(null)}>Close</Button>
+              <Button
+                onClick={() => {
+                  if (!warningDialog) return;
+                  applyWarning(warningDialog, warningDialog.warning ?? true, warningNote.trim() || null);
+                  setWarningDialog(null);
+                }}
+              >
+                Save Message
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
