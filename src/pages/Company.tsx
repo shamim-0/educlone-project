@@ -352,8 +352,13 @@ export default function CompanyPage() {
             render: (r) => {
               const cur = STATUS_OPTS.find((o) => o.value === (r.status ?? "active")) ?? STATUS_OPTS[0];
               return (
-                <div className="flex items-center gap-1">
-                  <Badge className={cn("border", cur.cls)}>{cur.label}</Badge>
+                 <div className="flex items-center gap-1">
+                   <Badge
+                     className={cn("border", cur.cls)}
+                     title={r.status_note ? `Reason: ${r.status_note}` : undefined}
+                   >
+                     {cur.label}
+                   </Badge>
                   {(role === "admin" || role === "sub_admin" || role === "editor") && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
