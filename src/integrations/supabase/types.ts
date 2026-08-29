@@ -701,6 +701,7 @@ export type Database = {
           created_at: string
           email: string | null
           expenses_access: boolean
+          expenses_branch_id: string | null
           id: string
           username: string
         }
@@ -710,6 +711,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           expenses_access?: boolean
+          expenses_branch_id?: string | null
           id: string
           username: string
         }
@@ -719,6 +721,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           expenses_access?: boolean
+          expenses_branch_id?: string | null
           id?: string
           username?: string
         }
@@ -726,6 +729,13 @@ export type Database = {
           {
             foreignKeyName: "profiles_branch_id_fkey"
             columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_expenses_branch_id_fkey"
+            columns: ["expenses_branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
             referencedColumns: ["id"]
@@ -903,6 +913,10 @@ export type Database = {
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_company_expenses_access: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
       }
       has_expenses_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
