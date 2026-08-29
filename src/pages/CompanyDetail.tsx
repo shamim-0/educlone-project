@@ -499,14 +499,18 @@ export default function CompanyDetail() {
         {/* Day status banner — starts counting when "All Papers Recieved" is marked done */}
         <div className={cn(
           "mt-4 p-3 rounded-md border text-sm flex items-center gap-2",
-          !progress.started
+          dayCountOff || !progress.started
             ? "bg-muted/40 border-border text-muted-foreground"
             : progress.overdue
             ? "bg-destructive/10 border-destructive/30 text-destructive"
             : "bg-accent/10 border-accent/30 text-foreground"
         )}>
-          <span className={cn("h-2.5 w-2.5 rounded-full", !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
-          {!progress.started ? (
+          <span className={cn("h-2.5 w-2.5 rounded-full", dayCountOff || !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
+          {dayCountOff ? (
+            <span>
+              <span className="font-semibold">Day count বন্ধ আছে</span> — Company {company?.status === "paused" ? "Paused" : "Inactive"} অবস্থায় আছে, কোনো day count বা overdue হিসাব হচ্ছে না
+            </span>
+          ) : !progress.started ? (
             <span>
               <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — "All Papers Recieved" status Done হলে 45 দিনের কাউন্ট শুরু হবে
             </span>
@@ -654,7 +658,7 @@ export default function CompanyDetail() {
             />
           </div>
           <div className="mt-2 text-xs text-muted-foreground">
-            {progress.done}/{progress.total} steps · {progress.started ? `${progress.days} days since All Papers Recieved` : "কাউন্টডাউন শুরু হয়নি"}
+            {progress.done}/{progress.total} steps · {dayCountOff ? `Day count off — ${company?.status === "paused" ? "Paused" : "Inactive"}` : progress.started ? `${progress.days} days since All Papers Recieved` : "কাউন্টডাউন শুরু হয়নি"}
           </div>
         </div>
 
