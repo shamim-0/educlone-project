@@ -169,10 +169,10 @@ export default function CompanyPage() {
 
   const loadNextNumber = async () => {
     setNextNum(null);
-    const { data } = await supabase.from("companies").select("tracking_id, name");
+    const { data } = await supabase.from("companies").select("company_code, name");
     let max = 0;
     (data ?? []).forEach((r: any) => {
-      const n = extractCompanyCode(r.tracking_id ?? r.name ?? "");
+      const n = extractCompanyCode(r.company_code ?? r.name ?? "");
       if (n > max) max = n;
     });
     setNextNum(max + 1);
