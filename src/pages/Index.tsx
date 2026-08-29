@@ -426,26 +426,32 @@ export default function Index() {
         if (t < addedRange.from.getTime() || t > addedRange.to.getTime()) return false;
       }
 
+      const isActive = !c.status || c.status === "active";
       switch (cardTab) {
+        case "paused":
+        case "inactive":
+          if (c.status !== cardTab) return false;
+          return true;
         case "services":
         case "trading":
         case "entrepreneur":
         case "industrial_license":
-          if (c.type !== cardTab) return false;
+          if (!isActive || c.type !== cardTab) return false;
           break;
         case "completed":
-          if (!completedIds.has(c.id)) return false;
+          if (!isActive || !completedIds.has(c.id)) return false;
           break;
         case "take_action":
-          if (!c.take_action) return false;
+          if (!isActive || !c.take_action) return false;
           break;
         case "emergency":
-          if (!c.emergency) return false;
+          if (!isActive || !c.emergency) return false;
           break;
         case "overdue":
-          if (!overdueIds.has(c.id)) return false;
+          if (!isActive || !overdueIds.has(c.id)) return false;
           break;
         default:
+          if (!isActive) return false;
           break;
       }
       return true;
@@ -569,7 +575,7 @@ export default function Index() {
       </div>
 
       {/* Stats — clickable tabs */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-10 gap-3">
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-11 gap-3">
         {[
           { id: "total", value: stats.total, label: "Total", color: "text-foreground" },
           { id: "services", value: stats.service, label: "Service", color: "text-primary" },
@@ -580,6 +586,8 @@ export default function Index() {
           { id: "overdue", value: stats.overdue, label: "Overdue", color: "text-destructive" },
           { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
           { id: "emergency", value: stats.emergency, label: "Emergency", color: "text-destructive" },
+          { id: "paused", value: stats.paused, label: "Paused", color: "text-amber-500" },
+          { id: "inactive", value: stats.inactive, label: "Inactive", color: "text-muted-foreground" },
         ].map((s) => (
           <div key={s.id} className="relative">
             <button
