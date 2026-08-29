@@ -328,10 +328,7 @@ export default function CompanyPage() {
               const title = r.update_by
                   ? auditTitle(r.update_by, r.updated_at, "Last updated by")
                   : auditTitle(profileNames[r.created_by ?? ""], r.created_at, "Added by");
-              const clean = r.company_code
-                ? r.name.replace(new RegExp(`^\\s*${r.company_code}\\s*`, "i"), "")
-                : r.name;
-              return <span title={title}>{clean || r.name}</span>;
+              return <span title={title}>{cleanName(r)}</span>;
             },
           },
           { key: "branch", header: "Branch", render: (r) => r.branches?.name ?? "—" },
