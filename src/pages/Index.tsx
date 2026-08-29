@@ -78,6 +78,15 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         </div>
       )}
 
+      {c.warning && (
+        <div className="-mx-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="h-3.5 w-3.5 fill-current shrink-0" />
+          <span className="truncate" title={c.warning_note ?? undefined}>
+            WARNING{c.warning_note ? ` — ${c.warning_note}` : ""}
+          </span>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-foreground font-semibold leading-tight">{c.name}</h3>
         <span
