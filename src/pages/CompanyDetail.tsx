@@ -36,6 +36,7 @@ interface Company {
   cr_number: string | null; whatsapp: string | null;
   contact_email: string | null; note: string | null;
   created_at: string;
+  status?: string | null;
   emergency?: boolean | null; take_action?: boolean | null;
 }
 interface Step {
@@ -183,6 +184,9 @@ export default function CompanyDetail() {
     });
   }, [applicableDefs]);
 
+  // Day count / countdown is off when the company is not active (paused / inactive)
+  const dayCountOff = !!company?.status && company.status !== "active";
+
   const progress = useMemo(() => {
     const applicable = applicableDefs.filter(d => steps[d.key]?.status !== "no_need");
     const total = applicable.length;
@@ -191,11 +195,11 @@ export default function CompanyDetail() {
     const allPapers = steps["all_papers_recieved"] as any;
     const apAt = allPapers ? (allPapers.status_changed_at ?? allPapers.updated_at) : null;
     const startAt = allPapers && allPapers.status === "done" && apAt ? new Date(apAt) : null;
-    const started = !!startAt;
+    const started = !!startAt && !dayCountOff;
     const days = started ? Math.floor((Date.now() - startAt!.getTime()) / 86400000) : 0;
     const overdue = started && days > target;
     return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days, started };
-  }, [steps, applicableDefs]);
+  }, [steps, applicableDefs, dayCountOff]);
 
   const currentlyWorking = applicableDefs.filter(d => steps[d.key]?.status === "processing");
 
@@ -495,14 +499,18 @@ export default function CompanyDetail() {
         {/* Day status banner — starts counting when "All Papers Recieved" is marked done */}
         <div className={cn(
           "mt-4 p-3 rounded-md border text-sm flex items-center gap-2",
-          !progress.started
+          dayCountOff || !progress.started
             ? "bg-muted/40 border-border text-muted-foreground"
             : progress.overdue
             ? "bg-destructive/10 border-destructive/30 text-destructive"
             : "bg-accent/10 border-accent/30 text-foreground"
         )}>
-          <span className={cn("h-2.5 w-2.5 rounded-full", !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
-          {!progress.started ? (
+          <span className={cn("h-2.5 w-2.5 rounded-full", dayCountOff || !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
+          {dayCountOff ? (
+            <span>
+              <span className="font-semibold">Day count বন্ধ আছে</span> — Company {company?.status === "paused" ? "Paused" : "Inactive"} অবস্থায় আছে, কোনো day count বা overdue হিসাব হচ্ছে না
+            </span>
+          ) : !progress.started ? (
             <span>
               <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — "All Papers Recieved" status Done হলে 45 দিনের কাউন্ট শুরু হবে
             </span>
@@ -650,7 +658,7 @@ export default function CompanyDetail() {
             />
           </div>
           <div className="mt-2 text-xs text-muted-foreground">
-            {progress.done}/{progress.total} steps · {progress.started ? `${progress.days} days since All Papers Recieved` : "কাউন্টডাউন শুরু হয়নি"}
+            {progress.done}/{progress.total} steps · {dayCountOff ? `Day count off — ${company?.status === "paused" ? "Paused" : "Inactive"}` : progress.started ? `${progress.days} days since All Papers Recieved` : "কাউন্টডাউন শুরু হয়নি"}
           </div>
         </div>
 
@@ -695,7 +703,7 @@ export default function CompanyDetail() {
               chamber_of_commerce_registration: { offsetWD: 20, windowWD: 5 },
             };
             const cdCfg = COUNTDOWN_CONFIG[def.key];
-            if (cdCfg) {
+            if (cdCfg && !dayCountOff) {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && stAt(ap)) {
                 const apDay = new Date(stAt(ap)!);
@@ -764,7 +772,7 @@ export default function CompanyDetail() {
             }
 
             // Saudi Employee Hiring — must be done by the next Wednesday after CR (Commercial Registration) is done.
-            if (def.key === "saudi_employee_hiring") {
+            if (def.key === "saudi_employee_hiring" && !dayCountOff) {
               const cr = steps["cr_commercial_registration"] as any;
               if (cr?.status === "done" && stAt(cr)) {
                 const start = new Date(stAt(cr)!);
@@ -797,7 +805,7 @@ export default function CompanyDetail() {
             }
 
             // Saudization Quota Allocation — must be done by the next Sunday after Saudi Employee Hiring is done.
-            if (def.key === "saudization_quota_allocation") {
+            if (def.key === "saudization_quota_allocation" && !dayCountOff) {
               const seh = steps["saudi_employee_hiring"] as any;
               if (seh?.status === "done" && stAt(seh)) {
                 const start = new Date(stAt(seh)!);

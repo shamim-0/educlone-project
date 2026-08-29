@@ -30,6 +30,7 @@ interface Company {
   warning?: boolean | null;
   warning_note?: string | null;
   note?: string | null;
+  status?: string | null;
   branches?: { name: string } | null;
 }
 
@@ -47,13 +48,14 @@ function deriveProgress(startAt: string | null, done: number, processing: number
 }
 
 function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses, startAt, lastUpdate }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string>; startAt: string | null; lastUpdate?: { label: string; by: string | null; at: string } | null }) {
+  const notActive = !!c.status && c.status !== "active";
   const p = deriveProgress(startAt, done, processing, totalSteps);
   const applicableKeys = applicableDefs.map((d) => d.key);
-  const isCompanyOverdueNow = isCompanyOverdue(applicableKeys, stepStatuses, startAt);
+  const isCompanyOverdueNow = !notActive && isCompanyOverdue(applicableKeys, stepStatuses, startAt);
 
   const branchName = c.branches?.name ?? "—";
-  const isEmergency = !!c.emergency;
-  const isTakeAction = !!c.take_action;
+  const isEmergency = !notActive && !!c.emergency;
+  const isTakeAction = !notActive && !!c.take_action;
   const isOverdue = isCompanyOverdueNow;
 
   return (
@@ -61,7 +63,8 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
     <Card
       className={cn(
         "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant cursor-pointer hover:-translate-y-0.5 border-2",
-        isEmergency && "border-destructive animate-border-pulse-red",
+        notActive && "opacity-55 grayscale-[35%] border-dashed border-muted-foreground/50",
+        !notActive && isEmergency && "border-destructive animate-border-pulse-red",
         !isEmergency && isTakeAction && "border-[rgb(249,115,22)] animate-border-pulse-orange",
         !isEmergency && !isTakeAction && isOverdue && "border-[rgb(249,115,22)] animate-border-pulse-orange"
       )}
@@ -87,12 +90,18 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         </div>
       )}
 
+      {notActive && (
+        <div className="-mx-5 -mt-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider bg-muted/60 border-border text-muted-foreground">
+          {c.status === "paused" ? "⏸ PAUSED — DAY COUNT OFF" : "⛔ INACTIVE — DAY COUNT OFF"}
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-foreground font-semibold leading-tight">{c.name}</h3>
         <span
           className={cn(
             "mt-1 h-2.5 w-2.5 rounded-full shrink-0",
-            p.overdue ? "bg-destructive" : "bg-accent"
+            notActive ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
           )}
         />
       </div>
@@ -171,26 +180,37 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
 
       {/* Days status */}
       <div className="mt-4 pt-4 border-t flex items-center gap-2 text-xs">
-        <span
-          className={cn(
-            "h-2 w-2 rounded-full",
-            !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
-          )}
-        />
-        {!p.started ? (
-          <span className="text-muted-foreground">
-            <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
-          </span>
-        ) : p.overdue ? (
-          <span className="text-foreground">
-            <span className="font-semibold text-destructive">{p.days} দিন হয়ে গেছে</span>
-            {" "}— <span className="text-destructive">{Math.abs(p.remaining)} দিন অতিরিক্ত</span>
-          </span>
+        {notActive ? (
+          <>
+            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+            <span className="text-muted-foreground">
+              <span className="font-semibold">Day count বন্ধ আছে</span> — Company {c.status === "paused" ? "Paused" : "Inactive"}
+            </span>
+          </>
         ) : (
-          <span className="text-foreground">
-            <span className="font-semibold text-primary">{p.days} দিন</span>
-            {" "}— <span className="text-muted-foreground">{p.remaining} দিন বাকি আছে</span>
-          </span>
+          <>
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full",
+                !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
+              )}
+            />
+            {!p.started ? (
+              <span className="text-muted-foreground">
+                <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
+              </span>
+            ) : p.overdue ? (
+              <span className="text-foreground">
+                <span className="font-semibold text-destructive">{p.days} দিন হয়ে গেছে</span>
+                {" "}— <span className="text-destructive">{Math.abs(p.remaining)} দিন অতিরিক্ত</span>
+              </span>
+            ) : (
+              <span className="text-foreground">
+                <span className="font-semibold text-primary">{p.days} দিন</span>
+                {" "}— <span className="text-muted-foreground">{p.remaining} দিন বাকি আছে</span>
+              </span>
+            )}
+          </>
         )}
       </div>
 
@@ -198,7 +218,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         Created at: {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
       </div>
 
-      {p.overdue && (
+      {!notActive && p.overdue && (
         <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন All Papers Recieved এর পর</p>
       )}
     </Card>
@@ -232,8 +252,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, branches!companies_branch_id_fkey(name)")
-        .eq("status", "active")
+        .select("id, name, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, branches!companies_branch_id_fkey(name)")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
@@ -302,6 +321,7 @@ export default function Index() {
   const overdueIds = useMemo(() => {
     const set = new Set<string>();
     companies.forEach((c) => {
+      if (c.status && c.status !== "active") return;
       const keys = getApplicableServiceDefs(c.type, serviceDefs).map((d) => d.key);
       if (isCompanyOverdue(keys, stepStatuses[c.id] ?? {}, allPapersAt[c.id] ?? null)) set.add(c.id);
     });
@@ -318,25 +338,28 @@ export default function Index() {
   }, [companies, serviceDefs, stepCounts]);
 
   const stats = useMemo(() => {
-    const total = companies.length;
-    const service = companies.filter((c) => c.type === "services").length;
-    const trading = companies.filter((c) => c.type === "trading").length;
-    const entrepreneur = companies.filter((c) => c.type === "entrepreneur").length;
-    const industrial = companies.filter((c) => c.type === "industrial_license").length;
+    const active = companies.filter((c) => !c.status || c.status === "active");
+    const paused = companies.filter((c) => c.status === "paused").length;
+    const inactive = companies.filter((c) => c.status === "inactive").length;
+    const total = active.length;
+    const service = active.filter((c) => c.type === "services").length;
+    const trading = active.filter((c) => c.type === "trading").length;
+    const entrepreneur = active.filter((c) => c.type === "entrepreneur").length;
+    const industrial = active.filter((c) => c.type === "industrial_license").length;
     const completed = completedIds.size;
-    const takeAction = companies.filter((c) => c.take_action).length;
-    const emergency = companies.filter((c) => c.emergency).length;
+    const takeAction = active.filter((c) => c.take_action).length;
+    const emergency = active.filter((c) => c.emergency).length;
     const overdue = overdueIds.size;
     const avgProgress =
       total > 0
         ? Math.round(
-            companies.reduce((sum, c) => {
+            active.reduce((sum, c) => {
               const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
               return sum + (Math.min(stepCounts[c.id]?.done ?? 0, applicableTotal) / applicableTotal) * 100;
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress };
+    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress, paused, inactive };
   }, [companies, stepCounts, serviceDefs, completedIds, overdueIds]);
 
 
@@ -403,26 +426,32 @@ export default function Index() {
         if (t < addedRange.from.getTime() || t > addedRange.to.getTime()) return false;
       }
 
+      const isActive = !c.status || c.status === "active";
       switch (cardTab) {
+        case "paused":
+        case "inactive":
+          if (c.status !== cardTab) return false;
+          return true;
         case "services":
         case "trading":
         case "entrepreneur":
         case "industrial_license":
-          if (c.type !== cardTab) return false;
+          if (!isActive || c.type !== cardTab) return false;
           break;
         case "completed":
-          if (!completedIds.has(c.id)) return false;
+          if (!isActive || !completedIds.has(c.id)) return false;
           break;
         case "take_action":
-          if (!c.take_action) return false;
+          if (!isActive || !c.take_action) return false;
           break;
         case "emergency":
-          if (!c.emergency) return false;
+          if (!isActive || !c.emergency) return false;
           break;
         case "overdue":
-          if (!overdueIds.has(c.id)) return false;
+          if (!isActive || !overdueIds.has(c.id)) return false;
           break;
         default:
+          if (!isActive) return false;
           break;
       }
       return true;
@@ -546,7 +575,7 @@ export default function Index() {
       </div>
 
       {/* Stats — clickable tabs */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-10 gap-3">
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-11 gap-3">
         {[
           { id: "total", value: stats.total, label: "Total", color: "text-foreground" },
           { id: "services", value: stats.service, label: "Service", color: "text-primary" },
@@ -557,6 +586,8 @@ export default function Index() {
           { id: "overdue", value: stats.overdue, label: "Overdue", color: "text-destructive" },
           { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
           { id: "emergency", value: stats.emergency, label: "Emergency", color: "text-destructive" },
+          { id: "paused", value: stats.paused, label: "Paused", color: "text-amber-500" },
+          { id: "inactive", value: stats.inactive, label: "Inactive", color: "text-muted-foreground" },
         ].map((s) => (
           <div key={s.id} className="relative">
             <button
