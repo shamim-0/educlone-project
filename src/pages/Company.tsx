@@ -450,7 +450,7 @@ export default function CompanyPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <Label>Branch</Label>
-              <Select value={branchId2} onValueChange={setBranchId}>
+              <Select value={branchId2} onValueChange={onBranchChange}>
                 <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
                 <SelectContent>
                   {branches.length === 0 ? (
@@ -465,13 +465,7 @@ export default function CompanyPage() {
               <div>
                 <Label>Company Code</Label>
                 <div className="flex gap-2">
-                  <Select value={prefix} onValueChange={(v) => setPrefix(v as "ISBI" | "ISBIJ")}>
-                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ISBI">ISBI</SelectItem>
-                      <SelectItem value="ISBIJ">ISBIJ</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input value={selectedPrefix} readOnly className="w-28 font-mono" title="Prefix auto-selected from branch (Dammam=ISBID, Madina=ISBIM, Jeddah=ISBIJ, others=ISBI)" />
                   <Input value={companyCode || "Generating..."} readOnly className="font-mono" />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
