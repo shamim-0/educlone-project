@@ -1,51 +1,49 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
-type ScrollEntryState = {
-  __scrollPath?: string;
-  __scrollY?: number;
+const storageKey = (pathname: string) => `scroll-position:${pathname}`;
+
+const readPosition = (pathname: string) => {
+  try {
+    const value = window.sessionStorage.getItem(storageKey(pathname));
+    if (value === null) return undefined;
+    const position = Number(value);
+    return Number.isFinite(position) ? position : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
-let restoring = false;
+const writePosition = (pathname: string, position: number) => {
+  try {
+    window.sessionStorage.setItem(storageKey(pathname), String(position));
+  } catch {
+    /* storage unavailable */
+  }
+};
 
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
 }
 
-const savePosition = (pathname: string, y: number) => {
-  try {
-    const state = (window.history.state ?? {}) as ScrollEntryState;
-    window.history.replaceState(
-      { ...state, __scrollPath: pathname, __scrollY: y },
-      "",
-      window.location.href,
-    );
-  } catch {
-    /* history unavailable */
-  }
-};
-
 export default function ScrollRestoration() {
   const location = useLocation();
   const navigationType = useNavigationType();
+  const restoringRef = useRef(false);
 
   useLayoutEffect(() => {
-    const state = (window.history.state ?? {}) as ScrollEntryState;
-    const saved = state.__scrollPath === location.pathname
-      ? state.__scrollY
-      : undefined;
+    const saved = readPosition(location.pathname);
 
-    // A newly opened page always starts at the top. Back/Forward returns to
-    // the position stored on that specific browser history entry.
     if (navigationType !== "POP" || saved === undefined) {
+      restoringRef.current = false;
       window.scrollTo(0, 0);
-      savePosition(location.pathname, 0);
+      writePosition(location.pathname, 0);
       return;
     }
 
     const apply = () => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (saved > maxScroll || window.scrollY === saved) return;
+      if (saved > maxScroll) return;
       window.scrollTo(0, saved);
     };
 
@@ -54,24 +52,24 @@ export default function ScrollRestoration() {
       return;
     }
 
-    restoring = true;
+    restoringRef.current = true;
     apply();
     const timer = window.setInterval(apply, 100);
     const stop = window.setTimeout(() => {
       window.clearInterval(timer);
-      restoring = false;
+      restoringRef.current = false;
     }, 8000);
 
     return () => {
       window.clearInterval(timer);
       window.clearTimeout(stop);
-      restoring = false;
+      restoringRef.current = false;
     };
   }, [location.pathname, navigationType]);
 
   useLayoutEffect(() => {
     const onScroll = () => {
-      if (!restoring) savePosition(location.pathname, window.scrollY);
+      if (!restoringRef.current) writePosition(location.pathname, window.scrollY);
     };
 
     onScroll();
