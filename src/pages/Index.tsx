@@ -347,19 +347,19 @@ export default function Index() {
     const entrepreneur = active.filter((c) => c.type === "entrepreneur").length;
     const industrial = active.filter((c) => c.type === "industrial_license").length;
     const completed = completedIds.size;
-    const takeAction = companies.filter((c) => c.take_action).length;
-    const emergency = companies.filter((c) => c.emergency).length;
+    const takeAction = active.filter((c) => c.take_action).length;
+    const emergency = active.filter((c) => c.emergency).length;
     const overdue = overdueIds.size;
     const avgProgress =
       total > 0
         ? Math.round(
-            companies.reduce((sum, c) => {
+            active.reduce((sum, c) => {
               const applicableTotal = getApplicableServiceDefs(c.type, serviceDefs).length || 1;
               return sum + (Math.min(stepCounts[c.id]?.done ?? 0, applicableTotal) / applicableTotal) * 100;
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress };
+    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress, paused, inactive };
   }, [companies, stepCounts, serviceDefs, completedIds, overdueIds]);
 
 
