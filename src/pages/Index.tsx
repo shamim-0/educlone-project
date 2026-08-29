@@ -27,6 +27,8 @@ interface Company {
   created_at: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
+  warning?: boolean | null;
+  warning_note?: string | null;
   note?: string | null;
   branches?: { name: string } | null;
 }
@@ -221,7 +223,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, type, branch_id, created_at, emergency, take_action, note, branches!companies_branch_id_fkey(name)")
+        .select("id, name, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, branches!companies_branch_id_fkey(name)")
         .eq("status", "active")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
