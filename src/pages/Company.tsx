@@ -557,7 +557,7 @@ export default function CompanyPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Warning — "{warningDialog?.row ? "" : ""}{warningDialog?.name}"
+              Warning — "{warningDialog?.name}"
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -576,6 +576,7 @@ export default function CompanyPage() {
                   } else {
                     applyWarning(warningDialog, true, warningNote.trim() || null);
                   }
+                  setWarningDialog(null);
                 }}
               >
                 Turn {warningDialog?.warning ? "Off" : "On"}
