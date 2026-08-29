@@ -97,7 +97,15 @@ export default function CompanyPage() {
   };
   useEffect(() => { document.title = "Company | ISBI Tracker"; if (role !== null) load(); }, [role, branchId]);
 
-  const trackingCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+  const companyCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+
+  /** 6-char uppercase alphanumeric suffix for the tracking ID. */
+  const randomSuffix = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const buf = new Uint32Array(6);
+    crypto.getRandomValues(buf);
+    return Array.from(buf, (n) => chars[n % chars.length]).join("");
+  };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -110,15 +118,16 @@ export default function CompanyPage() {
     const rawName = String(fd.get("name") ?? "").trim();
     if (!rawName) { toast.error("Company name required"); return; }
     const payload: Record<string, unknown> = {
-      name: editing ? rawName : `${trackingCode} ${rawName}`.trim(),
+      name: editing ? rawName : `${companyCode} ${rawName}`.trim(),
       type,
       branch_id: branchId2 || null,
       package_id: packageId || null,
       total_deal: dealAmount,
     };
     if (!editing) {
-      if (!trackingCode) { toast.error("Tracking ID not ready, please retry"); return; }
-      payload.tracking_id = trackingCode;
+      if (!companyCode) { toast.error("Company code not ready, please retry"); return; }
+      payload.company_code = companyCode;
+      payload.tracking_id = `${companyCode}-${randomSuffix()}`;
     }
     const { data: authData } = await supabase.auth.getUser();
     const { error } = editing
