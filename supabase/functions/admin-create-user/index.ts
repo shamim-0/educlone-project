@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const body = await req.json();
-    const { username, email, password, branch_id, role, accounts_access, expenses_access } = body ?? {};
+    const { username, email, password, branch_id, role, accounts_access, expenses_access, expenses_branch_id } = body ?? {};
     if (!username || !email || !password) {
       return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
     if (branch_id) profileUpdate.branch_id = branch_id;
     if (typeof accounts_access === "boolean") profileUpdate.accounts_access = accounts_access;
     if (typeof expenses_access === "boolean") profileUpdate.expenses_access = expenses_access;
+    if (expenses_access && expenses_branch_id) profileUpdate.expenses_branch_id = expenses_branch_id;
     if (Object.keys(profileUpdate).length > 0) {
       await admin.from("profiles").update(profileUpdate).eq("id", newId);
     }

@@ -17,7 +17,7 @@ import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
 import { UserActivityDialog } from "@/components/UserActivityDialog";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; expenses_branch_id: string | null; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
@@ -32,7 +32,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false, expenses_access: false });
+  const [form, setForm] = useState({ username: "", email: "", password: "", branch_id: "", role: "viewer" as AppRole, accounts_access: false, expenses_access: false, expenses_branch_id: "" });
   const [pwdTarget, setPwdTarget] = useState<Profile | null>(null);
   const [assignTarget, setAssignTarget] = useState<Profile | null>(null);
   const [todoTarget, setTodoTarget] = useState<Profile | null>(null);
@@ -43,7 +43,7 @@ export default function UsersPage() {
   const load = async () => {
     setLoading(true);
     const [{ data: p }, { data: r }, { data: b }] = await Promise.all([
-      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access, expenses_branch_id").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("branches").select("id, name").order("name"),
     ]);
@@ -86,11 +86,22 @@ export default function UsersPage() {
   };
 
   const toggleExpensesAccess = async (userId: string, value: boolean) => {
-    const { error } = await supabase.from("profiles").update({ expenses_access: value } as any).eq("id", userId);
+    const patch: any = { expenses_access: value };
+    if (!value) patch.expenses_branch_id = null;
+    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
     if (error) { toast.error(error.message); return; }
     toast.success("Expenses access updated");
-    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, expenses_access: value } : p));
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, expenses_access: value, expenses_branch_id: value ? p.expenses_branch_id : null } : p));
   };
+
+  const changeExpensesBranch = async (userId: string, branchId: string) => {
+    const value = branchId === "__all__" ? null : branchId;
+    const { error } = await supabase.from("profiles").update({ expenses_branch_id: value } as any).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Expenses branch updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, expenses_branch_id: value } : p));
+  };
+
 
   const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name ?? "—";
 
@@ -107,6 +118,7 @@ export default function UsersPage() {
         role: form.role,
         accounts_access: form.accounts_access,
         expenses_access: form.expenses_access,
+        expenses_branch_id: form.expenses_access ? (form.expenses_branch_id || null) : null,
       },
     });
     setSubmitting(false);
@@ -116,7 +128,8 @@ export default function UsersPage() {
     }
     toast.success("User created");
     setOpen(false);
-    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false, expenses_access: false });
+    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false, expenses_access: false, expenses_branch_id: "" });
+
     load();
   };
 
@@ -191,11 +204,25 @@ export default function UsersPage() {
                 </TableCell>
                 <TableCell>
                   {isAdmin ? (
-                    <Switch checked={!!p.expenses_access} onCheckedChange={(v) => toggleExpensesAccess(p.id, v)} />
+                    <div className="space-y-2">
+                      <Switch checked={!!p.expenses_access} onCheckedChange={(v) => toggleExpensesAccess(p.id, v)} />
+                      {p.expenses_access && (
+                        <Select value={p.expenses_branch_id ?? "__all__"} onValueChange={(v) => changeExpensesBranch(p.id, v)}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__all__">All branches</SelectItem>
+                            {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
                   ) : (
-                    <Badge variant="secondary">{p.expenses_access ? "Yes" : "No"}</Badge>
+                    <Badge variant="secondary">
+                      {p.expenses_access ? (p.expenses_branch_id ? branchName(p.expenses_branch_id) : "All branches") : "No"}
+                    </Badge>
                   )}
                 </TableCell>
+
                 {isAdmin && (
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -266,13 +293,29 @@ export default function UsersPage() {
               </div>
               <Switch checked={form.accounts_access} onCheckedChange={(v) => setForm({ ...form, accounts_access: v })} />
             </div>
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <Label>Expenses Access</Label>
-                <p className="text-xs text-muted-foreground">Allow this user to open the Expenses page.</p>
+            <div className="rounded-md border p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Expenses Access</Label>
+                  <p className="text-xs text-muted-foreground">Allow this user to open the Expenses page.</p>
+                </div>
+                <Switch checked={form.expenses_access} onCheckedChange={(v) => setForm({ ...form, expenses_access: v, expenses_branch_id: v ? form.expenses_branch_id : "" })} />
               </div>
-              <Switch checked={form.expenses_access} onCheckedChange={(v) => setForm({ ...form, expenses_access: v })} />
+              {form.expenses_access && (
+                <div>
+                  <Label>Expenses Branch</Label>
+                  <Select value={form.expenses_branch_id || "__all__"} onValueChange={(v) => setForm({ ...form, expenses_branch_id: v === "__all__" ? "" : v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">All branches</SelectItem>
+                      {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Only companies of this branch will be visible in Expenses.</p>
+                </div>
+              )}
             </div>
+
           </div>
           <DialogFooter>
             <Button onClick={createUser} disabled={submitting}>{submitting ? "Creating…" : "Create User"}</Button>
