@@ -159,14 +159,26 @@ export default function CompanyPage() {
     { value: "inactive", label: "Inactive", cls: "bg-destructive text-destructive-foreground border-destructive" },
   ];
 
-  const setStatus = async (row: Company, status: string) => {
+  const [statusDialog, setStatusDialog] = useState<{ row: Company; status: string } | null>(null);
+  const [statusNote, setStatusNote] = useState("");
+
+  const applyStatus = async (row: Company, status: string, note: string | null) => {
     const { error } = await supabase
       .from("companies")
-      .update({ status, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any)
+      .update({ status, status_note: note, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any)
       .eq("id", row.id);
     if (error) { toast.error(error.message); return; }
-    setRows((prev) => prev.map((c) => (c.id === row.id ? { ...c, status } : c)));
+    setRows((prev) => prev.map((c) => (c.id === row.id ? { ...c, status, status_note: note } : c)));
     toast.success(`Status set to ${status}`);
+  };
+
+  const setStatus = (row: Company, status: string) => {
+    if (status === "paused" || status === "inactive") {
+      setStatusNote(row.status_note ?? "");
+      setStatusDialog({ row, status });
+      return;
+    }
+    applyStatus(row, status, row.status_note ?? null);
   };
 
   const onPackageChange = (v: string) => {
