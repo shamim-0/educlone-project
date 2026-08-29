@@ -58,6 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setBranchId(null);
         setAccountsAccess(false);
         setExpensesAccess(false);
+        setExpensesBranchId(null);
       }
     });
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -91,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <Ctx.Provider value={{ session, user, role, username, branchId, accountsAccess, expensesAccess, loading, signIn, signUp, signOut }}>
+    <Ctx.Provider value={{ session, user, role, username, branchId, accountsAccess, expensesAccess, expensesBranchId, loading, signIn, signUp, signOut }}>
       {children}
     </Ctx.Provider>
   );
