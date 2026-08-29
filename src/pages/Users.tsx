@@ -118,6 +118,7 @@ export default function UsersPage() {
         role: form.role,
         accounts_access: form.accounts_access,
         expenses_access: form.expenses_access,
+        expenses_branch_id: form.expenses_access ? (form.expenses_branch_id || null) : null,
       },
     });
     setSubmitting(false);
@@ -127,7 +128,8 @@ export default function UsersPage() {
     }
     toast.success("User created");
     setOpen(false);
-    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false, expenses_access: false });
+    setForm({ username: "", email: "", password: "", branch_id: "", role: "viewer", accounts_access: false, expenses_access: false, expenses_branch_id: "" });
+
     load();
   };
 
@@ -202,11 +204,25 @@ export default function UsersPage() {
                 </TableCell>
                 <TableCell>
                   {isAdmin ? (
-                    <Switch checked={!!p.expenses_access} onCheckedChange={(v) => toggleExpensesAccess(p.id, v)} />
+                    <div className="space-y-2">
+                      <Switch checked={!!p.expenses_access} onCheckedChange={(v) => toggleExpensesAccess(p.id, v)} />
+                      {p.expenses_access && (
+                        <Select value={p.expenses_branch_id ?? "__all__"} onValueChange={(v) => changeExpensesBranch(p.id, v)}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__all__">All branches</SelectItem>
+                            {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
                   ) : (
-                    <Badge variant="secondary">{p.expenses_access ? "Yes" : "No"}</Badge>
+                    <Badge variant="secondary">
+                      {p.expenses_access ? (p.expenses_branch_id ? branchName(p.expenses_branch_id) : "All branches") : "No"}
+                    </Badge>
                   )}
                 </TableCell>
+
                 {isAdmin && (
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
