@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS warning boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS warning_note text;

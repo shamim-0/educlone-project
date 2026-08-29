@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { extractCompanyCode } from "@/lib/companySort";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Zap, Search, MoreVertical, FileDown } from "lucide-react";
+import { Zap, Search, MoreVertical, FileDown, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,8 @@ interface Company {
   created_at: string;
   emergency?: boolean | null;
   take_action?: boolean | null;
+  warning?: boolean | null;
+  warning_note?: string | null;
   note?: string | null;
   branches?: { name: string } | null;
 }
@@ -73,6 +75,15 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         )}>
           <Zap className="h-3.5 w-3.5 fill-current" />
           {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : isTakeAction ? "TAKE ACTION REQUIRED" : "OVERDUE — ACTION REQUIRED"}
+        </div>
+      )}
+
+      {c.warning && (
+        <div className="-mx-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="h-3.5 w-3.5 fill-current shrink-0" />
+          <span className="truncate" title={c.warning_note ?? undefined}>
+            WARNING{c.warning_note ? ` — ${c.warning_note}` : ""}
+          </span>
         </div>
       )}
 
@@ -221,7 +232,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, type, branch_id, created_at, emergency, take_action, note, branches!companies_branch_id_fkey(name)")
+        .select("id, name, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, branches!companies_branch_id_fkey(name)")
         .eq("status", "active")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {

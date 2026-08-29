@@ -116,6 +116,8 @@ export type Database = {
           update_by: string | null
           updated_at: string
           vat: string | null
+          warning: boolean
+          warning_note: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -152,6 +154,8 @@ export type Database = {
           update_by?: string | null
           updated_at?: string
           vat?: string | null
+          warning?: boolean
+          warning_note?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -188,6 +192,8 @@ export type Database = {
           update_by?: string | null
           updated_at?: string
           vat?: string | null
+          warning?: boolean
+          warning_note?: string | null
           whatsapp?: string | null
         }
         Relationships: [

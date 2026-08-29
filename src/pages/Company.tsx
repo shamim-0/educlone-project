@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MoreVertical } from "lucide-react";
+import { Search, MoreVertical, AlertTriangle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ interface Company {
   updated_at?: string | null;
   status?: string | null;
   status_note?: string | null;
+  warning?: boolean | null;
+  warning_note?: string | null;
   branches?: { name: string } | null;
 }
 interface Branch { id: string; name: string; }
@@ -82,7 +84,7 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, company_code, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, status_note, branches!companies_branch_id_fkey(name)")
+      .select("id, name, company_code, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, status_note, warning, warning_note, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
@@ -161,6 +163,25 @@ export default function CompanyPage() {
 
   const [statusDialog, setStatusDialog] = useState<{ row: Company; status: string } | null>(null);
   const [statusNote, setStatusNote] = useState("");
+
+  // Warning state
+  const [warningDialog, setWarningDialog] = useState<Company | null>(null);
+  const [warningNote, setWarningNote] = useState("");
+
+  const applyWarning = async (row: Company, on: boolean, note: string | null) => {
+    const { error } = await supabase
+      .from("companies")
+      .update({ warning: on, warning_note: note, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any)
+      .eq("id", row.id);
+    if (error) { toast.error(error.message); return; }
+    setRows((prev) => prev.map((c) => (c.id === row.id ? { ...c, warning: on, warning_note: note } : c)));
+    toast.success(on ? "Warning turned on" : "Warning turned off");
+  };
+
+  const openWarning = (row: Company) => {
+    setWarningNote(row.warning_note ?? "");
+    setWarningDialog(row);
+  };
 
   const applyStatus = async (row: Company, status: string, note: string | null) => {
     const { error } = await supabase
@@ -379,6 +400,25 @@ export default function CompanyPage() {
               );
             },
           },
+          {
+            key: "warning",
+            header: "Warning",
+            render: (r) => {
+              const canEdit = role === "admin" || role === "sub_admin" || role === "editor";
+              return (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className={cn("h-7 w-7", r.warning ? "text-amber-500" : "text-muted-foreground")}
+                  title={r.warning ? (r.warning_note ? `Warning: ${r.warning_note}` : "Warning on") : canEdit ? "Set warning" : "No warning"}
+                  onClick={() => canEdit && openWarning(r)}
+                  disabled={!canEdit}
+                >
+                  <AlertTriangle className={cn("h-4 w-4", r.warning && "fill-amber-500")} />
+                </Button>
+              );
+            },
+          },
         ]}
         onAdd={role === "admin" || role === "sub_admin" ? openAdd : undefined}
         onEdit={role === "admin" || role === "sub_admin" || role === "editor" ? openEdit : undefined}
@@ -508,6 +548,63 @@ export default function CompanyPage() {
               <Button type="submit">Save Status</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Warning dialog */}
+      <Dialog open={!!warningDialog} onOpenChange={(o) => !o && setWarningDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Warning — "{warningDialog?.name}"
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <p className="text-sm font-medium">Warning {warningDialog?.warning ? "On" : "Off"}</p>
+                <p className="text-xs text-muted-foreground">Toggle to enable or disable the warning for this company</p>
+              </div>
+              <Button
+                variant={warningDialog?.warning ? "destructive" : "default"}
+                size="sm"
+                onClick={() => {
+                  if (!warningDialog) return;
+                  if (warningDialog.warning) {
+                    applyWarning(warningDialog, false, warningDialog.warning_note ?? null);
+                  } else {
+                    applyWarning(warningDialog, true, warningNote.trim() || null);
+                  }
+                  setWarningDialog(null);
+                }}
+              >
+                Turn {warningDialog?.warning ? "Off" : "On"}
+              </Button>
+            </div>
+            <div>
+              <Label htmlFor="warning_note">Warning Message</Label>
+              <Input
+                id="warning_note"
+                value={warningNote}
+                onChange={(e) => setWarningNote(e.target.value)}
+                placeholder="Write the warning message..."
+                maxLength={300}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setWarningDialog(null)}>Close</Button>
+              <Button
+                onClick={() => {
+                  if (!warningDialog) return;
+                  applyWarning(warningDialog, warningDialog.warning ?? true, warningNote.trim() || null);
+                  setWarningDialog(null);
+                }}
+              >
+                Save Message
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
