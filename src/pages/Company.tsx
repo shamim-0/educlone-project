@@ -304,6 +304,11 @@ export default function CompanyPage() {
         showIndex
         columns={[
           {
+            key: "company_code",
+            header: "Company Code",
+            render: (r) => <span className="font-mono text-xs">{r.company_code ?? "—"}</span>,
+          },
+          {
             key: "tracking_id",
             header: "Tracking ID",
             render: (r) => <span className="font-mono text-xs">{r.tracking_id ?? "—"}</span>,
@@ -315,7 +320,10 @@ export default function CompanyPage() {
               const title = r.update_by
                   ? auditTitle(r.update_by, r.updated_at, "Last updated by")
                   : auditTitle(profileNames[r.created_by ?? ""], r.created_at, "Added by");
-              return <span title={title}>{r.name}</span>;
+              const clean = r.company_code
+                ? r.name.replace(new RegExp(`^\\s*${r.company_code}\\s*`, "i"), "")
+                : r.name;
+              return <span title={title}>{clean || r.name}</span>;
             },
           },
           { key: "branch", header: "Branch", render: (r) => r.branches?.name ?? "—" },
