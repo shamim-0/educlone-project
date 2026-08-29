@@ -29,19 +29,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [branchId, setBranchId] = useState<string | null>(null);
   const [accountsAccess, setAccountsAccess] = useState<boolean>(false);
   const [expensesAccess, setExpensesAccess] = useState<boolean>(false);
+  const [expensesBranchId, setExpensesBranchId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (uid: string) => {
     const [{ data: roleRow }, { data: profile }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", uid).order("role").limit(1).maybeSingle(),
-      supabase.from("profiles").select("username, branch_id, accounts_access, expenses_access").eq("id", uid).maybeSingle(),
+      supabase.from("profiles").select("username, branch_id, accounts_access, expenses_access, expenses_branch_id").eq("id", uid).maybeSingle(),
     ]);
     setRole((roleRow?.role as AppRole) ?? "viewer");
     setUsername(profile?.username ?? null);
     setBranchId((profile as any)?.branch_id ?? null);
     setAccountsAccess(!!(profile as any)?.accounts_access);
     setExpensesAccess(!!(profile as any)?.expenses_access);
+    setExpensesBranchId((profile as any)?.expenses_branch_id ?? null);
   };
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
