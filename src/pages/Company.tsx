@@ -474,6 +474,42 @@ export default function CompanyPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Status change note dialog (Paused / Inactive) */}
+      <Dialog open={!!statusDialog} onOpenChange={(o) => !o && setStatusDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="capitalize">
+              Set "{statusDialog?.row.name}" to {statusDialog?.status}
+            </DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!statusNote.trim()) { toast.error("Please write a note / reason"); return; }
+              applyStatus(statusDialog!.row, statusDialog!.status, statusNote.trim());
+              setStatusDialog(null);
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <Label htmlFor="status_note">Note / Reason <span className="text-destructive">*</span></Label>
+              <Input
+                id="status_note"
+                value={statusNote}
+                onChange={(e) => setStatusNote(e.target.value)}
+                placeholder="Why is this company being paused / inactivated?"
+                maxLength={300}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setStatusDialog(null)}>Cancel</Button>
+              <Button type="submit">Save Status</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
