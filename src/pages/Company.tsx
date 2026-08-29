@@ -33,6 +33,7 @@ interface Company {
   update_by?: string | null;
   updated_at?: string | null;
   status?: string | null;
+  status_note?: string | null;
   branches?: { name: string } | null;
 }
 interface Branch { id: string; name: string; }
@@ -81,7 +82,7 @@ export default function CompanyPage() {
     setLoading(true);
     let q = supabase
       .from("companies")
-      .select("id, name, company_code, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, branches!companies_branch_id_fkey(name)")
+      .select("id, name, company_code, tracking_id, type, branch_id, package_id, total_deal, created_at, emergency, take_action, created_by, update_by, updated_at, status, status_note, branches!companies_branch_id_fkey(name)")
       .order("created_at", { ascending: false });
     if (role && role !== "admin" && branchId) q = q.eq("branch_id", branchId);
     const [{ data: c, error }, { data: b }, { data: s }, { data: pk }] = await Promise.all([
@@ -158,14 +159,26 @@ export default function CompanyPage() {
     { value: "inactive", label: "Inactive", cls: "bg-destructive text-destructive-foreground border-destructive" },
   ];
 
-  const setStatus = async (row: Company, status: string) => {
+  const [statusDialog, setStatusDialog] = useState<{ row: Company; status: string } | null>(null);
+  const [statusNote, setStatusNote] = useState("");
+
+  const applyStatus = async (row: Company, status: string, note: string | null) => {
     const { error } = await supabase
       .from("companies")
-      .update({ status, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any)
+      .update({ status, status_note: note, update_by: myUsername ?? null, updated_at: new Date().toISOString() } as any)
       .eq("id", row.id);
     if (error) { toast.error(error.message); return; }
-    setRows((prev) => prev.map((c) => (c.id === row.id ? { ...c, status } : c)));
+    setRows((prev) => prev.map((c) => (c.id === row.id ? { ...c, status, status_note: note } : c)));
     toast.success(`Status set to ${status}`);
+  };
+
+  const setStatus = (row: Company, status: string) => {
+    if (status === "paused" || status === "inactive") {
+      setStatusNote(row.status_note ?? "");
+      setStatusDialog({ row, status });
+      return;
+    }
+    applyStatus(row, status, row.status_note ?? null);
   };
 
   const onPackageChange = (v: string) => {
@@ -339,8 +352,13 @@ export default function CompanyPage() {
             render: (r) => {
               const cur = STATUS_OPTS.find((o) => o.value === (r.status ?? "active")) ?? STATUS_OPTS[0];
               return (
-                <div className="flex items-center gap-1">
-                  <Badge className={cn("border", cur.cls)}>{cur.label}</Badge>
+                 <div className="flex items-center gap-1">
+                   <Badge
+                     className={cn("border", cur.cls)}
+                     title={r.status_note ? `Reason: ${r.status_note}` : undefined}
+                   >
+                     {cur.label}
+                   </Badge>
                   {(role === "admin" || role === "sub_admin" || role === "editor") && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -453,6 +471,42 @@ export default function CompanyPage() {
               </p>
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Status change note dialog (Paused / Inactive) */}
+      <Dialog open={!!statusDialog} onOpenChange={(o) => !o && setStatusDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="capitalize">
+              Set "{statusDialog?.row.name}" to {statusDialog?.status}
+            </DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!statusNote.trim()) { toast.error("Please write a note / reason"); return; }
+              applyStatus(statusDialog!.row, statusDialog!.status, statusNote.trim());
+              setStatusDialog(null);
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <Label htmlFor="status_note">Note / Reason <span className="text-destructive">*</span></Label>
+              <Input
+                id="status_note"
+                value={statusNote}
+                onChange={(e) => setStatusNote(e.target.value)}
+                placeholder="Why is this company being paused / inactivated?"
+                maxLength={300}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setStatusDialog(null)}>Cancel</Button>
+              <Button type="submit">Save Status</Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

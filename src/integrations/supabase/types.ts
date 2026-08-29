@@ -108,6 +108,7 @@ export type Database = {
           phone: string | null
           slug: string | null
           status: string
+          status_note: string | null
           take_action: boolean
           total_deal: number | null
           tracking_id: string | null
@@ -143,6 +144,7 @@ export type Database = {
           phone?: string | null
           slug?: string | null
           status?: string
+          status_note?: string | null
           take_action?: boolean
           total_deal?: number | null
           tracking_id?: string | null
@@ -178,6 +180,7 @@ export type Database = {
           phone?: string | null
           slug?: string | null
           status?: string
+          status_note?: string | null
           take_action?: boolean
           total_deal?: number | null
           tracking_id?: string | null
