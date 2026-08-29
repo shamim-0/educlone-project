@@ -49,6 +49,11 @@ export default function ScrollRestoration() {
       window.scrollTo(0, saved);
     };
 
+    if (saved === 0) {
+      apply();
+      return;
+    }
+
     restoring = true;
     apply();
     const timer = window.setInterval(apply, 100);
