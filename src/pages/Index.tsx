@@ -90,12 +90,18 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         </div>
       )}
 
+      {notActive && (
+        <div className="-mx-5 -mt-5 mb-4 px-5 py-2 border-b flex items-center gap-2 text-[11px] font-bold tracking-wider bg-muted/60 border-border text-muted-foreground">
+          {c.status === "paused" ? "⏸ PAUSED — DAY COUNT OFF" : "⛔ INACTIVE — DAY COUNT OFF"}
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-foreground font-semibold leading-tight">{c.name}</h3>
         <span
           className={cn(
             "mt-1 h-2.5 w-2.5 rounded-full shrink-0",
-            p.overdue ? "bg-destructive" : "bg-accent"
+            notActive ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
           )}
         />
       </div>
