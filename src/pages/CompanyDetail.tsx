@@ -703,7 +703,7 @@ export default function CompanyDetail() {
               chamber_of_commerce_registration: { offsetWD: 20, windowWD: 5 },
             };
             const cdCfg = COUNTDOWN_CONFIG[def.key];
-            if (cdCfg) {
+            if (cdCfg && !dayCountOff) {
               const ap = steps["all_papers_recieved"] as any;
               if (ap?.status === "done" && stAt(ap)) {
                 const apDay = new Date(stAt(ap)!);
@@ -772,7 +772,7 @@ export default function CompanyDetail() {
             }
 
             // Saudi Employee Hiring — must be done by the next Wednesday after CR (Commercial Registration) is done.
-            if (def.key === "saudi_employee_hiring") {
+            if (def.key === "saudi_employee_hiring" && !dayCountOff) {
               const cr = steps["cr_commercial_registration"] as any;
               if (cr?.status === "done" && stAt(cr)) {
                 const start = new Date(stAt(cr)!);
@@ -805,7 +805,7 @@ export default function CompanyDetail() {
             }
 
             // Saudization Quota Allocation — must be done by the next Sunday after Saudi Employee Hiring is done.
-            if (def.key === "saudization_quota_allocation") {
+            if (def.key === "saudization_quota_allocation" && !dayCountOff) {
               const seh = steps["saudi_employee_hiring"] as any;
               if (seh?.status === "done" && stAt(seh)) {
                 const start = new Date(stAt(seh)!);
