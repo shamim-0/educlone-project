@@ -30,6 +30,7 @@ interface Company {
   warning?: boolean | null;
   warning_note?: string | null;
   note?: string | null;
+  status?: string | null;
   branches?: { name: string } | null;
 }
 
@@ -47,13 +48,14 @@ function deriveProgress(startAt: string | null, done: number, processing: number
 }
 
 function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses, startAt, lastUpdate }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string>; startAt: string | null; lastUpdate?: { label: string; by: string | null; at: string } | null }) {
+  const notActive = !!c.status && c.status !== "active";
   const p = deriveProgress(startAt, done, processing, totalSteps);
   const applicableKeys = applicableDefs.map((d) => d.key);
-  const isCompanyOverdueNow = isCompanyOverdue(applicableKeys, stepStatuses, startAt);
+  const isCompanyOverdueNow = !notActive && isCompanyOverdue(applicableKeys, stepStatuses, startAt);
 
   const branchName = c.branches?.name ?? "—";
-  const isEmergency = !!c.emergency;
-  const isTakeAction = !!c.take_action;
+  const isEmergency = !notActive && !!c.emergency;
+  const isTakeAction = !notActive && !!c.take_action;
   const isOverdue = isCompanyOverdueNow;
 
   return (
@@ -61,7 +63,8 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
     <Card
       className={cn(
         "relative p-5 shadow-card overflow-hidden transition-all hover:shadow-elegant cursor-pointer hover:-translate-y-0.5 border-2",
-        isEmergency && "border-destructive animate-border-pulse-red",
+        notActive && "opacity-55 grayscale-[35%] border-dashed border-muted-foreground/50",
+        !notActive && isEmergency && "border-destructive animate-border-pulse-red",
         !isEmergency && isTakeAction && "border-[rgb(249,115,22)] animate-border-pulse-orange",
         !isEmergency && !isTakeAction && isOverdue && "border-[rgb(249,115,22)] animate-border-pulse-orange"
       )}
