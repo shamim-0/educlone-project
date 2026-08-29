@@ -20,6 +20,7 @@ type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license
 interface Company {
   id: string;
   name: string;
+  company_code?: string | null;
   tracking_id?: string | null;
   type: CompanyType;
   branch_id: string | null;
