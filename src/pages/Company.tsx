@@ -219,10 +219,11 @@ export default function CompanyPage() {
     if (pkg) setDeal(String(pkg.price));
   };
 
-  const loadNextNumber = async (pfx: string) => {
+  const loadNextNumber = async (_pfx: string) => {
     setNextNum(null);
     const { data } = await supabase.from("companies").select("company_code, name");
-    const re = new RegExp(`^${pfx}(\\d+)`, "i");
+    // Global sequence: the number continues across all branch prefixes (ISBI/ISBID/ISBIM/ISBIJ)
+    const re = /^ISBI[A-Z]?(\d+)/i;
     let max = 0;
     (data ?? []).forEach((r: any) => {
       const m = (r.company_code ?? r.name ?? "").trim().match(re);
@@ -233,6 +234,7 @@ export default function CompanyPage() {
     });
     setNextNum(max + 1);
   };
+
 
   const onBranchChange = (id: string) => {
     setBranchId(id);
