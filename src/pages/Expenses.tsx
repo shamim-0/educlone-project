@@ -76,7 +76,7 @@ function AnimatedProgress({ value, className = "", barClassName = "bg-primary" }
 }
 
 export default function ExpensesPage() {
-  const { role, username: myUsername } = useAuth();
+  const { role, username: myUsername, expensesBranchId } = useAuth();
   const profileNames = useProfileNames();
   const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
     auditTitle(name, at, verb);
@@ -113,12 +113,13 @@ export default function ExpensesPage() {
 
   const load = async () => {
     setLoading(true);
+    let companyQuery = supabase
+      .from("companies")
+      .select("id, name, type, branch_id, branches!companies_branch_id_fkey(name)")
+      .eq("status", "active");
+    if (role !== "admin" && expensesBranchId) companyQuery = companyQuery.eq("branch_id", expensesBranchId);
     const [c, e, x] = await Promise.all([
-      supabase
-        .from("companies")
-        .select("id, name, type, branch_id, branches!companies_branch_id_fkey(name)")
-        .eq("status", "active")
-        .order("name"),
+      companyQuery.order("name"),
       db.from("company_expenses").select("*"),
       db.from("company_extra_expenses").select("*").order("created_at", { ascending: false }),
     ]);
@@ -130,7 +131,8 @@ export default function ExpensesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { document.title = "Expenses | ISBI Tracker"; load(); }, []);
+  useEffect(() => { document.title = "Expenses | ISBI Tracker"; load(); }, [role, expensesBranchId]);
+
 
   const dateFilterActive = !!dayFilter || !!monthFilter || !!fromDate || !!toDate;
   const periodExpenses = useMemo(() => {
