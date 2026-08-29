@@ -1,126 +1,74 @@
 import { useLayoutEffect } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
-// Remember each page's scroll position so that going back (or forward)
-// returns you to the exact spot you left, instead of jumping to the top.
-//
-// Positions are keyed by pathname (location.key is not unique across routes
-// in this app) and mirrored to sessionStorage so they survive full page
-// reloads — which is what a back/forward navigation can trigger here.
-const scrollPositions = new Map<string, number>();
-
-const storageKey = (pathname: string) => `sr-pos:${pathname}`;
-const pendingRestoreKey = "sr-pending-path";
-
-const readSaved = (pathname: string): number | undefined => {
-  if (scrollPositions.has(pathname)) return scrollPositions.get(pathname);
-  try {
-    const raw = sessionStorage.getItem(storageKey(pathname));
-    if (raw !== null) return Number(raw) || 0;
-  } catch {
-    /* storage unavailable */
-  }
-  return undefined;
+type ScrollEntryState = {
+  __scrollPath?: string;
+  __scrollY?: number;
 };
 
-const writeSaved = (pathname: string, y: number) => {
-  scrollPositions.set(pathname, y);
-  try {
-    sessionStorage.setItem(storageKey(pathname), String(y));
-  } catch {
-    /* storage unavailable */
-  }
-};
-
-// True while a restore is in progress; during that window scroll events
-// (including the browser's own native restoration) are ignored so they
-// cannot overwrite the position we are restoring.
 let restoring = false;
 
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
 }
 
+const savePosition = (pathname: string, y: number) => {
+  try {
+    const state = (window.history.state ?? {}) as ScrollEntryState;
+    window.history.replaceState(
+      { ...state, __scrollPath: pathname, __scrollY: y },
+      "",
+      window.location.href,
+    );
+  } catch {
+    /* history unavailable */
+  }
+};
+
 export default function ScrollRestoration() {
   const location = useLocation();
   const navigationType = useNavigationType();
 
-  // On back/forward navigation, return to the exact spot the user left.
-  // The page may still be loading its content (which can grow and shrink),
-  // and the browser may apply its own native scroll, so keep re-applying
-  // until the document is tall enough to hold the saved position.
   useLayoutEffect(() => {
-    let pendingPath: string | null = null;
-    try {
-      pendingPath = sessionStorage.getItem(pendingRestoreKey);
-    } catch {
-      /* storage unavailable */
-    }
+    const state = (window.history.state ?? {}) as ScrollEntryState;
+    const saved = state.__scrollPath === location.pathname
+      ? state.__scrollY
+      : undefined;
 
-    // A normal link click opens the destination at the top. The scroll
-    // listener on the previous route has already saved where the user was,
-    // so a later Back action can still restore that exact position.
-    if (navigationType !== "POP" && pendingPath !== location.pathname) {
+    // A newly opened page always starts at the top. Back/Forward returns to
+    // the position stored on that specific browser history entry.
+    if (navigationType !== "POP" || saved === undefined) {
       window.scrollTo(0, 0);
+      savePosition(location.pathname, 0);
       return;
     }
-    const saved = readSaved(location.pathname);
-    if (saved === undefined) return;
 
-    // Keep this marker in session storage until restoration finishes. In
-    // this app a browser Back can reload and briefly remount the auth tree;
-    // the next mount must continue restoring instead of treating it as a
-    // fresh visit and resetting the page to the top.
-    try {
-      sessionStorage.setItem(pendingRestoreKey, location.pathname);
-    } catch {
-      /* storage unavailable */
-    }
-
-const apply = () => {
+    const apply = () => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (saved > maxScroll) return; // page not tall enough yet — keep waiting
-      if (window.scrollY === saved) return; // already there — never fight the user
+      if (saved > maxScroll || window.scrollY === saved) return;
       window.scrollTo(0, saved);
-      writeSaved(location.pathname, saved);
     };
 
-apply();
-    // A fresh visit with nothing saved (or a restored position of "top of
-    // page") needs no restore window — starting one would only fight the
-    // user's scrolling. For any real saved position we keep the window
-    // alive even if we are already at the target, so a late native
-    // browser restore cannot knock us off it.
-    if (saved === 0 && window.scrollY === 0) return;
-
     restoring = true;
-    const timer = setInterval(apply, 100);
-const stop = setTimeout(() => {
-      clearInterval(timer);
+    apply();
+    const timer = window.setInterval(apply, 100);
+    const stop = window.setTimeout(() => {
+      window.clearInterval(timer);
       restoring = false;
-      try {
-        if (sessionStorage.getItem(pendingRestoreKey) === location.pathname) {
-          sessionStorage.removeItem(pendingRestoreKey);
-        }
-      } catch {
-        /* storage unavailable */
-      }
     }, 8000);
+
     return () => {
-      clearInterval(timer);
-      clearTimeout(stop);
+      window.clearInterval(timer);
+      window.clearTimeout(stop);
       restoring = false;
     };
   }, [location.pathname, navigationType]);
 
-  // Track the current page's scroll position continuously so it can be
-  // restored later. Runs after the restore effect so it never overwrites
-  // a saved position before it is read.
   useLayoutEffect(() => {
     const onScroll = () => {
-      if (restoring) return;
-      writeSaved(location.pathname, window.scrollY);
+      if (!restoring) savePosition(location.pathname, window.scrollY);
     };
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
