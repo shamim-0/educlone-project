@@ -55,14 +55,18 @@ export default function ScrollRestoration() {
     restoringRef.current = true;
     apply();
     const timer = window.setInterval(apply, 100);
+    const observer = new ResizeObserver(apply);
+    observer.observe(document.documentElement);
     const stop = window.setTimeout(() => {
       window.clearInterval(timer);
+      observer.disconnect();
       restoringRef.current = false;
-    }, 8000);
+    }, 30000);
 
     return () => {
       window.clearInterval(timer);
       window.clearTimeout(stop);
+      observer.disconnect();
       restoringRef.current = false;
     };
   }, [location.pathname, navigationType]);
