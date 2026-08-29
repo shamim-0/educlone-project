@@ -96,8 +96,12 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        company_code: (company as any).company_code ?? null,
         tracking_id: (company as any).tracking_id ?? null,
-        name: company.name,
+        name: (company as any).company_code
+          ? String(company.name).replace(new RegExp(`^\\s*${(company as any).company_code}\\s*`, "i"), "").trim() || company.name
+          : company.name,
+        full_name: company.name,
         branch: branchName,
         status: company.status,
         percentage,
