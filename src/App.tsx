@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ScrollRestoration from "@/components/ScrollRestoration";
 import AppLayout from "@/components/AppLayout";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
@@ -31,7 +32,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
+<AuthProvider>
+          <ScrollRestoration />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route
