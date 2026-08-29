@@ -293,13 +293,29 @@ export default function UsersPage() {
               </div>
               <Switch checked={form.accounts_access} onCheckedChange={(v) => setForm({ ...form, accounts_access: v })} />
             </div>
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <Label>Expenses Access</Label>
-                <p className="text-xs text-muted-foreground">Allow this user to open the Expenses page.</p>
+            <div className="rounded-md border p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Expenses Access</Label>
+                  <p className="text-xs text-muted-foreground">Allow this user to open the Expenses page.</p>
+                </div>
+                <Switch checked={form.expenses_access} onCheckedChange={(v) => setForm({ ...form, expenses_access: v, expenses_branch_id: v ? form.expenses_branch_id : "" })} />
               </div>
-              <Switch checked={form.expenses_access} onCheckedChange={(v) => setForm({ ...form, expenses_access: v })} />
+              {form.expenses_access && (
+                <div>
+                  <Label>Expenses Branch</Label>
+                  <Select value={form.expenses_branch_id || "__all__"} onValueChange={(v) => setForm({ ...form, expenses_branch_id: v === "__all__" ? "" : v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">All branches</SelectItem>
+                      {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Only companies of this branch will be visible in Expenses.</p>
+                </div>
+              )}
             </div>
+
           </div>
           <DialogFooter>
             <Button onClick={createUser} disabled={submitting}>{submitting ? "Creating…" : "Create User"}</Button>
