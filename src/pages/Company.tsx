@@ -71,8 +71,18 @@ export default function CompanyPage() {
   const [branchId2, setBranchId] = useState<string>("");
   const [packageId, setPackageId] = useState<string>("");
   const [deal, setDeal] = useState<string>("");
-  const [prefix, setPrefix] = useState<"ISBI" | "ISBIJ">("ISBIJ");
   const [nextNum, setNextNum] = useState<number | null>(null);
+
+  /** Derives the company-code prefix from the selected branch name. */
+  const prefixForBranch = (branchName: string | undefined | null): string => {
+    const n = (branchName ?? "").toLowerCase();
+    if (n.includes("dammam")) return "ISBID";
+    if (n.includes("madina")) return "ISBIM";
+    if (n.includes("jeddah")) return "ISBIJ";
+    return "ISBI"; // Dhaka, Jahid vai Makkah, Riyadh, default
+  };
+
+  const selectedPrefix = prefixForBranch(branches.find((b) => b.id === branchId2)?.name);
 
   // Filter / sort state
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -108,7 +118,7 @@ export default function CompanyPage() {
   };
   useEffect(() => { document.title = "Company | ISBI Tracker"; if (role !== null) load(); }, [role, branchId]);
 
-  const companyCode = nextNum != null ? `${prefix}${String(nextNum).padStart(5, "0")}` : "";
+  const companyCode = nextNum != null ? `${selectedPrefix}${String(nextNum).padStart(5, "0")}` : "";
 
   /** 6-char uppercase alphanumeric suffix for the tracking ID. */
   const randomSuffix = () => {
@@ -209,18 +219,27 @@ export default function CompanyPage() {
     if (pkg) setDeal(String(pkg.price));
   };
 
-  const loadNextNumber = async () => {
+  const loadNextNumber = async (pfx: string) => {
     setNextNum(null);
     const { data } = await supabase.from("companies").select("company_code, name");
+    const re = new RegExp(`^${pfx}(\\d+)`, "i");
     let max = 0;
     (data ?? []).forEach((r: any) => {
-      const n = extractCompanyCode(r.company_code ?? r.name ?? "");
-      if (n > max) max = n;
+      const m = (r.company_code ?? r.name ?? "").trim().match(re);
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (Number.isFinite(n) && n > max) max = n;
+      }
     });
     setNextNum(max + 1);
   };
 
-  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); setPrefix("ISBIJ"); loadNextNumber(); setOpen(true); };
+  const onBranchChange = (id: string) => {
+    setBranchId(id);
+    if (!editing) loadNextNumber(prefixForBranch(branches.find((b) => b.id === id)?.name));
+  };
+
+  const openAdd = () => { setEditing(null); setType("trading"); setBranchId(""); setPackageId(""); setDeal(""); loadNextNumber(prefixForBranch(undefined)); setOpen(true); };
   const openEdit = (r: Company) => { setEditing(r); setType(r.type); setBranchId(r.branch_id ?? ""); setPackageId((r as any).package_id ?? ""); setDeal(r.total_deal != null ? String(r.total_deal) : ""); setOpen(true); };
 
 
@@ -431,7 +450,7 @@ export default function CompanyPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <Label>Branch</Label>
-              <Select value={branchId2} onValueChange={setBranchId}>
+              <Select value={branchId2} onValueChange={onBranchChange}>
                 <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
                 <SelectContent>
                   {branches.length === 0 ? (
@@ -446,13 +465,7 @@ export default function CompanyPage() {
               <div>
                 <Label>Company Code</Label>
                 <div className="flex gap-2">
-                  <Select value={prefix} onValueChange={(v) => setPrefix(v as "ISBI" | "ISBIJ")}>
-                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ISBI">ISBI</SelectItem>
-                      <SelectItem value="ISBIJ">ISBIJ</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input value={selectedPrefix} readOnly className="w-28 font-mono" title="Prefix auto-selected from branch (Dammam=ISBID, Madina=ISBIM, Jeddah=ISBIJ, others=ISBI)" />
                   <Input value={companyCode || "Generating..."} readOnly className="font-mono" />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
