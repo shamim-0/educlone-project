@@ -400,6 +400,25 @@ export default function CompanyPage() {
               );
             },
           },
+          {
+            key: "warning",
+            header: "Warning",
+            render: (r) => {
+              const canEdit = role === "admin" || role === "sub_admin" || role === "editor";
+              return (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className={cn("h-7 w-7", r.warning ? "text-amber-500" : "text-muted-foreground")}
+                  title={r.warning ? (r.warning_note ? `Warning: ${r.warning_note}` : "Warning on") : canEdit ? "Set warning" : "No warning"}
+                  onClick={() => canEdit && openWarning(r)}
+                  disabled={!canEdit}
+                >
+                  <AlertTriangle className={cn("h-4 w-4", r.warning && "fill-amber-500")} />
+                </Button>
+              );
+            },
+          },
         ]}
         onAdd={role === "admin" || role === "sub_admin" ? openAdd : undefined}
         onEdit={role === "admin" || role === "sub_admin" || role === "editor" ? openEdit : undefined}
