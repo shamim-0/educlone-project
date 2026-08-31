@@ -108,6 +108,22 @@ export default function UsersPage() {
 
   const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name ?? "—";
 
+  const deleteUser = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+      body: { user_id: deleteTarget.id },
+    });
+    setDeleting(false);
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? "Failed to delete user");
+      return;
+    }
+    toast.success(`User "${deleteTarget.username}" deleted`);
+    setDeleteTarget(null);
+    load();
+  };
+
   const createUser = async () => {
     if (!form.username || !form.email || !form.password) { toast.error("All fields required"); return; }
     if (form.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
@@ -245,6 +261,11 @@ export default function UsersPage() {
                       <Button variant="outline" size="sm" className="gap-1" onClick={() => setPwdTarget(p)}>
                         <KeyRound className="h-3.5 w-3.5" /> Change
                       </Button>
+                      {p.id !== me?.id && (
+                        <Button variant="outline" size="sm" className="gap-1 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(p)}>
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 )}
