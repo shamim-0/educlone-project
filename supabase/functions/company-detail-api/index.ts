@@ -103,7 +103,7 @@ let companyQuery = supabase
           : company.name,
         full_name: company.name,
         branch: branchName,
-status: company.status,
+        status: company.status,
         status_note: (company as any).status_note ?? null,
         note: (company as any).note ?? null,
         warning: (company as any).warning ?? false,
