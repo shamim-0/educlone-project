@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, KeyRound, ClipboardCheck, ListTodo, Activity } from "lucide-react";
+import { Plus, KeyRound, ClipboardCheck, ListTodo, Activity, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
@@ -37,6 +38,8 @@ export default function UsersPage() {
   const [assignTarget, setAssignTarget] = useState<Profile | null>(null);
   const [todoTarget, setTodoTarget] = useState<Profile | null>(null);
   const [activityTarget, setActivityTarget] = useState<Profile | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const isAdmin = myRole === "admin";
 
