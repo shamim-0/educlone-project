@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth, AppRole } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, KeyRound, ClipboardCheck, ListTodo, Activity } from "lucide-react";
+import { Plus, KeyRound, ClipboardCheck, ListTodo, Activity, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
@@ -37,6 +38,8 @@ export default function UsersPage() {
   const [assignTarget, setAssignTarget] = useState<Profile | null>(null);
   const [todoTarget, setTodoTarget] = useState<Profile | null>(null);
   const [activityTarget, setActivityTarget] = useState<Profile | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const isAdmin = myRole === "admin";
 
@@ -104,6 +107,22 @@ export default function UsersPage() {
 
 
   const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name ?? "—";
+
+  const deleteUser = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+      body: { user_id: deleteTarget.id },
+    });
+    setDeleting(false);
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? "Failed to delete user");
+      return;
+    }
+    toast.success(`User "${deleteTarget.username}" deleted`);
+    setDeleteTarget(null);
+    load();
+  };
 
   const createUser = async () => {
     if (!form.username || !form.email || !form.password) { toast.error("All fields required"); return; }
@@ -242,6 +261,11 @@ export default function UsersPage() {
                       <Button variant="outline" size="sm" className="gap-1" onClick={() => setPwdTarget(p)}>
                         <KeyRound className="h-3.5 w-3.5" /> Change
                       </Button>
+                      {p.id !== me?.id && (
+                        <Button variant="outline" size="sm" className="gap-1 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(p)}>
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 )}
@@ -349,6 +373,23 @@ export default function UsersPage() {
         userId={activityTarget?.id}
         username={activityTarget?.username}
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <span className="font-semibold">{deleteTarget?.username}</span> ({deleteTarget?.email ?? "no email"}). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteUser} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? "Deleting…" : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
