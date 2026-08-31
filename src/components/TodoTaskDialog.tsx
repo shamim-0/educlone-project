@@ -68,7 +68,7 @@ export function TodoTaskDialog({ open, onOpenChange, onSaved, mode, fullAccess =
     (async () => {
       const c = await supabase.from("companies").select("id,name").eq("status", "active");
       setCompanies(sortCompanies((c.data as Company[]) ?? []));
-      if (fullAccess) {
+      if (fullAccess || mode === "admin") {
         setAllowedKeys(null);
         const r = await supabase.from("user_roles").select("user_id, role").in("role", ["editor", "sub_admin"]);
         const ids = Array.from(new Set(((r.data as any[]) ?? []).map((x) => x.user_id)));
