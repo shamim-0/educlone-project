@@ -54,6 +54,7 @@ export default function AppLayout() {
     { value: "not_started", label: "⚪ Not Started" },
     { value: "processing", label: "🔵 Processing" },
     { value: "applied", label: "🟣 Applied" },
+    { value: "at_muafaka", label: "🟣 At Muafaka" },
     { value: "done", label: "🟢 Done" },
     { value: "no_need", label: "⚫ No Need" },
   ];

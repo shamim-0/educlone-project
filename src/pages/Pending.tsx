@@ -32,6 +32,7 @@ export default function PendingPage() {
     not_started: "Not Started",
     processing: "Processing",
     applied: "Applied",
+    at_muafaka: "At Muafaka",
     done: "Done",
     no_need: "No Need",
   };
