@@ -32,6 +32,7 @@ export default function PendingPage() {
     not_started: "Not Started",
     processing: "Processing",
     applied: "Applied",
+    at_muafaka: "At Muafaka",
     done: "Done",
     no_need: "No Need",
   };
@@ -321,6 +322,7 @@ export default function PendingPage() {
               done: { chip: "bg-success/15 text-success", badge: "bg-success text-success-foreground", bar: "bg-success" },
               processing: { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" },
               applied: { chip: "bg-amber-500/15 text-amber-600", badge: "bg-amber-500 text-white", bar: "bg-amber-500" },
+              at_muafaka: { chip: "bg-violet-500/15 text-violet-600", badge: "bg-violet-600 text-white", bar: "bg-violet-600" },
               no_need: { chip: "bg-muted text-muted-foreground", badge: "bg-muted text-foreground", bar: "bg-muted-foreground/50" },
               not_started: { chip: "bg-destructive/15 text-destructive", badge: "bg-destructive text-destructive-foreground", bar: "bg-destructive" },
               "": { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" },
