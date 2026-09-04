@@ -22,6 +22,14 @@ const writePosition = (pathname: string, position: number) => {
   }
 };
 
+const clearPosition = (pathname: string) => {
+  try {
+    window.sessionStorage.removeItem(storageKey(pathname));
+  } catch {
+    /* storage unavailable */
+  }
+};
+
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
 }
@@ -57,18 +65,42 @@ export default function ScrollRestoration() {
     const timer = window.setInterval(apply, 100);
     const observer = new ResizeObserver(apply);
     observer.observe(document.documentElement);
-    const stop = window.setTimeout(() => {
+
+    const finish = () => {
       window.clearInterval(timer);
+      window.clearTimeout(stop);
       observer.disconnect();
       restoringRef.current = false;
-    }, 30000);
+      window.removeEventListener("wheel", finish);
+      window.removeEventListener("touchmove", finish);
+      window.removeEventListener("keydown", onKey);
+      // Once restored (or the user takes over), drop the saved position so
+      // normal scrolling works and a later POP re-reads a fresh value.
+      clearPosition(location.pathname);
+      writePosition(location.pathname, window.scrollY);
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(e.key)) finish();
+    };
+
+    // Stop restoring as soon as the user tries to scroll.
+    window.addEventListener("wheel", finish, { passive: true });
+    window.addEventListener("touchmove", finish, { passive: true });
+    window.addEventListener("keydown", onKey);
+
+    const stop = window.setTimeout(finish, 30000);
 
     return () => {
       window.clearInterval(timer);
       window.clearTimeout(stop);
       observer.disconnect();
       restoringRef.current = false;
+      window.removeEventListener("wheel", finish);
+      window.removeEventListener("touchmove", finish);
+      window.removeEventListener("keydown", onKey);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, navigationType]);
 
   useLayoutEffect(() => {
