@@ -244,6 +244,18 @@ export default function AccountsPage() {
     return { deal, discount, received: periodReceived, allTimeReceived, net, due: net - allTimeReceived, extras };
   }, [filtered, receivedByCompany, extrasByCompany, allTimeReceivedByCompany]);
 
+  /** Total Received split by payment method (respects date + branch filters) */
+  const receivedByMethod = useMemo(() => {
+    const ids = new Set(filtered.map((c) => c.id));
+    const map = new Map<string, number>();
+    periodInstallments.forEach((x) => {
+      if (!ids.has(x.company_id)) return;
+      const k = methodLabel(x.payment_method);
+      map.set(k, (map.get(k) ?? 0) + Number(x.amount || 0));
+    });
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [filtered, periodInstallments]);
+
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
     [installments, openCompany],
@@ -488,6 +500,26 @@ export default function AccountsPage() {
           progress={100 - collectedPct}
         />
       </div>
+
+      {/* Received by payment method */}
+      {receivedByMethod.length > 0 && (
+        <Card className="p-4 shadow-card border-border/60">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold mr-1">
+              Received by Method{dateFilterActive ? " (period)" : ""}:
+            </span>
+            {receivedByMethod.map(([label, amt]) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+              >
+                {label}
+                <span className="font-bold tabular-nums">{fmt(amt)}</span>
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Search + Table */}
       <Card className="p-6 shadow-card border-border/60">
