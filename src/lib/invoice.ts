@@ -590,6 +590,12 @@ export function openRangeStatement(opts: {
     <div class="stat"><div class="lbl">Total Received</div><div class="val">${money(total)}</div></div>
   </div>
 
+  <div class="methods">
+    <span class="mlabel">Received by Method:</span>
+    ${Array.from(byMethod.entries()).map(([k, v]) =>
+      `<span class="mchip"><b>${escapeHtml(k)}</b> — ${money(v)}</span>`).join("")}
+  </div>
+
   <h3 class="sec">Payments (${rows.length})</h3>
   <table>
     <thead><tr><th style="width:36px">#</th><th style="width:90px">Invoice</th><th>Company</th><th style="width:100px">Date</th><th>Method / Note</th><th class="r" style="width:120px">Amount</th></tr></thead>
