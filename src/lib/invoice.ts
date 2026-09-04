@@ -543,6 +543,9 @@ export function openRangeStatement(opts: {
   .stat { background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px; text-align:center; }
   .stat .lbl { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:#64748b; font-weight:600; }
   .stat .val { font-size:15px; font-weight:800; margin-top:4px; color:#047857; }
+  .methods { margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .methods .mlabel { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:#64748b; font-weight:600; }
+  .methods .mchip { font-size:11px; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; border-radius:999px; padding:4px 10px; }
   h3.sec { margin: 16px 0 6px; font-size: 13px; color:#1e3a8a; text-transform:uppercase; letter-spacing:.6px; border-bottom:2px solid #dbeafe; padding-bottom:4px; }
   table { width:100%; border-collapse: collapse; font-size:12px; }
   table thead th { background:#2563eb; color:#fff; padding:8px 10px; text-align:left; font-weight:600; font-size:11px; }
@@ -588,6 +591,12 @@ export function openRangeStatement(opts: {
     <div class="stat"><div class="lbl">Payments</div><div class="val" style="color:#1e3a8a">${rows.length}</div></div>
     <div class="stat"><div class="lbl">Companies</div><div class="val" style="color:#1e3a8a">${new Set(rows.map(r => r.companyName)).size}</div></div>
     <div class="stat"><div class="lbl">Total Received</div><div class="val">${money(total)}</div></div>
+  </div>
+
+  <div class="methods">
+    <span class="mlabel">Received by Method:</span>
+    ${Array.from(byMethod.entries()).map(([k, v]) =>
+      `<span class="mchip"><b>${escapeHtml(k)}</b> — ${money(v)}</span>`).join("")}
   </div>
 
   <h3 class="sec">Payments (${rows.length})</h3>
