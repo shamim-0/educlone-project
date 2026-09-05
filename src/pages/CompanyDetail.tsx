@@ -508,7 +508,7 @@ export default function CompanyDetail() {
           <span className={cn("h-2.5 w-2.5 rounded-full", dayCountOff || !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
           {dayCountOff ? (
             <span>
-              <span className="font-semibold">Day count বন্ধ আছে</span> — Company {company?.status === "paused" ? "Paused" : "Inactive"} অবস্থায় আছে, কোনো day count বা overdue হিসাব হচ্ছে না
+              <span className="font-semibold">Day count বন্ধ আছে</span> — Company {company?.status === "paused" ? "Paused" : "Inactive"} অবস্থায় আছে, কোনো day count বা over date হিসাব হচ্ছে না
             </span>
           ) : !progress.started ? (
             <span>
@@ -998,7 +998,7 @@ export default function CompanyDetail() {
                               {done
                                 ? "✓ সম্পন্ন / Done"
                                 : overdue
-                                  ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে overdue — Status অবশ্যই "${requiredStatus}" দিতে হবে`
+                                  ? `⚠ ${overdueHrs}ঘ ${String(overdueMin).padStart(2,"0")}মি ${String(overdueSec).padStart(2,"0")}সে over date — Status অবশ্যই "${requiredStatus}" দিতে হবে`
                                   : `শেষ ২৪ ঘণ্টা — বাকি ${hours}ঘ ${String(mins).padStart(2,"0")}মি ${String(secs).padStart(2,"0")}সে`}
                             </p>
                           </div>
@@ -1152,7 +1152,7 @@ export default function CompanyDetail() {
                               <span className="mx-2 text-border">•</span>
                               <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-background border border-border shadow-sm", toneText)}>
                                 {mcfDates && mcfDates.remaining < 0
-                                  ? `${Math.abs(mcfDates.remaining)} দিন overdue`
+                                  ? `${Math.abs(mcfDates.remaining)} দিন over date`
                                   : mcfDates && mcfDates.remaining === 0
                                     ? "আজই শেষ দিন"
                                     : <>বাকি <span className="tabular-nums">{mcfDates?.remaining}</span> দিন</>}
@@ -1181,7 +1181,7 @@ export default function CompanyDetail() {
                                 <div className="flex justify-between gap-4"><span className="text-muted-foreground">পার হয়েছে:</span><span className="font-medium text-primary">{mcfDates.passed} working day</span></div>
                                 <div className="flex justify-between gap-4"><span className="text-muted-foreground">বাকি আছে:</span>
                                   <span className={cn("font-medium", mcfDates.remaining < 0 ? "text-destructive" : "text-success")}>
-                                    {mcfDates.remaining < 0 ? `${Math.abs(mcfDates.remaining)} দিন overdue` : `${mcfDates.remaining} working day`}
+                                    {mcfDates.remaining < 0 ? `${Math.abs(mcfDates.remaining)} দিন over date` : `${mcfDates.remaining} working day`}
                                   </span>
                                 </div>
                                 <div className="pt-2 flex flex-wrap gap-2 text-[10px]">

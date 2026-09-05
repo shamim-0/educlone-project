@@ -50,7 +50,7 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
 function deadlineTone(deadline: string | null, status: string) {
   if (!deadline || status === "completed") return { className: "text-muted-foreground", icon: CalendarIcon, label: "" };
   const days = differenceInCalendarDays(parseISO(deadline), new Date());
-  if (days < 0) return { className: "text-destructive font-semibold", icon: AlertTriangle, label: `Overdue ${Math.abs(days)}d` };
+  if (days < 0) return { className: "text-destructive font-semibold", icon: AlertTriangle, label: `Over Date ${Math.abs(days)}d` };
   if (days <= 3) return { className: "text-amber-600 dark:text-amber-400 font-semibold", icon: Clock, label: `${days}d left` };
   return { className: "text-foreground", icon: CalendarIcon, label: `${days}d left` };
 }
