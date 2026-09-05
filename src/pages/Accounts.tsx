@@ -20,7 +20,7 @@ import {
   Wallet, TrendingUp, AlertCircle, Search, Pencil, Plus, Trash2, Save,
   Calendar, Receipt, Percent, Building2, ArrowDownRight, FileText,
 } from "lucide-react";
-import { openInvoice, openDealSummary, openRangeStatement, PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
+import { openInvoice, openDealSummary, openRangeStatement, PAYMENT_METHODS, methodLabel, formatInvoiceNo } from "@/lib/invoice";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +43,7 @@ interface Installment {
   payment_date: string | null;
   note: string | null;
   payment_method?: string | null;
+  invoice_no?: number | null;
 }
 interface ExtraDeal {
   id: string;
@@ -95,6 +96,7 @@ export default function AccountsPage() {
   const [toDate, setToDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [methodModalLabel, setMethodModalLabel] = useState<string | null>(null);
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
   const [editingSetup, setEditingSetup] = useState(false);
@@ -255,6 +257,27 @@ export default function AccountsPage() {
     });
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [filtered, periodInstallments]);
+
+  /** Rows for the selected payment method, grouped by company (same filters) */
+  const methodModalGroups = useMemo(() => {
+    if (!methodModalLabel) return [];
+    const ids = new Set(filtered.map((c) => c.id));
+    const rows = periodInstallments.filter(
+      (x) => ids.has(x.company_id) && methodLabel(x.payment_method) === methodModalLabel,
+    );
+    const byCompany = new Map<string, { company: Company; rows: { invoice_no: number | null; amount: number; payment_date: string | null }[]; total: number }>();
+    rows.forEach((x) => {
+      const c = filtered.find((cc) => cc.id === x.company_id);
+      if (!c) return;
+      let g = byCompany.get(c.id);
+      if (!g) { g = { company: c, rows: [], total: 0 }; byCompany.set(c.id, g); }
+      g.rows.push({ invoice_no: x.invoice_no ?? null, amount: Number(x.amount || 0), payment_date: x.payment_date });
+      g.total += Number(x.amount || 0);
+    });
+    return Array.from(byCompany.values()).sort((a, b) => b.total - a.total);
+  }, [methodModalLabel, filtered, periodInstallments]);
+
+  const methodModalTotal = methodModalGroups.reduce((s, g) => s + g.total, 0);
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
@@ -509,17 +532,80 @@ export default function AccountsPage() {
               Received by Method{dateFilterActive ? " (period)" : ""}:
             </span>
             {receivedByMethod.map(([label, amt]) => (
-              <span
+              <button
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+                type="button"
+                onClick={() => setMethodModalLabel(label)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/20"
+                title={`View ${label} breakdown`}
               >
                 {label}
                 <span className="font-bold tabular-nums">{fmt(amt)}</span>
-              </span>
+              </button>
             ))}
           </div>
         </Card>
       )}
+
+      {/* Payment method breakdown modal */}
+      <Dialog open={!!methodModalLabel} onOpenChange={(o) => !o && setMethodModalLabel(null)}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-emerald-600" />
+              {methodModalLabel} — Received Breakdown
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Company-wise installments{dateFilterActive ? " for the selected period" : " (all time)"}. Total:{" "}
+              <span className="font-bold text-emerald-600">{fmt(methodModalTotal)}</span>
+            </p>
+          </DialogHeader>
+          <div className="overflow-y-auto -mx-1 px-1 space-y-4">
+            {methodModalGroups.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">No installments found.</p>
+            ) : (
+              methodModalGroups.map((g) => (
+                <div key={g.company.id} className="rounded-lg border border-border bg-card overflow-hidden">
+                  <div className="flex items-center justify-between gap-3 bg-secondary/50 px-4 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{g.company.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{g.company.branches?.name ?? "—"}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                      {fmt(g.total)}
+                    </span>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="h-9 text-xs">Invoice ID</TableHead>
+                        <TableHead className="h-9 text-xs">Date</TableHead>
+                        <TableHead className="h-9 text-xs text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {g.rows.map((r, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="py-2 text-xs font-medium">
+                            {r.invoice_no ? formatInvoiceNo(r.invoice_no) : "—"}
+                          </TableCell>
+                          <TableCell className="py-2 text-xs text-muted-foreground">
+                            {r.payment_date ? r.payment_date.slice(0, 10) : "—"}
+                          </TableCell>
+                          <TableCell className="py-2 text-xs text-right tabular-nums">{fmt(r.amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMethodModalLabel(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Search + Table */}
       <Card className="p-6 shadow-card border-border/60">
