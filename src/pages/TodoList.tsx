@@ -99,7 +99,7 @@ export default function TodoListPage() {
                       <div className="text-xs text-muted-foreground">{g.tasks.length} active task{g.tasks.length === 1 ? "" : "s"}</div>
                     </div>
                     {overdueCount > 0 && (
-                      <Badge variant="destructive">{overdueCount} overdue</Badge>
+                      <Badge variant="destructive">{overdueCount} over date</Badge>
                     )}
                   </Card>
                 </button>

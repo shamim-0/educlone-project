@@ -79,7 +79,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
             : "bg-[rgb(249,115,22)]/15 border-[rgb(249,115,22)]/40 text-[rgb(234,88,12)]"
         )}>
           <Zap className="h-3.5 w-3.5 fill-current" />
-          {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : isTakeAction ? "TAKE ACTION REQUIRED" : "OVERDUE — ACTION REQUIRED"}
+          {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : isTakeAction ? "TAKE ACTION REQUIRED" : "OVER DATE — ACTION REQUIRED"}
         </div>
       )}
 
@@ -520,16 +520,16 @@ export default function Index() {
     });
     const doc = new jsPDF({ orientation: "landscape" });
     doc.setFontSize(16);
-    doc.text("Overdue Services Report", 14, 16);
+    doc.text("Over Date Services Report", 14, 16);
     doc.setFontSize(10);
     doc.text(
-      `Generated: ${new Date().toLocaleString("en-GB")}  |  Companies: ${list.length}  |  Overdue services: ${rows.length}`,
+      `Generated: ${new Date().toLocaleString("en-GB")}  |  Companies: ${list.length}  |  Over date services: ${rows.length}`,
       14,
       23
     );
     autoTable(doc, {
       startY: 28,
-      head: [["Company", "Branch", "Service", "Status", "Deadline", "Overdue By"]],
+      head: [["Company", "Branch", "Service", "Status", "Deadline", "Over Date By"]],
       body: rows,
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [220, 38, 38] },
@@ -586,7 +586,7 @@ export default function Index() {
           { id: "entrepreneur", value: stats.entrepreneur, label: "Entrepreneur", color: "text-primary" },
           { id: "industrial_license", value: stats.industrial, label: "Industrial", color: "text-primary" },
           { id: "completed", value: stats.completed, label: "সম্পন্ন", color: "text-success" },
-          { id: "overdue", value: stats.overdue, label: "Overdue", color: "text-destructive" },
+          { id: "overdue", value: stats.overdue, label: "Over Date", color: "text-destructive" },
           { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
           { id: "emergency", value: stats.emergency, label: "Emergency", color: "text-destructive" },
           { id: "paused", value: stats.paused, label: "Paused", color: "text-amber-500" },
@@ -611,7 +611,7 @@ export default function Index() {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    aria-label="Overdue options"
+                    aria-label="Over Date options"
                     className="absolute top-1 right-1 rounded-md p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     <MoreVertical className="h-4 w-4" />
