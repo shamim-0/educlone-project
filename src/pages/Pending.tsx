@@ -33,6 +33,8 @@ export default function PendingPage() {
     processing: "Processing",
     applied: "Applied",
     at_muafaka: "At Muafaka",
+    rejected: "Rejected",
+    re_applied: "Re applied",
     done: "Done",
     no_need: "No Need",
   };
@@ -323,6 +325,8 @@ export default function PendingPage() {
               processing: { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" },
               applied: { chip: "bg-amber-500/15 text-amber-600", badge: "bg-amber-500 text-white", bar: "bg-amber-500" },
               at_muafaka: { chip: "bg-violet-500/15 text-violet-600", badge: "bg-violet-600 text-white", bar: "bg-violet-600" },
+              rejected: { chip: "bg-rose-600/15 text-rose-700", badge: "bg-rose-700 text-white", bar: "bg-rose-700" },
+              re_applied: { chip: "bg-cyan-500/15 text-cyan-700", badge: "bg-cyan-600 text-white", bar: "bg-cyan-600" },
               no_need: { chip: "bg-muted text-muted-foreground", badge: "bg-muted text-foreground", bar: "bg-muted-foreground/50" },
               not_started: { chip: "bg-destructive/15 text-destructive", badge: "bg-destructive text-destructive-foreground", bar: "bg-destructive" },
               "": { chip: "bg-primary/15 text-primary", badge: "bg-primary text-primary-foreground", bar: "bg-primary" },
@@ -461,6 +465,10 @@ export default function PendingPage() {
                                     ? "bg-primary/15 text-primary border-primary/30"
                                     : st === "applied"
                                     ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                                    : st === "rejected"
+                                    ? "bg-rose-600/15 text-rose-700 border-rose-600/30"
+                                    : st === "re_applied"
+                                    ? "bg-cyan-500/15 text-cyan-700 border-cyan-500/30"
                                     : "bg-muted text-muted-foreground border-border"
                                 )}
                               >
