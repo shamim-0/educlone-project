@@ -587,7 +587,7 @@ export default function AccountsPage() {
                       {g.rows.map((r, idx) => (
                         <TableRow key={idx}>
                           <TableCell className="py-2 text-xs font-medium">
-                            {r.invoice_no ? `ISBI${String(r.invoice_no).padStart(5, "0")}` : "—"}
+                            {r.invoice_no ? formatInvoiceNo(r.invoice_no) : "—"}
                           </TableCell>
                           <TableCell className="py-2 text-xs text-muted-foreground">
                             {r.payment_date ? r.payment_date.slice(0, 10) : "—"}
