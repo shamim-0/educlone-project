@@ -241,16 +241,26 @@ export default function AccountsPage() {
     }
   }, [companies, search, branchFilter, sortBy, receivedByCompany, extrasByCompany, dateFilterActive, periodInstallments, allTimeReceivedByCompany]);
 
+  /** Companies filtered by branch only — date filters must NOT shrink the deal/due base */
+  const branchFiltered = useMemo(() => {
+    if (branchFilter === "all") return companies;
+    return companies.filter((c) => (c.branches?.name ?? "—") === branchFilter);
+  }, [companies, branchFilter]);
+
+  /**
+   * Summary cards: Deal / Discount / Due are LIFETIME and fixed — date filters only
+   * change the "Received" (period) figure. Due = Net Deal − All-time Received.
+   */
   const totals = useMemo(() => {
-    const baseDeal = filtered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
-    const extras = filtered.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
+    const baseDeal = branchFiltered.reduce((s, c) => s + Number(c.total_deal || 0), 0);
+    const extras = branchFiltered.reduce((s, c) => s + (extrasByCompany[c.id] ?? 0), 0);
     const deal = baseDeal + extras;
-    const discount = filtered.reduce((s, c) => s + Number(c.discount || 0), 0);
-    const periodReceived = filtered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
-    const allTimeReceived = filtered.reduce((s, c) => s + (allTimeReceivedByCompany[c.id] ?? 0), 0);
+    const discount = branchFiltered.reduce((s, c) => s + Number(c.discount || 0), 0);
+    const periodReceived = branchFiltered.reduce((s, c) => s + (receivedByCompany[c.id] ?? 0), 0);
+    const allTimeReceived = branchFiltered.reduce((s, c) => s + (allTimeReceivedByCompany[c.id] ?? 0), 0);
     const net = deal - discount;
     return { deal, discount, received: periodReceived, allTimeReceived, net, due: net - allTimeReceived, extras };
-  }, [filtered, receivedByCompany, extrasByCompany, allTimeReceivedByCompany]);
+  }, [branchFiltered, receivedByCompany, extrasByCompany, allTimeReceivedByCompany]);
 
   /** Total Received split by payment method (respects date + branch filters) */
   const receivedByMethod = useMemo(() => {
