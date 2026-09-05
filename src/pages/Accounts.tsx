@@ -258,6 +258,27 @@ export default function AccountsPage() {
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [filtered, periodInstallments]);
 
+  /** Rows for the selected payment method, grouped by company (same filters) */
+  const methodModalGroups = useMemo(() => {
+    if (!methodModalLabel) return [];
+    const ids = new Set(filtered.map((c) => c.id));
+    const rows = periodInstallments.filter(
+      (x) => ids.has(x.company_id) && methodLabel(x.payment_method) === methodModalLabel,
+    );
+    const byCompany = new Map<string, { company: Company; rows: { invoice_no: number | null; amount: number; payment_date: string | null }[]; total: number }>();
+    rows.forEach((x) => {
+      const c = filtered.find((cc) => cc.id === x.company_id);
+      if (!c) return;
+      let g = byCompany.get(c.id);
+      if (!g) { g = { company: c, rows: [], total: 0 }; byCompany.set(c.id, g); }
+      g.rows.push({ invoice_no: x.invoice_no ?? null, amount: Number(x.amount || 0), payment_date: x.payment_date });
+      g.total += Number(x.amount || 0);
+    });
+    return Array.from(byCompany.values()).sort((a, b) => b.total - a.total);
+  }, [methodModalLabel, filtered, periodInstallments]);
+
+  const methodModalTotal = methodModalGroups.reduce((s, g) => s + g.total, 0);
+
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
     [installments, openCompany],
