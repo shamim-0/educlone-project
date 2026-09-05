@@ -586,10 +586,53 @@ export default function AccountsPage() {
               {methodModalLabel} — Received Breakdown
             </DialogTitle>
             <p className="text-xs text-muted-foreground">
-              Company-wise installments{dateFilterActive ? " for the selected period" : " (all time)"}. Total:{" "}
+              Company-wise installments. Total:{" "}
               <span className="font-bold text-emerald-600">{fmt(methodModalTotal)}</span>
             </p>
           </DialogHeader>
+
+          {/* Modal-local filters */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
+            <Select value={methodModalBranch} onValueChange={setMethodModalBranch}>
+              <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Branches</SelectItem>
+                {methodModalBranches.map((b) => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date" value={methodModalDay} onChange={(e) => setMethodModalDay(e.target.value)}
+              className="h-8 w-36 text-xs" title="Filter by payment day"
+            />
+            <Input
+              type="month" value={methodModalMonth} onChange={(e) => setMethodModalMonth(e.target.value)}
+              className="h-8 w-32 text-xs" title="Filter by payment month"
+            />
+            <div className="flex items-center gap-1">
+              <Input
+                type="date" value={methodModalFrom} onChange={(e) => setMethodModalFrom(e.target.value)}
+                className="h-8 w-32 text-xs" title="From date"
+              />
+              <span className="text-[11px] text-muted-foreground">to</span>
+              <Input
+                type="date" value={methodModalTo} onChange={(e) => setMethodModalTo(e.target.value)}
+                className="h-8 w-32 text-xs" title="To date"
+              />
+            </div>
+            {(methodModalBranch !== "all" || methodModalDateActive) && (
+              <Button
+                variant="outline" size="sm" className="h-8 text-xs"
+                onClick={() => {
+                  setMethodModalBranch("all");
+                  setMethodModalDay(""); setMethodModalMonth("");
+                  setMethodModalFrom(""); setMethodModalTo("");
+                }}
+              >Clear</Button>
+            )}
+          </div>
+
           <div className="overflow-y-auto -mx-1 px-1 space-y-4">
             {methodModalGroups.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">No installments found.</p>
