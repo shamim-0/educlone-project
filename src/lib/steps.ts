@@ -33,6 +33,8 @@ export const ALL_STATUS_OPTS = [
   { value: "processing", label: "Processing" },
   { value: "applied", label: "Applied" },
   { value: "at_muafaka", label: "At Muafaka" },
+  { value: "rejected", label: "Rejected" },
+  { value: "re_applied", label: "Re applied" },
   { value: "done", label: "Done" },
   { value: "no_need", label: "No Need" },
 ];
@@ -70,6 +72,8 @@ export function statusBadgeClass(s: string) {
   if (s === "pending") return "bg-blue-600 text-white border-blue-600 hover:bg-blue-700";
   if (s === "applied") return "bg-blue-700 text-white border-blue-700 hover:bg-blue-800";
   if (s === "at_muafaka") return "bg-violet-600 text-white border-violet-600 hover:bg-violet-700";
+  if (s === "rejected") return "bg-rose-700 text-white border-rose-700 hover:bg-rose-800";
+  if (s === "re_applied") return "bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700";
   if (s === "no_need") return "bg-white text-black border-border line-through";
   return "bg-destructive text-destructive-foreground border-destructive";
 }

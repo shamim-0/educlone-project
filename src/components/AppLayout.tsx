@@ -55,6 +55,8 @@ export default function AppLayout() {
     { value: "processing", label: "🔵 Processing" },
     { value: "applied", label: "🟣 Applied" },
     { value: "at_muafaka", label: "🟣 At Muafaka" },
+    { value: "rejected", label: "🔴 Rejected" },
+    { value: "re_applied", label: "🔁 Re applied" },
     { value: "done", label: "🟢 Done" },
     { value: "no_need", label: "⚫ No Need" },
   ];
