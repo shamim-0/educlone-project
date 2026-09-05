@@ -44,6 +44,7 @@ interface Installment {
   note: string | null;
   payment_method?: string | null;
   invoice_no?: number | null;
+  created_by?: string | null;
 }
 interface ExtraDeal {
   id: string;
