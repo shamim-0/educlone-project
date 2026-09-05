@@ -658,6 +658,7 @@ export default function AccountsPage() {
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
                         <TableHead className="h-9 text-xs">Invoice ID</TableHead>
+                        <TableHead className="h-9 text-xs">Received by</TableHead>
                         <TableHead className="h-9 text-xs">Date</TableHead>
                         <TableHead className="h-9 text-xs text-right">Amount</TableHead>
                       </TableRow>
@@ -667,6 +668,9 @@ export default function AccountsPage() {
                         <TableRow key={idx}>
                           <TableCell className="py-2 text-xs font-medium">
                             {r.invoice_no ? formatInvoiceNo(r.invoice_no) : "—"}
+                          </TableCell>
+                          <TableCell className="py-2 text-xs text-muted-foreground">
+                            {r.created_by ? (profileNames[r.created_by] ?? "Unknown") : "—"}
                           </TableCell>
                           <TableCell className="py-2 text-xs text-muted-foreground">
                             {r.payment_date ? r.payment_date.slice(0, 10) : "—"}
