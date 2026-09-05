@@ -263,13 +263,28 @@ export default function AccountsPage() {
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [filtered, periodInstallments]);
 
-  /** Rows for the selected payment method, grouped by company (same filters) */
+  /** Rows for the selected payment method, grouped by company, with modal-local branch+date filters */
   const methodModalGroups = useMemo(() => {
     if (!methodModalLabel) return [];
     const ids = new Set(filtered.map((c) => c.id));
-    const rows = periodInstallments.filter(
-      (x) => ids.has(x.company_id) && methodLabel(x.payment_method) === methodModalLabel,
-    );
+    const modalDateActive = !!methodModalDay || !!methodModalMonth || !!methodModalFrom || !!methodModalTo;
+    const rows = installments.filter((x) => {
+      if (!ids.has(x.company_id)) return false;
+      if (methodLabel(x.payment_method) !== methodModalLabel) return false;
+      if (methodModalBranch !== "all") {
+        const c = filtered.find((cc) => cc.id === x.company_id);
+        if ((c?.branches?.name ?? "—") !== methodModalBranch) return false;
+      }
+      if (modalDateActive) {
+        const d = x.payment_date ? String(x.payment_date).slice(0, 10) : "";
+        if (!d) return false;
+        if (methodModalDay && d !== methodModalDay) return false;
+        if (methodModalMonth && d.slice(0, 7) !== methodModalMonth) return false;
+        if (methodModalFrom && d < methodModalFrom) return false;
+        if (methodModalTo && d > methodModalTo) return false;
+      }
+      return true;
+    });
     const byCompany = new Map<string, { company: Company; rows: { invoice_no: number | null; amount: number; payment_date: string | null }[]; total: number }>();
     rows.forEach((x) => {
       const c = filtered.find((cc) => cc.id === x.company_id);
@@ -278,11 +293,21 @@ export default function AccountsPage() {
       if (!g) { g = { company: c, rows: [], total: 0 }; byCompany.set(c.id, g); }
       g.rows.push({ invoice_no: x.invoice_no ?? null, amount: Number(x.amount || 0), payment_date: x.payment_date });
       g.total += Number(x.amount || 0);
+      g.rows.sort((a, b) => (b.payment_date ?? "").localeCompare(a.payment_date ?? ""));
     });
     return Array.from(byCompany.values()).sort((a, b) => b.total - a.total);
-  }, [methodModalLabel, filtered, periodInstallments]);
+  }, [methodModalLabel, filtered, installments, methodModalBranch, methodModalDay, methodModalMonth, methodModalFrom, methodModalTo]);
 
   const methodModalTotal = methodModalGroups.reduce((s, g) => s + g.total, 0);
+
+  /** Branch options available inside the modal (from filtered companies) */
+  const methodModalBranches = useMemo(() => {
+    const set = new Set<string>();
+    filtered.forEach((c) => set.add(c.branches?.name ?? "—"));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [filtered]);
+
+  const methodModalDateActive = !!methodModalDay || !!methodModalMonth || !!methodModalFrom || !!methodModalTo;
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
