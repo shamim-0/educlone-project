@@ -97,6 +97,11 @@ export default function AccountsPage() {
   const [sortBy, setSortBy] = useState<string>("default");
   const [searchParams, setSearchParams] = useSearchParams();
   const [methodModalLabel, setMethodModalLabel] = useState<string | null>(null);
+  const [methodModalBranch, setMethodModalBranch] = useState<string>("all");
+  const [methodModalDay, setMethodModalDay] = useState<string>("");
+  const [methodModalMonth, setMethodModalMonth] = useState<string>("");
+  const [methodModalFrom, setMethodModalFrom] = useState<string>("");
+  const [methodModalTo, setMethodModalTo] = useState<string>("");
 
   const [openCompany, setOpenCompany] = useState<Company | null>(null);
   const [editingSetup, setEditingSetup] = useState(false);
@@ -258,13 +263,28 @@ export default function AccountsPage() {
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [filtered, periodInstallments]);
 
-  /** Rows for the selected payment method, grouped by company (same filters) */
+  /** Rows for the selected payment method, grouped by company, with modal-local branch+date filters */
   const methodModalGroups = useMemo(() => {
     if (!methodModalLabel) return [];
     const ids = new Set(filtered.map((c) => c.id));
-    const rows = periodInstallments.filter(
-      (x) => ids.has(x.company_id) && methodLabel(x.payment_method) === methodModalLabel,
-    );
+    const modalDateActive = !!methodModalDay || !!methodModalMonth || !!methodModalFrom || !!methodModalTo;
+    const rows = installments.filter((x) => {
+      if (!ids.has(x.company_id)) return false;
+      if (methodLabel(x.payment_method) !== methodModalLabel) return false;
+      if (methodModalBranch !== "all") {
+        const c = filtered.find((cc) => cc.id === x.company_id);
+        if ((c?.branches?.name ?? "—") !== methodModalBranch) return false;
+      }
+      if (modalDateActive) {
+        const d = x.payment_date ? String(x.payment_date).slice(0, 10) : "";
+        if (!d) return false;
+        if (methodModalDay && d !== methodModalDay) return false;
+        if (methodModalMonth && d.slice(0, 7) !== methodModalMonth) return false;
+        if (methodModalFrom && d < methodModalFrom) return false;
+        if (methodModalTo && d > methodModalTo) return false;
+      }
+      return true;
+    });
     const byCompany = new Map<string, { company: Company; rows: { invoice_no: number | null; amount: number; payment_date: string | null }[]; total: number }>();
     rows.forEach((x) => {
       const c = filtered.find((cc) => cc.id === x.company_id);
@@ -273,11 +293,21 @@ export default function AccountsPage() {
       if (!g) { g = { company: c, rows: [], total: 0 }; byCompany.set(c.id, g); }
       g.rows.push({ invoice_no: x.invoice_no ?? null, amount: Number(x.amount || 0), payment_date: x.payment_date });
       g.total += Number(x.amount || 0);
+      g.rows.sort((a, b) => (b.payment_date ?? "").localeCompare(a.payment_date ?? ""));
     });
     return Array.from(byCompany.values()).sort((a, b) => b.total - a.total);
-  }, [methodModalLabel, filtered, periodInstallments]);
+  }, [methodModalLabel, filtered, installments, methodModalBranch, methodModalDay, methodModalMonth, methodModalFrom, methodModalTo]);
 
   const methodModalTotal = methodModalGroups.reduce((s, g) => s + g.total, 0);
+
+  /** Branch options available inside the modal (from filtered companies) */
+  const methodModalBranches = useMemo(() => {
+    const set = new Set<string>();
+    filtered.forEach((c) => set.add(c.branches?.name ?? "—"));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [filtered]);
+
+  const methodModalDateActive = !!methodModalDay || !!methodModalMonth || !!methodModalFrom || !!methodModalTo;
 
   const companyInstallments = useMemo(
     () => (openCompany ? installments.filter((x) => x.company_id === openCompany.id) : []),
@@ -535,7 +565,12 @@ export default function AccountsPage() {
               <button
                 key={label}
                 type="button"
-                onClick={() => setMethodModalLabel(label)}
+                onClick={() => {
+                  setMethodModalBranch("all");
+                  setMethodModalDay(""); setMethodModalMonth("");
+                  setMethodModalFrom(""); setMethodModalTo("");
+                  setMethodModalLabel(label);
+                }}
                 className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/20"
                 title={`View ${label} breakdown`}
               >
@@ -556,10 +591,53 @@ export default function AccountsPage() {
               {methodModalLabel} — Received Breakdown
             </DialogTitle>
             <p className="text-xs text-muted-foreground">
-              Company-wise installments{dateFilterActive ? " for the selected period" : " (all time)"}. Total:{" "}
+              Company-wise installments. Total:{" "}
               <span className="font-bold text-emerald-600">{fmt(methodModalTotal)}</span>
             </p>
           </DialogHeader>
+
+          {/* Modal-local filters */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
+            <Select value={methodModalBranch} onValueChange={setMethodModalBranch}>
+              <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Branches</SelectItem>
+                {methodModalBranches.map((b) => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date" value={methodModalDay} onChange={(e) => setMethodModalDay(e.target.value)}
+              className="h-8 w-36 text-xs" title="Filter by payment day"
+            />
+            <Input
+              type="month" value={methodModalMonth} onChange={(e) => setMethodModalMonth(e.target.value)}
+              className="h-8 w-32 text-xs" title="Filter by payment month"
+            />
+            <div className="flex items-center gap-1">
+              <Input
+                type="date" value={methodModalFrom} onChange={(e) => setMethodModalFrom(e.target.value)}
+                className="h-8 w-32 text-xs" title="From date"
+              />
+              <span className="text-[11px] text-muted-foreground">to</span>
+              <Input
+                type="date" value={methodModalTo} onChange={(e) => setMethodModalTo(e.target.value)}
+                className="h-8 w-32 text-xs" title="To date"
+              />
+            </div>
+            {(methodModalBranch !== "all" || methodModalDateActive) && (
+              <Button
+                variant="outline" size="sm" className="h-8 text-xs"
+                onClick={() => {
+                  setMethodModalBranch("all");
+                  setMethodModalDay(""); setMethodModalMonth("");
+                  setMethodModalFrom(""); setMethodModalTo("");
+                }}
+              >Clear</Button>
+            )}
+          </div>
+
           <div className="overflow-y-auto -mx-1 px-1 space-y-4">
             {methodModalGroups.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">No installments found.</p>
