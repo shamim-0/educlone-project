@@ -565,7 +565,12 @@ export default function AccountsPage() {
               <button
                 key={label}
                 type="button"
-                onClick={() => setMethodModalLabel(label)}
+                onClick={() => {
+                  setMethodModalBranch("all");
+                  setMethodModalDay(""); setMethodModalMonth("");
+                  setMethodModalFrom(""); setMethodModalTo("");
+                  setMethodModalLabel(label);
+                }}
                 className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/20"
                 title={`View ${label} breakdown`}
               >
