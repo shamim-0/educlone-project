@@ -532,13 +532,16 @@ export default function AccountsPage() {
               Received by Method{dateFilterActive ? " (period)" : ""}:
             </span>
             {receivedByMethod.map(([label, amt]) => (
-              <span
+              <button
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+                type="button"
+                onClick={() => setMethodModalLabel(label)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/20"
+                title={`View ${label} breakdown`}
               >
                 {label}
                 <span className="font-bold tabular-nums">{fmt(amt)}</span>
-              </span>
+              </button>
             ))}
           </div>
         </Card>
