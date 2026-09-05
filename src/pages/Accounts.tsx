@@ -43,6 +43,7 @@ interface Installment {
   payment_date: string | null;
   note: string | null;
   payment_method?: string | null;
+  invoice_no?: number | null;
 }
 interface ExtraDeal {
   id: string;
