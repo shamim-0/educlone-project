@@ -1,0 +1,1 @@
+ALTER TABLE public.company_installments ALTER COLUMN created_by SET DEFAULT auth.uid();
