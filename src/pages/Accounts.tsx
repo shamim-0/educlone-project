@@ -44,6 +44,7 @@ interface Installment {
   note: string | null;
   payment_method?: string | null;
   invoice_no?: number | null;
+  created_by?: string | null;
 }
 interface ExtraDeal {
   id: string;
@@ -285,13 +286,13 @@ export default function AccountsPage() {
       }
       return true;
     });
-    const byCompany = new Map<string, { company: Company; rows: { invoice_no: number | null; amount: number; payment_date: string | null }[]; total: number }>();
+    const byCompany = new Map<string, { company: Company; rows: { invoice_no: number | null; amount: number; payment_date: string | null; created_by: string | null }[]; total: number }>();
     rows.forEach((x) => {
       const c = filtered.find((cc) => cc.id === x.company_id);
       if (!c) return;
       let g = byCompany.get(c.id);
       if (!g) { g = { company: c, rows: [], total: 0 }; byCompany.set(c.id, g); }
-      g.rows.push({ invoice_no: x.invoice_no ?? null, amount: Number(x.amount || 0), payment_date: x.payment_date });
+      g.rows.push({ invoice_no: x.invoice_no ?? null, amount: Number(x.amount || 0), payment_date: x.payment_date, created_by: (x as any).created_by ?? null });
       g.total += Number(x.amount || 0);
       g.rows.sort((a, b) => (b.payment_date ?? "").localeCompare(a.payment_date ?? ""));
     });
@@ -657,6 +658,7 @@ export default function AccountsPage() {
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
                         <TableHead className="h-9 text-xs">Invoice ID</TableHead>
+                        <TableHead className="h-9 text-xs">Received by</TableHead>
                         <TableHead className="h-9 text-xs">Date</TableHead>
                         <TableHead className="h-9 text-xs text-right">Amount</TableHead>
                       </TableRow>
@@ -666,6 +668,9 @@ export default function AccountsPage() {
                         <TableRow key={idx}>
                           <TableCell className="py-2 text-xs font-medium">
                             {r.invoice_no ? formatInvoiceNo(r.invoice_no) : "—"}
+                          </TableCell>
+                          <TableCell className="py-2 text-xs text-muted-foreground">
+                            {r.created_by ? (profileNames[r.created_by] ?? "Unknown") : "—"}
                           </TableCell>
                           <TableCell className="py-2 text-xs text-muted-foreground">
                             {r.payment_date ? r.payment_date.slice(0, 10) : "—"}
