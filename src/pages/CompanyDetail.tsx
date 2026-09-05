@@ -499,14 +499,18 @@ export default function CompanyDetail() {
         {/* Day status banner — starts counting when "All Papers Recieved" is marked done */}
         <div className={cn(
           "mt-4 p-3 rounded-md border text-sm flex items-center gap-2",
-          dayCountOff || !progress.started
+          progress.percent >= 100
+            ? "bg-emerald-500/10 border-emerald-500/30 text-foreground"
+            : dayCountOff || !progress.started
             ? "bg-muted/40 border-border text-muted-foreground"
             : progress.overdue
             ? "bg-destructive/10 border-destructive/30 text-destructive"
             : "bg-accent/10 border-accent/30 text-foreground"
         )}>
-          <span className={cn("h-2.5 w-2.5 rounded-full", dayCountOff || !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
-          {dayCountOff ? (
+          <span className={cn("h-2.5 w-2.5 rounded-full", progress.percent >= 100 ? "bg-emerald-500" : dayCountOff || !progress.started ? "bg-muted-foreground" : progress.overdue ? "bg-destructive" : "bg-accent")} />
+          {progress.percent >= 100 ? (
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">Completed</span>
+          ) : dayCountOff ? (
             <span>
               <span className="font-semibold">Day count বন্ধ আছে</span> — Company {company?.status === "paused" ? "Paused" : "Inactive"} অবস্থায় আছে, কোনো day count বা over date হিসাব হচ্ছে না
             </span>

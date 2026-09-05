@@ -198,10 +198,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
               )}
             />
             {p.percent >= 100 ? (
-              <span className="text-foreground">
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">সব স্টেপ সম্পন্ন হয়েছে</span>
-                {" "}— <span className="text-muted-foreground">Day count প্রযোজ্য নয়</span>
-              </span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">Completed</span>
             ) : !p.started ? (
               <span className="text-muted-foreground">
                 <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
