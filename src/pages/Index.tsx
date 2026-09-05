@@ -194,10 +194,15 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
             <span
               className={cn(
                 "h-2 w-2 rounded-full",
-                !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
+                p.percent >= 100 ? "bg-emerald-500" : !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
               )}
             />
-            {!p.started ? (
+            {p.percent >= 100 ? (
+              <span className="text-foreground">
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">সব স্টেপ সম্পন্ন হয়েছে</span>
+                {" "}— <span className="text-muted-foreground">Day count প্রযোজ্য নয়</span>
+              </span>
+            ) : !p.started ? (
               <span className="text-muted-foreground">
                 <span className="font-semibold">কাউন্টডাউন শুরু হয়নি</span> — All Papers Recieved এর অপেক্ষায়
               </span>
@@ -220,7 +225,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         Created at: {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
       </div>
 
-      {!notActive && p.overdue && (
+      {!notActive && p.percent < 100 && p.overdue && (
         <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন All Papers Recieved এর পর</p>
       )}
     </Card>
