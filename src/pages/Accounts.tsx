@@ -547,6 +547,66 @@ export default function AccountsPage() {
         </Card>
       )}
 
+      {/* Payment method breakdown modal */}
+      <Dialog open={!!methodModalLabel} onOpenChange={(o) => !o && setMethodModalLabel(null)}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-emerald-600" />
+              {methodModalLabel} — Received Breakdown
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Company-wise installments{dateFilterActive ? " for the selected period" : " (all time)"}. Total:{" "}
+              <span className="font-bold text-emerald-600">{fmt(methodModalTotal)}</span>
+            </p>
+          </DialogHeader>
+          <div className="overflow-y-auto -mx-1 px-1 space-y-4">
+            {methodModalGroups.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">No installments found.</p>
+            ) : (
+              methodModalGroups.map((g) => (
+                <div key={g.company.id} className="rounded-lg border border-border bg-card overflow-hidden">
+                  <div className="flex items-center justify-between gap-3 bg-secondary/50 px-4 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{g.company.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{g.company.branches?.name ?? "—"}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                      {fmt(g.total)}
+                    </span>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="h-9 text-xs">Invoice ID</TableHead>
+                        <TableHead className="h-9 text-xs">Date</TableHead>
+                        <TableHead className="h-9 text-xs text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {g.rows.map((r, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="py-2 text-xs font-medium">
+                            {r.invoice_no ? `ISBI${String(r.invoice_no).padStart(5, "0")}` : "—"}
+                          </TableCell>
+                          <TableCell className="py-2 text-xs text-muted-foreground">
+                            {r.payment_date ? r.payment_date.slice(0, 10) : "—"}
+                          </TableCell>
+                          <TableCell className="py-2 text-xs text-right tabular-nums">{fmt(r.amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMethodModalLabel(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Search + Table */}
       <Card className="p-6 shadow-card border-border/60">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5">
