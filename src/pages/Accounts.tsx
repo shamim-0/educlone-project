@@ -540,7 +540,7 @@ export default function AccountsPage() {
           value={fmt(totals.deal)}
           accent="primary"
           icon={<Wallet className="h-5 w-5" />}
-          hint={`${companies.length} companies`}
+          hint={`${branchFiltered.length} companies · lifetime`}
         />
         <StatCard
           label="Total Discount"
@@ -550,10 +550,11 @@ export default function AccountsPage() {
           hint={`Net: ${fmt(totals.net)}`}
         />
         <StatCard
-          label="Total Received"
+          label={dateFilterActive ? "Total Received (Period)" : "Total Received"}
           value={fmt(totals.received)}
           accent="emerald"
           icon={<TrendingUp className="h-5 w-5" />}
+          hint={dateFilterActive ? `All-time received: ${fmt(totals.allTimeReceived)}` : undefined}
           progress={collectedPct}
         />
         <StatCard
@@ -561,6 +562,7 @@ export default function AccountsPage() {
           value={fmt(totals.due)}
           accent="rose"
           icon={<AlertCircle className="h-5 w-5" />}
+          hint={dateFilterActive ? "Lifetime: Net Deal − All-time Received" : undefined}
           progress={100 - collectedPct}
         />
       </div>
