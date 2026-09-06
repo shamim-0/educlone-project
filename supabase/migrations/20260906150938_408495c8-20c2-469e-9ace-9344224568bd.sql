@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.generate_company_codes() FROM anon, authenticated, public;
