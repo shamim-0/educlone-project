@@ -651,6 +651,7 @@ export type Database = {
           monthly_salary: number
           name: string
           note: string | null
+          payment_details: string | null
           phone: string | null
           updated_at: string
           updated_by: string | null
@@ -665,6 +666,7 @@ export type Database = {
           monthly_salary?: number
           name: string
           note?: string | null
+          payment_details?: string | null
           phone?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -679,6 +681,7 @@ export type Database = {
           monthly_salary?: number
           name?: string
           note?: string | null
+          payment_details?: string | null
           phone?: string | null
           updated_at?: string
           updated_by?: string | null

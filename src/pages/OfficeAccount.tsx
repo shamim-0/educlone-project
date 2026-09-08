@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, FileText, Plus, Trash2, Users, Wallet, Pencil } from "lucide-react";
+import { Building2, Eye, FileText, Plus, Trash2, Users, Wallet, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -34,6 +35,7 @@ interface OfficeExpense {
 interface Employee {
   id: string; name: string; designation: string | null; branch_id: string | null;
   monthly_salary: number; phone: string | null; active: boolean;
+  payment_details: string | null;
 }
 interface SalaryPayment {
   id: string; employee_id: string; salary_month: string; amount: number;
@@ -73,6 +75,23 @@ export default function OfficeAccount() {
   const [salBranch, setSalBranch] = useState("all");
   const [payTarget, setPayTarget] = useState<Employee | null>(null);
   const [payForm, setPayForm] = useState({ amount: "", paid_date: today(), payment_method: "cash", note: "" });
+
+  const [viewTarget, setViewTarget] = useState<Employee | null>(null);
+  const [payDetails, setPayDetails] = useState("");
+
+  const openView = (emp: Employee) => {
+    setViewTarget(emp);
+    setPayDetails(emp.payment_details ?? "");
+  };
+
+  const savePayDetails = async () => {
+    if (!viewTarget) return;
+    const { error } = await supabase.from("employees").update({ payment_details: payDetails, updated_by: user?.email ?? null }).eq("id", viewTarget.id);
+    if (error) return toast.error(error.message);
+    toast.success("Payment details saved");
+    setViewTarget({ ...viewTarget, payment_details: payDetails });
+    load();
+  };
 
   const load = async () => {
     setLoading(true);
@@ -512,8 +531,9 @@ export default function OfficeAccount() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{p ? userName(p.created_by) : "—"}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="outline" size="sm" onClick={() => openPay(e)}>{p ? "Edit Pay" : "Pay"}</Button>
+                         <div className="flex justify-end gap-1">
+                           <Button variant="ghost" size="icon" title="View employee" onClick={() => openView(e)}><Eye className="h-4 w-4" /></Button>
+                           <Button variant="outline" size="sm" onClick={() => openPay(e)}>{p ? "Edit Pay" : "Pay"}</Button>
                           {p && <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deletePay(p.id)}><Trash2 className="h-4 w-4" /></Button>}
                           <Button variant="ghost" size="icon" onClick={() => openEmployee(e)}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteEmployee(e.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -608,6 +628,67 @@ export default function OfficeAccount() {
             </div>
           </div>
           <DialogFooter><Button onClick={saveExpense}>Save</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Employee view dialog */}
+      <Dialog open={!!viewTarget} onOpenChange={(v) => { if (!v) setViewTarget(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>{viewTarget?.name}</DialogTitle></DialogHeader>
+          {viewTarget && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div><p className="text-muted-foreground">Designation</p><p className="font-medium">{viewTarget.designation ?? "—"}</p></div>
+                <div><p className="text-muted-foreground">Branch</p><p className="font-medium">{branchName(viewTarget.branch_id)}</p></div>
+                <div><p className="text-muted-foreground">Phone</p><p className="font-medium">{viewTarget.phone ?? "—"}</p></div>
+                <div><p className="text-muted-foreground">Monthly Salary</p><p className="font-medium">{fmt(Number(viewTarget.monthly_salary || 0))}</p></div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-medium">Payment History</p>
+                <div className="rounded-md border max-h-56 overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Month</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Method</TableHead>
+                        <TableHead>Paid Date</TableHead>
+                        <TableHead>Paid By</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salaries.filter((s) => s.employee_id === viewTarget.id).length === 0 ? (
+                        <TableRow><TableCell colSpan={5} className="py-6 text-center text-muted-foreground">No payments yet.</TableCell></TableRow>
+                      ) : salaries
+                        .filter((s) => s.employee_id === viewTarget.id)
+                        .sort((a, b) => b.salary_month.localeCompare(a.salary_month))
+                        .map((s) => (
+                          <TableRow key={s.id}>
+                            <TableCell>{s.salary_month}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(Number(s.amount || 0))}</TableCell>
+                            <TableCell>{methodLabel(s.payment_method)}</TableCell>
+                            <TableCell>{s.paid_date ? new Date(s.paid_date).toLocaleDateString() : "—"}</TableCell>
+                            <TableCell className="text-muted-foreground">{userName(s.created_by)}</TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              <div>
+                <Label>Payment Details</Label>
+                <Textarea
+                  value={payDetails}
+                  onChange={(e) => setPayDetails(e.target.value)}
+                  placeholder="Bank account, payment terms, notes about this employee's salary payments…"
+                  className="mt-1 min-h-[110px]"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={savePayDetails}>Save Payment Details</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
