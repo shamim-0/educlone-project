@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setAccountsAccess(false);
         setExpensesAccess(false);
         setExpensesBranchId(null);
+        setOfficeAccess(false);
       }
     });
     supabase.auth.getSession().then(({ data: { session: s } }) => {
