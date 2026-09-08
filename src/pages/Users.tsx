@@ -18,7 +18,7 @@ import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
 import { UserActivityDialog } from "@/components/UserActivityDialog";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; expenses_branch_id: string | null; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; expenses_branch_id: string | null; office_access: boolean; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
@@ -46,7 +46,7 @@ export default function UsersPage() {
   const load = async () => {
     setLoading(true);
     const [{ data: p }, { data: r }, { data: b }] = await Promise.all([
-      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access, expenses_branch_id").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access, expenses_branch_id, office_access").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("branches").select("id, name").order("name"),
     ]);
@@ -95,6 +95,13 @@ export default function UsersPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Expenses access updated");
     setProfiles((s) => s.map((p) => p.id === userId ? { ...p, expenses_access: value, expenses_branch_id: value ? p.expenses_branch_id : null } : p));
+  };
+
+  const toggleOfficeAccess = async (userId: string, value: boolean) => {
+    const { error } = await supabase.from("profiles").update({ office_access: value } as any).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Office Account access updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, office_access: value } : p));
   };
 
   const changeExpensesBranch = async (userId: string, branchId: string) => {
@@ -176,14 +183,15 @@ export default function UsersPage() {
               <TableHead className="w-48">Role</TableHead>
               <TableHead className="w-40">Accounts Access</TableHead>
               <TableHead className="w-40">Expenses Access</TableHead>
+              <TableHead className="w-40">Office Account</TableHead>
               {isAdmin && <TableHead className="w-64 text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : profiles.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-10 text-muted-foreground">No users.</TableCell></TableRow>
 
             ) : profiles.map((p) => (
               <TableRow key={p.id}>
@@ -239,6 +247,13 @@ export default function UsersPage() {
                     <Badge variant="secondary">
                       {p.expenses_access ? (p.expenses_branch_id ? branchName(p.expenses_branch_id) : "All branches") : "No"}
                     </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {isAdmin ? (
+                    <Switch checked={!!p.office_access} onCheckedChange={(v) => toggleOfficeAccess(p.id, v)} />
+                  ) : (
+                    <Badge variant="secondary">{p.office_access ? "Yes" : "No"}</Badge>
                   )}
                 </TableCell>
 

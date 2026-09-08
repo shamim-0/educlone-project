@@ -640,6 +640,143 @@ export type Database = {
           },
         ]
       }
+      employees: {
+        Row: {
+          active: boolean
+          branch_id: string | null
+          created_at: string
+          created_by: string | null
+          designation: string | null
+          id: string
+          monthly_salary: number
+          name: string
+          note: string | null
+          phone: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          designation?: string | null
+          id?: string
+          monthly_salary?: number
+          name: string
+          note?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          designation?: string | null
+          id?: string
+          monthly_salary?: number
+          name?: string
+          note?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_expense_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      office_expenses: {
+        Row: {
+          amount: number
+          branch_id: string | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          expense_date: string
+          id: string
+          note: string | null
+          payment_method: string
+          purpose: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number
+          branch_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expense_date?: string
+          id?: string
+          note?: string | null
+          payment_method?: string
+          purpose: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          branch_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expense_date?: string
+          id?: string
+          note?: string | null
+          payment_method?: string
+          purpose?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_expenses_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "office_expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "office_expense_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packages: {
         Row: {
           created_at: string
@@ -703,6 +840,7 @@ export type Database = {
           expenses_access: boolean
           expenses_branch_id: string | null
           id: string
+          office_access: boolean
           username: string
         }
         Insert: {
@@ -713,6 +851,7 @@ export type Database = {
           expenses_access?: boolean
           expenses_branch_id?: string | null
           id: string
+          office_access?: boolean
           username: string
         }
         Update: {
@@ -723,6 +862,7 @@ export type Database = {
           expenses_access?: boolean
           expenses_branch_id?: string | null
           id?: string
+          office_access?: boolean
           username?: string
         }
         Relationships: [
@@ -738,6 +878,56 @@ export type Database = {
             columns: ["expenses_branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salary_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          note: string | null
+          paid_date: string | null
+          payment_method: string
+          salary_month: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          note?: string | null
+          paid_date?: string | null
+          payment_method?: string
+          salary_month: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          note?: string | null
+          paid_date?: string | null
+          payment_method?: string
+          salary_month?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_payments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -919,6 +1109,7 @@ export type Database = {
         Returns: boolean
       }
       has_expenses_access: { Args: { _user_id: string }; Returns: boolean }
+      has_office_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

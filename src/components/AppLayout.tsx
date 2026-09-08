@@ -41,7 +41,7 @@ const menu = [
 ];
 
 export default function AppLayout() {
-  const { signOut, username, role, accountsAccess, expensesAccess } = useAuth();
+  const { signOut, username, role, accountsAccess, expensesAccess, officeAccess } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
   const { theme, toggle } = useTheme();
@@ -248,6 +248,7 @@ export default function AppLayout() {
                         {[
                           { to: "/accounts", label: "Accounts" },
                           { to: "/due-list", label: "Due List" },
+                          ...(role === "admin" || officeAccess ? [{ to: "/office-account", label: "Office Account" }] : []),
                         ].map((s) => (
                           <button
                             key={s.to}

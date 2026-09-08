@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { extractCompanyCode } from "@/lib/companySort";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -79,7 +79,8 @@ function AnimatedProgress({
 }
 
 export default function AccountsPage() {
-  const { role, accountsAccess, branchId, username: myUsername } = useAuth();
+  const { role, accountsAccess, branchId, officeAccess, username: myUsername } = useAuth();
+  const navigate = useNavigate();
   const profileNames = useProfileNames();
   const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
     auditTitle(name, at, verb);
@@ -521,6 +522,12 @@ export default function AccountsPage() {
               A unified ledger of every company's deal value, discounts, payments received and dues outstanding.
             </p>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+          {(role === "admin" || officeAccess) && (
+            <Button variant="outline" className="gap-1.5" onClick={() => navigate("/office-account")}>
+              <Building2 className="h-4 w-4" /> Office Account
+            </Button>
+          )}
           <div className="flex items-center gap-3 rounded-xl bg-background/70 backdrop-blur px-4 py-3 border shadow-sm">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Collected</p>
@@ -529,6 +536,7 @@ export default function AccountsPage() {
             <div className="w-24">
               <AnimatedProgress value={collectedPct} barClassName="bg-gradient-to-r from-emerald-400 to-emerald-600" />
             </div>
+          </div>
           </div>
         </div>
       </div>
