@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, FileText, Plus, Trash2, Users, Wallet, Pencil } from "lucide-react";
+import { Building2, Eye, FileText, Plus, Trash2, Users, Wallet, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -74,6 +75,23 @@ export default function OfficeAccount() {
   const [salBranch, setSalBranch] = useState("all");
   const [payTarget, setPayTarget] = useState<Employee | null>(null);
   const [payForm, setPayForm] = useState({ amount: "", paid_date: today(), payment_method: "cash", note: "" });
+
+  const [viewTarget, setViewTarget] = useState<Employee | null>(null);
+  const [payDetails, setPayDetails] = useState("");
+
+  const openView = (emp: Employee) => {
+    setViewTarget(emp);
+    setPayDetails(emp.payment_details ?? "");
+  };
+
+  const savePayDetails = async () => {
+    if (!viewTarget) return;
+    const { error } = await supabase.from("employees").update({ payment_details: payDetails, updated_by: user?.email ?? null }).eq("id", viewTarget.id);
+    if (error) return toast.error(error.message);
+    toast.success("Payment details saved");
+    setViewTarget({ ...viewTarget, payment_details: payDetails });
+    load();
+  };
 
   const load = async () => {
     setLoading(true);
