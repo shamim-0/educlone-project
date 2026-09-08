@@ -531,8 +531,9 @@ export default function OfficeAccount() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{p ? userName(p.created_by) : "—"}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="outline" size="sm" onClick={() => openPay(e)}>{p ? "Edit Pay" : "Pay"}</Button>
+                         <div className="flex justify-end gap-1">
+                           <Button variant="ghost" size="icon" title="View employee" onClick={() => openView(e)}><Eye className="h-4 w-4" /></Button>
+                           <Button variant="outline" size="sm" onClick={() => openPay(e)}>{p ? "Edit Pay" : "Pay"}</Button>
                           {p && <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deletePay(p.id)}><Trash2 className="h-4 w-4" /></Button>}
                           <Button variant="ghost" size="icon" onClick={() => openEmployee(e)}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteEmployee(e.id)}><Trash2 className="h-4 w-4" /></Button>
