@@ -631,6 +631,67 @@ export default function OfficeAccount() {
         </DialogContent>
       </Dialog>
 
+      {/* Employee view dialog */}
+      <Dialog open={!!viewTarget} onOpenChange={(v) => { if (!v) setViewTarget(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>{viewTarget?.name}</DialogTitle></DialogHeader>
+          {viewTarget && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div><p className="text-muted-foreground">Designation</p><p className="font-medium">{viewTarget.designation ?? "—"}</p></div>
+                <div><p className="text-muted-foreground">Branch</p><p className="font-medium">{branchName(viewTarget.branch_id)}</p></div>
+                <div><p className="text-muted-foreground">Phone</p><p className="font-medium">{viewTarget.phone ?? "—"}</p></div>
+                <div><p className="text-muted-foreground">Monthly Salary</p><p className="font-medium">{fmt(Number(viewTarget.monthly_salary || 0))}</p></div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-medium">Payment History</p>
+                <div className="rounded-md border max-h-56 overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Month</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Method</TableHead>
+                        <TableHead>Paid Date</TableHead>
+                        <TableHead>Paid By</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salaries.filter((s) => s.employee_id === viewTarget.id).length === 0 ? (
+                        <TableRow><TableCell colSpan={5} className="py-6 text-center text-muted-foreground">No payments yet.</TableCell></TableRow>
+                      ) : salaries
+                        .filter((s) => s.employee_id === viewTarget.id)
+                        .sort((a, b) => b.salary_month.localeCompare(a.salary_month))
+                        .map((s) => (
+                          <TableRow key={s.id}>
+                            <TableCell>{s.salary_month}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(Number(s.amount || 0))}</TableCell>
+                            <TableCell>{methodLabel(s.payment_method)}</TableCell>
+                            <TableCell>{s.paid_date ? new Date(s.paid_date).toLocaleDateString() : "—"}</TableCell>
+                            <TableCell className="text-muted-foreground">{userName(s.created_by)}</TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              <div>
+                <Label>Payment Details</Label>
+                <Textarea
+                  value={payDetails}
+                  onChange={(e) => setPayDetails(e.target.value)}
+                  placeholder="Bank account, payment terms, notes about this employee's salary payments…"
+                  className="mt-1 min-h-[110px]"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={savePayDetails}>Save Payment Details</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Employee dialog */}
       <Dialog open={empOpen} onOpenChange={setEmpOpen}>
         <DialogContent>
