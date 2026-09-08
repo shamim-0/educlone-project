@@ -249,6 +249,13 @@ export default function UsersPage() {
                     </Badge>
                   )}
                 </TableCell>
+                <TableCell>
+                  {isAdmin ? (
+                    <Switch checked={!!p.office_access} onCheckedChange={(v) => toggleOfficeAccess(p.id, v)} />
+                  ) : (
+                    <Badge variant="secondary">{p.office_access ? "Yes" : "No"}</Badge>
+                  )}
+                </TableCell>
 
                 {isAdmin && (
                   <TableCell className="text-right">
