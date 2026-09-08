@@ -521,6 +521,12 @@ export default function AccountsPage() {
               A unified ledger of every company's deal value, discounts, payments received and dues outstanding.
             </p>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+          {(role === "admin" || officeAccess) && (
+            <Button variant="outline" className="gap-1.5" onClick={() => navigate("/office-account")}>
+              <Building2 className="h-4 w-4" /> Office Account
+            </Button>
+          )}
           <div className="flex items-center gap-3 rounded-xl bg-background/70 backdrop-blur px-4 py-3 border shadow-sm">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Collected</p>
