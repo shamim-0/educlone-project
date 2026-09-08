@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { extractCompanyCode } from "@/lib/companySort";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
