@@ -35,5 +35,8 @@ export const ProtectedRoute = ({
   if (requireExpensesAccess && role !== "admin" && !expensesAccess) {
     return <Navigate to="/" replace />;
   }
+  if (requireOfficeAccess && role !== "admin" && !officeAccess) {
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 };
