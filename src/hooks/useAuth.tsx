@@ -13,6 +13,7 @@ interface AuthCtx {
   accountsAccess: boolean;
   expensesAccess: boolean;
   expensesBranchId: string | null;
+  officeAccess: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (username: string, email: string, password: string) => Promise<{ error: string | null }>;
