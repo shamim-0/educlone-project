@@ -79,7 +79,8 @@ function AnimatedProgress({
 }
 
 export default function AccountsPage() {
-  const { role, accountsAccess, branchId, username: myUsername } = useAuth();
+  const { role, accountsAccess, branchId, officeAccess, username: myUsername } = useAuth();
+  const navigate = useNavigate();
   const profileNames = useProfileNames();
   const adminTitle = (name?: string | null, at?: string | null, verb?: string) =>
     auditTitle(name, at, verb);
