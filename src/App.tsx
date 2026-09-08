@@ -14,6 +14,7 @@ import CompanyDetail from "./pages/CompanyDetail";
 import Branch from "./pages/Branch";
 import Accounts from "./pages/Accounts";
 import DueList from "./pages/DueList";
+import OfficeAccount from "./pages/OfficeAccount";
 import Expenses from "./pages/Expenses";
 import Pending from "./pages/Pending";
 import MyTasks from "./pages/MyTasks";
