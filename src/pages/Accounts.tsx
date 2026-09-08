@@ -536,6 +536,7 @@ export default function AccountsPage() {
               <AnimatedProgress value={collectedPct} barClassName="bg-gradient-to-r from-emerald-400 to-emerald-600" />
             </div>
           </div>
+          </div>
         </div>
       </div>
 
