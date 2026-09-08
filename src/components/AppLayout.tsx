@@ -248,6 +248,7 @@ export default function AppLayout() {
                         {[
                           { to: "/accounts", label: "Accounts" },
                           { to: "/due-list", label: "Due List" },
+                          ...(role === "admin" || officeAccess ? [{ to: "/office-account", label: "Office Account" }] : []),
                         ].map((s) => (
                           <button
                             key={s.to}
