@@ -34,6 +34,7 @@ interface OfficeExpense {
 interface Employee {
   id: string; name: string; designation: string | null; branch_id: string | null;
   monthly_salary: number; phone: string | null; active: boolean;
+  payment_details: string | null;
 }
 interface SalaryPayment {
   id: string; employee_id: string; salary_month: string; amount: number;
