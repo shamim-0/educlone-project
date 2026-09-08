@@ -183,6 +183,7 @@ export default function UsersPage() {
               <TableHead className="w-48">Role</TableHead>
               <TableHead className="w-40">Accounts Access</TableHead>
               <TableHead className="w-40">Expenses Access</TableHead>
+              <TableHead className="w-40">Office Account</TableHead>
               {isAdmin && <TableHead className="w-64 text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
