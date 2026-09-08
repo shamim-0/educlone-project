@@ -7,14 +7,16 @@ export const ProtectedRoute = ({
   requireAdmin,
   requireAccountsAccess,
   requireExpensesAccess,
+  requireOfficeAccess,
 }: {
   children: React.ReactNode;
   requireRoles?: AppRole[];
   requireAdmin?: boolean;
   requireAccountsAccess?: boolean;
   requireExpensesAccess?: boolean;
+  requireOfficeAccess?: boolean;
 }) => {
-  const { user, role, accountsAccess, expensesAccess, loading } = useAuth();
+  const { user, role, accountsAccess, expensesAccess, officeAccess, loading } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen grid place-items-center text-muted-foreground">Loading…</div>
