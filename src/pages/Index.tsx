@@ -106,7 +106,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         <span
           className={cn(
             "mt-1 h-2.5 w-2.5 rounded-full shrink-0",
-            notActive ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
+            notActive ? "bg-muted-foreground" : complete ? "bg-emerald-500" : p.overdue ? "bg-destructive" : "bg-accent"
           )}
         />
       </div>

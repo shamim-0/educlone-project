@@ -197,8 +197,10 @@ export default function CompanyDetail() {
     const startAt = allPapers && allPapers.status === "done" && apAt ? new Date(apAt) : null;
     const started = !!startAt && !dayCountOff;
     const days = started ? Math.floor((Date.now() - startAt!.getTime()) / 86400000) : 0;
-    const overdue = started && days > target;
-    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days, started };
+    // "Delivery Done" marked done = project complete — no day count, no over date
+    const delivered = steps["delivery_done"]?.status === "done";
+    const overdue = started && days > target && !delivered;
+    return { total, done, percent: total ? Math.round((done / total) * 100) : 0, days, overdue, remaining: target - days, started, delivered };
   }, [steps, applicableDefs, dayCountOff]);
 
   const currentlyWorking = applicableDefs.filter(d => steps[d.key]?.status === "processing");
