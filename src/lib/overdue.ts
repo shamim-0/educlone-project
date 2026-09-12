@@ -48,6 +48,8 @@ export function isCompanyOverdue(
   allPapersAt: string | null
 ): boolean {
   if (!allPapersAt) return false;
+  // Delivery Done = project complete — never over date
+  if ((statuses["delivery_done"] ?? "") === "done") return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return applicableKeys.some((key) => {
@@ -68,6 +70,7 @@ export function getOverdueServices(
   allPapersAt: string | null
 ): { key: string; status: string; target: Date; daysOver: number }[] {
   if (!allPapersAt) return [];
+  if ((statuses["delivery_done"] ?? "") === "done") return [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const out: { key: string; status: string; target: Date; daysOver: number }[] = [];
