@@ -52,8 +52,11 @@ function deriveProgress(startAt: string | null, done: number, processing: number
 function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStatuses, startAt, lastUpdate }: { c: Company; done: number; processing: number; totalSteps: number; applicableDefs: { key: string; label: string }[]; stepStatuses: Record<string, string>; startAt: string | null; lastUpdate?: { label: string; by: string | null; at: string } | null }) {
   const notActive = !!c.status && c.status !== "active";
   const p = deriveProgress(startAt, done, processing, totalSteps);
+  // "Delivery Done" marked done = project complete — no day count, no over date
+  const delivered = stepStatuses["delivery_done"] === "done";
+  const complete = delivered || p.percent >= 100;
   const applicableKeys = applicableDefs.map((d) => d.key);
-  const isCompanyOverdueNow = !notActive && isCompanyOverdue(applicableKeys, stepStatuses, startAt);
+  const isCompanyOverdueNow = !notActive && !delivered && isCompanyOverdue(applicableKeys, stepStatuses, startAt);
 
   const branchName = c.branches?.name ?? "—";
   const isEmergency = !notActive && !!c.emergency;
@@ -159,7 +162,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         <div
           className={cn(
             "h-full rounded-full transition-all",
-            p.overdue ? "bg-destructive" : "bg-success"
+            p.overdue && !complete ? "bg-destructive" : "bg-success"
           )}
           style={{ width: `${p.percent}%` }}
         />
@@ -167,7 +170,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
 
       <div className="mt-2 flex items-center justify-between text-xs">
         <span className="text-muted-foreground">{p.done}/{p.total} steps completed</span>
-        <span className={cn("font-semibold", p.overdue ? "text-destructive" : "text-primary")}>
+        <span className={cn("font-semibold", p.overdue && !complete ? "text-destructive" : "text-primary")}>
           {p.percent}%
         </span>
       </div>
@@ -194,10 +197,10 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
             <span
               className={cn(
                 "h-2 w-2 rounded-full",
-                p.percent >= 100 ? "bg-emerald-500" : !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
+                complete ? "bg-emerald-500" : !p.started ? "bg-muted-foreground" : p.overdue ? "bg-destructive" : "bg-accent"
               )}
             />
-            {p.percent >= 100 ? (
+            {complete ? (
               <span className="font-semibold text-emerald-600 dark:text-emerald-400">Completed</span>
             ) : !p.started ? (
               <span className="text-muted-foreground">
@@ -222,7 +225,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         Created at: {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
       </div>
 
-      {!notActive && p.percent < 100 && p.overdue && (
+      {!notActive && !complete && p.overdue && (
         <p className="mt-2 text-[11px] text-muted-foreground">Target ছিল {TARGET_DAYS} দিন All Papers Recieved এর পর</p>
       )}
     </Card>
