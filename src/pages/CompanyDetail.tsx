@@ -1508,20 +1508,24 @@ export default function CompanyDetail() {
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        type="date"
-                        value={(company as any)[f.issued] ?? ""}
-                        onChange={(e) => setCompany({ ...company, [f.issued]: e.target.value } as any)}
-                        disabled={!canEdit}
-                        title="Issued date"
-                      />
-                      <Input
-                        type="date"
-                        value={exp ?? ""}
-                        onChange={(e) => setCompany({ ...company, [f.expire]: e.target.value } as any)}
-                        disabled={!canEdit}
-                        title="Expire date"
-                      />
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Issued Date</Label>
+                        <Input
+                          type="date"
+                          value={(company as any)[f.issued] ?? ""}
+                          onChange={(e) => setCompany({ ...company, [f.issued]: e.target.value } as any)}
+                          disabled={!canEdit}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Expire Date</Label>
+                        <Input
+                          type="date"
+                          value={exp ?? ""}
+                          onChange={(e) => setCompany({ ...company, [f.expire]: e.target.value } as any)}
+                          disabled={!canEdit}
+                        />
+                      </div>
                     </div>
                   </div>
                 );
