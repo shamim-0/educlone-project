@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfileNames } from "@/hooks/useProfileNames";
 import { auditTitle } from "@/lib/audit";
 
-type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license";
+type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license" | "tga" | "after_licence";
 interface Company {
   id: string;
   name: string;
@@ -46,6 +46,8 @@ const TYPES: { value: CompanyType; label: string }[] = [
   { value: "trading", label: "Trading" },
   { value: "services", label: "Services" },
   { value: "industrial_license", label: "Industrial License" },
+  { value: "tga", label: "TGA" },
+  { value: "after_licence", label: "After Licence" },
 ];
 
 /** Company name without its leading company code. */

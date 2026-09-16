@@ -14,6 +14,7 @@ import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs } from "@/lib/steps";
 import { isCompanyOverdue, getOverdueServices } from "@/lib/overdue";
 import { auditTitle, fmtWhen } from "@/lib/audit";
+import { getExpiryAlerts, fmtDate } from "@/lib/licenceExpiry";
 
 const extractCode = extractCompanyCode;
 
@@ -34,6 +35,12 @@ interface Company {
   note?: string | null;
   status?: string | null;
   branches?: { name: string } | null;
+  mother_company_issued_date?: string | null;
+  mother_company_expire_date?: string | null;
+  company_issue_date?: string | null;
+  company_expire_date?: string | null;
+  misa_issued_date?: string | null;
+  misa_expire_date?: string | null;
 }
 
 const TARGET_DAYS = 45;
@@ -62,6 +69,7 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
   const isEmergency = !notActive && !!c.emergency;
   const isTakeAction = !notActive && !!c.take_action;
   const isOverdue = isCompanyOverdueNow;
+  const expiryAlerts = notActive ? [] : getExpiryAlerts(c);
 
   return (
     <Link to={`/company/${c.id}`} className="block">
@@ -83,6 +91,17 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         )}>
           <Zap className="h-3.5 w-3.5 fill-current" />
           {isEmergency ? "EMERGENCY — IMMEDIATE ATTENTION" : isTakeAction ? "TAKE ACTION REQUIRED" : "OVER DATE — ACTION REQUIRED"}
+        </div>
+      )}
+
+      {expiryAlerts.length > 0 && (
+        <div className="-mx-5 mb-4 px-5 py-2 border-b flex flex-wrap items-center gap-2 text-[11px] font-bold tracking-wider bg-[rgb(249,115,22)]/15 border-[rgb(249,115,22)]/40 text-[rgb(234,88,12)]">
+          <AlertTriangle className="h-3.5 w-3.5 fill-current shrink-0" />
+          {expiryAlerts.map((a) => (
+            <span key={a.key} title={`${a.label} expire date: ${fmtDate(a.date)}`}>
+              {a.label.toUpperCase()} {a.expired ? `EXPIRED (${fmtDate(a.date)})` : `EXPIRES IN ${a.daysLeft}D — RENEW`}
+            </span>
+          ))}
         </div>
       )}
 
@@ -259,7 +278,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, company_code, tracking_id, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, branches!companies_branch_id_fkey(name)")
+        .select("id, name, company_code, tracking_id, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, mother_company_issued_date, mother_company_expire_date, company_issue_date, company_expire_date, misa_issued_date, misa_expire_date, branches!companies_branch_id_fkey(name)")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
