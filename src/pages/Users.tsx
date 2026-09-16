@@ -18,7 +18,7 @@ import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
 import { UserActivityDialog } from "@/components/UserActivityDialog";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; expenses_branch_id: string | null; office_access: boolean; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; expenses_branch_id: string | null; office_access: boolean; office_branch_id: string | null; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
@@ -46,7 +46,7 @@ export default function UsersPage() {
   const load = async () => {
     setLoading(true);
     const [{ data: p }, { data: r }, { data: b }] = await Promise.all([
-      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access, expenses_branch_id, office_access").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access, expenses_branch_id, office_access, office_branch_id").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("branches").select("id, name").order("name"),
     ]);
