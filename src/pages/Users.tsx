@@ -98,10 +98,20 @@ export default function UsersPage() {
   };
 
   const toggleOfficeAccess = async (userId: string, value: boolean) => {
-    const { error } = await supabase.from("profiles").update({ office_access: value } as any).eq("id", userId);
+    const patch: any = { office_access: value };
+    if (!value) patch.office_branch_id = null;
+    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
     if (error) { toast.error(error.message); return; }
     toast.success("Office Account access updated");
-    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, office_access: value } : p));
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, office_access: value, office_branch_id: value ? p.office_branch_id : null } : p));
+  };
+
+  const changeOfficeBranch = async (userId: string, branchId: string) => {
+    const value = branchId === "__all__" ? null : branchId;
+    const { error } = await supabase.from("profiles").update({ office_branch_id: value } as any).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Office branch updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, office_branch_id: value } : p));
   };
 
   const changeExpensesBranch = async (userId: string, branchId: string) => {
