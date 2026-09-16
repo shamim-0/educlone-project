@@ -402,7 +402,9 @@ export default function OfficeAccount() {
           p?.paid_date ? p.paid_date.slice(0, 10) : "—",
         ];
       }),
-      foot: [["", "Total", "", "", fmt(salaryTotals.payable, salaryCur), fmt(salaryTotals.paid, salaryCur), "", ""]],
+      foot: salBranch === "all"
+        ? salaryTotalsByCur.map((t, i) => ["", i === 0 ? "Total" : "", "", "", fmt(t.payable, t.cur), fmt(t.paid, t.cur), "", ""])
+        : [["", "Total", "", "", fmt(salaryTotals.payable, salaryCur), fmt(salaryTotals.paid, salaryCur), "", ""]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [30, 41, 59] },
       footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: "bold" },
