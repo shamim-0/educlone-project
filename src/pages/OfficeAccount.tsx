@@ -213,14 +213,25 @@ export default function OfficeAccount() {
 
   const expenseTotal = useMemo(() => filteredExpenses.reduce((s, x) => s + Number(x.amount || 0), 0), [filteredExpenses]);
 
+  const expenseTotalsByCur = useMemo(() => {
+    const m = new Map<string, number>();
+    filteredExpenses.forEach((x) => {
+      const c = branchCur(x.branch_id);
+      m.set(c, (m.get(c) ?? 0) + Number(x.amount || 0));
+    });
+    return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filteredExpenses, branches]);
+
   const byCategory = useMemo(() => {
     const m = new Map<string, number>();
     filteredExpenses.forEach((x) => {
-      const k = catName(x.category_id);
+      const k = `${catName(x.category_id)}|${branchCur(x.branch_id)}`;
       m.set(k, (m.get(k) ?? 0) + Number(x.amount || 0));
     });
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
-  }, [filteredExpenses, categories]);
+    return Array.from(m.entries())
+      .map(([k, v]) => { const [name, cur] = k.split("|"); return { name, cur, amt: v }; })
+      .sort((a, b) => b.amt - a.amt);
+  }, [filteredExpenses, categories, branches]);
 
   const costReport = () => {
     const doc = new jsPDF({ orientation: "landscape" });
@@ -247,7 +258,9 @@ export default function OfficeAccount() {
         userName(x.created_by),
         fmt(Number(x.amount || 0), branchCur(x.branch_id)),
       ]),
-      foot: [["", "", "", "", "", "", "Total", fmt(expenseTotal, costCur)]],
+      foot: fBranch === "all"
+        ? expenseTotalsByCur.map(([cur, amt], i) => ["", "", "", "", "", "", i === 0 ? "Total" : "", fmt(amt, cur)])
+        : [["", "", "", "", "", "", "Total", fmt(expenseTotal, costCur)]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [30, 41, 59] },
       footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: "bold" },
@@ -313,6 +326,21 @@ export default function OfficeAccount() {
     return { payable, paid, due: payable - paid };
   }, [monthEmployees, salaries, salMonth]);
 
+  const salaryTotalsByCur = useMemo(() => {
+    const m = new Map<string, { payable: number; paid: number }>();
+    monthEmployees.forEach((e) => {
+      const c = branchCur(e.branch_id);
+      const cur = m.get(c) ?? { payable: 0, paid: 0 };
+      cur.payable += Number(e.monthly_salary || 0);
+      const p = paidFor(e.id);
+      if (p) cur.paid += Number(p.amount || 0);
+      m.set(c, cur);
+    });
+    return Array.from(m.entries())
+      .map(([cur, v]) => ({ cur, ...v, due: v.payable - v.paid }))
+      .sort((a, b) => a.cur.localeCompare(b.cur));
+  }, [monthEmployees, salaries, salMonth, branches]);
+
   const openPay = (emp: Employee) => {
     const existing = paidFor(emp.id);
     setPayTarget(emp);
@@ -374,7 +402,9 @@ export default function OfficeAccount() {
           p?.paid_date ? p.paid_date.slice(0, 10) : "—",
         ];
       }),
-      foot: [["", "Total", "", "", fmt(salaryTotals.payable, salaryCur), fmt(salaryTotals.paid, salaryCur), "", ""]],
+      foot: salBranch === "all"
+        ? salaryTotalsByCur.map((t, i) => ["", i === 0 ? "Total" : "", "", "", fmt(t.payable, t.cur), fmt(t.paid, t.cur), "", ""])
+        : [["", "Total", "", "", fmt(salaryTotals.payable, salaryCur), fmt(salaryTotals.paid, salaryCur), "", ""]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [30, 41, 59] },
       footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: "bold" },
@@ -419,15 +449,25 @@ export default function OfficeAccount() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Total Cost</p>
-              <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal, costCur)}</p>
+              {fBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {expenseTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold">{fmt(0, costCur)}</p>
+                  ) : expenseTotalsByCur.map(([cur, amt]) => (
+                    <p key={cur} className="text-2xl font-bold leading-tight">{fmt(amt, cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal, costCur)}</p>
+              )}
               <p className="text-xs text-muted-foreground">{filteredExpenses.length} entries</p>
             </Card>
             <Card className="p-4 md:col-span-2">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">By Category</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {byCategory.length === 0 ? <span className="text-sm text-muted-foreground">No data</span> :
-                  byCategory.map(([name, amt]) => (
-                    <Badge key={name} variant="secondary" className="text-xs">{name}: {fmt(amt, costCur)}</Badge>
+                  byCategory.map((c) => (
+                    <Badge key={`${c.name}|${c.cur}`} variant="secondary" className="text-xs">{c.name}: {fmt(c.amt, c.cur)}</Badge>
                   ))}
               </div>
             </Card>
@@ -508,15 +548,45 @@ export default function OfficeAccount() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Monthly Payable</p>
-              <p className="mt-1 text-2xl font-bold">{fmt(salaryTotals.payable, salaryCur)}</p>
+              {salBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {salaryTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold">{fmt(0, salaryCur)}</p>
+                  ) : salaryTotalsByCur.map((t) => (
+                    <p key={t.cur} className="text-2xl font-bold leading-tight">{fmt(t.payable, t.cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold">{fmt(salaryTotals.payable, salaryCur)}</p>
+              )}
             </Card>
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Paid ({salMonth})</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(salaryTotals.paid, salaryCur)}</p>
+              {salBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {salaryTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(0, salaryCur)}</p>
+                  ) : salaryTotalsByCur.map((t) => (
+                    <p key={t.cur} className="text-2xl font-bold leading-tight text-emerald-600 dark:text-emerald-400">{fmt(t.paid, t.cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(salaryTotals.paid, salaryCur)}</p>
+              )}
             </Card>
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Remaining</p>
-              <p className="mt-1 text-2xl font-bold text-destructive">{fmt(salaryTotals.due, salaryCur)}</p>
+              {salBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {salaryTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold text-destructive">{fmt(0, salaryCur)}</p>
+                  ) : salaryTotalsByCur.map((t) => (
+                    <p key={t.cur} className="text-2xl font-bold leading-tight text-destructive">{fmt(t.due, t.cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold text-destructive">{fmt(salaryTotals.due, salaryCur)}</p>
+              )}
             </Card>
           </div>
 
