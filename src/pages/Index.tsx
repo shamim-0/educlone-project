@@ -14,6 +14,7 @@ import { useServiceDefs } from "@/hooks/useServiceDefs";
 import { getApplicableServiceDefs } from "@/lib/steps";
 import { isCompanyOverdue, getOverdueServices } from "@/lib/overdue";
 import { auditTitle, fmtWhen } from "@/lib/audit";
+import { getExpiryAlerts, fmtDate } from "@/lib/licenceExpiry";
 
 const extractCode = extractCompanyCode;
 
@@ -34,6 +35,12 @@ interface Company {
   note?: string | null;
   status?: string | null;
   branches?: { name: string } | null;
+  mother_company_issued_date?: string | null;
+  mother_company_expire_date?: string | null;
+  company_issue_date?: string | null;
+  company_expire_date?: string | null;
+  misa_issued_date?: string | null;
+  misa_expire_date?: string | null;
 }
 
 const TARGET_DAYS = 45;
