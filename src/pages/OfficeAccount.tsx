@@ -213,14 +213,25 @@ export default function OfficeAccount() {
 
   const expenseTotal = useMemo(() => filteredExpenses.reduce((s, x) => s + Number(x.amount || 0), 0), [filteredExpenses]);
 
+  const expenseTotalsByCur = useMemo(() => {
+    const m = new Map<string, number>();
+    filteredExpenses.forEach((x) => {
+      const c = branchCur(x.branch_id);
+      m.set(c, (m.get(c) ?? 0) + Number(x.amount || 0));
+    });
+    return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filteredExpenses, branches]);
+
   const byCategory = useMemo(() => {
     const m = new Map<string, number>();
     filteredExpenses.forEach((x) => {
-      const k = catName(x.category_id);
+      const k = `${catName(x.category_id)}|${branchCur(x.branch_id)}`;
       m.set(k, (m.get(k) ?? 0) + Number(x.amount || 0));
     });
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
-  }, [filteredExpenses, categories]);
+    return Array.from(m.entries())
+      .map(([k, v]) => { const [name, cur] = k.split("|"); return { name, cur, amt: v }; })
+      .sort((a, b) => b.amt - a.amt);
+  }, [filteredExpenses, categories, branches]);
 
   const costReport = () => {
     const doc = new jsPDF({ orientation: "landscape" });
