@@ -546,15 +546,45 @@ export default function OfficeAccount() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Monthly Payable</p>
-              <p className="mt-1 text-2xl font-bold">{fmt(salaryTotals.payable, salaryCur)}</p>
+              {salBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {salaryTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold">{fmt(0, salaryCur)}</p>
+                  ) : salaryTotalsByCur.map((t) => (
+                    <p key={t.cur} className="text-2xl font-bold leading-tight">{fmt(t.payable, t.cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold">{fmt(salaryTotals.payable, salaryCur)}</p>
+              )}
             </Card>
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Paid ({salMonth})</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(salaryTotals.paid, salaryCur)}</p>
+              {salBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {salaryTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(0, salaryCur)}</p>
+                  ) : salaryTotalsByCur.map((t) => (
+                    <p key={t.cur} className="text-2xl font-bold leading-tight text-emerald-600 dark:text-emerald-400">{fmt(t.paid, t.cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(salaryTotals.paid, salaryCur)}</p>
+              )}
             </Card>
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Remaining</p>
-              <p className="mt-1 text-2xl font-bold text-destructive">{fmt(salaryTotals.due, salaryCur)}</p>
+              {salBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {salaryTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold text-destructive">{fmt(0, salaryCur)}</p>
+                  ) : salaryTotalsByCur.map((t) => (
+                    <p key={t.cur} className="text-2xl font-bold leading-tight text-destructive">{fmt(t.due, t.cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold text-destructive">{fmt(salaryTotals.due, salaryCur)}</p>
+              )}
             </Card>
           </div>
 
