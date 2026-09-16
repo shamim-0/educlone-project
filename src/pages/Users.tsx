@@ -261,9 +261,22 @@ export default function UsersPage() {
                 </TableCell>
                 <TableCell>
                   {isAdmin ? (
-                    <Switch checked={!!p.office_access} onCheckedChange={(v) => toggleOfficeAccess(p.id, v)} />
+                    <div className="space-y-2">
+                      <Switch checked={!!p.office_access} onCheckedChange={(v) => toggleOfficeAccess(p.id, v)} />
+                      {p.office_access && (
+                        <Select value={p.office_branch_id ?? "__all__"} onValueChange={(v) => changeOfficeBranch(p.id, v)}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__all__">All branches</SelectItem>
+                            {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
                   ) : (
-                    <Badge variant="secondary">{p.office_access ? "Yes" : "No"}</Badge>
+                    <Badge variant="secondary">
+                      {p.office_access ? (p.office_branch_id ? branchName(p.office_branch_id) : "All branches") : "No"}
+                    </Badge>
                   )}
                 </TableCell>
 
