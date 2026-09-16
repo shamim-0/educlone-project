@@ -1471,6 +1471,8 @@ export default function CompanyDetail() {
                     <SelectItem value="trading">Trading</SelectItem>
                     <SelectItem value="services">Services</SelectItem>
                     <SelectItem value="industrial_license">Industrial License</SelectItem>
+                    <SelectItem value="tga">TGA</SelectItem>
+                    <SelectItem value="after_licence">After Licence</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1488,6 +1490,41 @@ export default function CompanyDetail() {
                 <Label className="text-xs">EMAIL</Label>
                 <Input value={company.contact_email ?? ""} onChange={(e) => setCompany({ ...company, contact_email: e.target.value })} disabled={!canEdit} />
               </div>
+            </div>
+            <div className="rounded-md border border-border p-3 space-y-3">
+              <div className="text-xs font-semibold text-muted-foreground tracking-wide">LICENCE DATES</div>
+              {EXPIRY_FIELDS.map((f) => {
+                const exp = (company as any)[f.expire] as string | null;
+                const left = exp ? daysUntil(exp) : null;
+                return (
+                  <div key={f.key} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">{f.label.toUpperCase()}</Label>
+                      {left !== null && left <= 30 && (
+                        <span className={cn("text-[10px] font-semibold", left < 0 ? "text-destructive" : "text-[rgb(234,88,12)]")}>
+                          {left < 0 ? `Expired ${Math.abs(left)}d ago` : `Renew in ${left}d`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="date"
+                        value={(company as any)[f.issued] ?? ""}
+                        onChange={(e) => setCompany({ ...company, [f.issued]: e.target.value } as any)}
+                        disabled={!canEdit}
+                        title="Issued date"
+                      />
+                      <Input
+                        type="date"
+                        value={exp ?? ""}
+                        onChange={(e) => setCompany({ ...company, [f.expire]: e.target.value } as any)}
+                        disabled={!canEdit}
+                        title="Expire date"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <div>
               <Label className="text-xs">NOTE / CONDITION</Label>
