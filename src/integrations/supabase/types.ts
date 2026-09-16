@@ -88,6 +88,8 @@ export type Database = {
           branch_id: string | null
           client_name: string | null
           company_code: string | null
+          company_expire_date: string | null
+          company_issue_date: string | null
           contact_email: string | null
           cr_number: string | null
           created_at: string
@@ -101,6 +103,10 @@ export type Database = {
           emergency: boolean
           id: string
           legacy_id: number | null
+          misa_expire_date: string | null
+          misa_issued_date: string | null
+          mother_company_expire_date: string | null
+          mother_company_issued_date: string | null
           name: string
           note: string | null
           package_id: string | null
@@ -126,6 +132,8 @@ export type Database = {
           branch_id?: string | null
           client_name?: string | null
           company_code?: string | null
+          company_expire_date?: string | null
+          company_issue_date?: string | null
           contact_email?: string | null
           cr_number?: string | null
           created_at?: string
@@ -139,6 +147,10 @@ export type Database = {
           emergency?: boolean
           id?: string
           legacy_id?: number | null
+          misa_expire_date?: string | null
+          misa_issued_date?: string | null
+          mother_company_expire_date?: string | null
+          mother_company_issued_date?: string | null
           name: string
           note?: string | null
           package_id?: string | null
@@ -164,6 +176,8 @@ export type Database = {
           branch_id?: string | null
           client_name?: string | null
           company_code?: string | null
+          company_expire_date?: string | null
+          company_issue_date?: string | null
           contact_email?: string | null
           cr_number?: string | null
           created_at?: string
@@ -177,6 +191,10 @@ export type Database = {
           emergency?: boolean
           id?: string
           legacy_id?: number | null
+          misa_expire_date?: string | null
+          misa_issued_date?: string | null
+          mother_company_expire_date?: string | null
+          mother_company_issued_date?: string | null
           name?: string
           note?: string | null
           package_id?: string | null
@@ -1129,6 +1147,8 @@ export type Database = {
         | "trading"
         | "services"
         | "industrial_license"
+        | "tga"
+        | "after_licence"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1263,6 +1283,8 @@ export const Constants = {
         "trading",
         "services",
         "industrial_license",
+        "tga",
+        "after_licence",
       ],
     },
   },
