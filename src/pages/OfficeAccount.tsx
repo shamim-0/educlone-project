@@ -324,6 +324,21 @@ export default function OfficeAccount() {
     return { payable, paid, due: payable - paid };
   }, [monthEmployees, salaries, salMonth]);
 
+  const salaryTotalsByCur = useMemo(() => {
+    const m = new Map<string, { payable: number; paid: number }>();
+    monthEmployees.forEach((e) => {
+      const c = branchCur(e.branch_id);
+      const cur = m.get(c) ?? { payable: 0, paid: 0 };
+      cur.payable += Number(e.monthly_salary || 0);
+      const p = paidFor(e.id);
+      if (p) cur.paid += Number(p.amount || 0);
+      m.set(c, cur);
+    });
+    return Array.from(m.entries())
+      .map(([cur, v]) => ({ cur, ...v, due: v.payable - v.paid }))
+      .sort((a, b) => a.cur.localeCompare(b.cur));
+  }, [monthEmployees, salaries, salMonth, branches]);
+
   const openPay = (emp: Employee) => {
     const existing = paidFor(emp.id);
     setPayTarget(emp);
