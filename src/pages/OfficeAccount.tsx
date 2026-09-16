@@ -258,7 +258,9 @@ export default function OfficeAccount() {
         userName(x.created_by),
         fmt(Number(x.amount || 0), branchCur(x.branch_id)),
       ]),
-      foot: [["", "", "", "", "", "", "Total", fmt(expenseTotal, costCur)]],
+      foot: fBranch === "all"
+        ? expenseTotalsByCur.map(([cur, amt], i) => ["", "", "", "", "", "", i === 0 ? "Total" : "", fmt(amt, cur)])
+        : [["", "", "", "", "", "", "Total", fmt(expenseTotal, costCur)]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [30, 41, 59] },
       footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: "bold" },
