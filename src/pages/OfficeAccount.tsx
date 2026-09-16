@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Eye, FileText, Plus, Trash2, Users, Wallet, Pencil } from "lucide-react";
+import { Building2, Coins, Eye, FileText, Plus, Trash2, Users, Wallet, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { PAYMENT_METHODS, methodLabel } from "@/lib/invoice";
 import { toast } from "sonner";
@@ -65,6 +65,8 @@ export default function OfficeAccount() {
   const [fTo, setFTo] = useState("");
 
   // dialogs
+  const [curOpen, setCurOpen] = useState(false);
+  const [curDraft, setCurDraft] = useState<Record<string, string>>({});
   const [catOpen, setCatOpen] = useState(false);
   const [newCat, setNewCat] = useState("");
   const [expOpen, setExpOpen] = useState(false);
@@ -100,7 +102,7 @@ export default function OfficeAccount() {
   const load = async () => {
     setLoading(true);
     const [b, c, e, emp, sal] = await Promise.all([
-      supabase.from("branches").select("id, name").order("name"),
+      supabase.from("branches").select("id, name, currency").order("name"),
       supabase.from("office_expense_categories").select("id, name").order("name"),
       supabase.from("office_expenses").select("*").order("expense_date", { ascending: false }),
       supabase.from("employees").select("*").order("name"),
@@ -118,8 +120,20 @@ export default function OfficeAccount() {
   useEffect(() => { document.title = "Office Account | ISBI Tracker"; load(); }, []);
 
   const branchName = (id: string | null) => branches.find((x) => x.id === id)?.name ?? "—";
+  const branchCur = (id: string | null) => branches.find((x) => x.id === id)?.currency || "SR";
   const catName = (id: string | null) => categories.find((x) => x.id === id)?.name ?? "—";
   const userName = (id: string | null) => (id ? profileNames[id] || "—" : "—");
+
+  const saveCurrencies = async () => {
+    const changed = branches.filter((b) => (curDraft[b.id] || "SR") !== (b.currency || "SR"));
+    for (const b of changed) {
+      const { error } = await supabase.from("branches").update({ currency: curDraft[b.id] } as any).eq("id", b.id);
+      if (error) { toast.error(error.message); return; }
+    }
+    toast.success("Branch currency saved");
+    setCurOpen(false);
+    load();
+  };
 
   /* ---------------- categories ---------------- */
   const addCategory = async () => {
@@ -194,6 +208,9 @@ export default function OfficeAccount() {
     });
   }, [expenses, fBranch, fCategory, fMonth, fFrom, fTo]);
 
+  const costCur = fBranch !== "all" ? branchCur(fBranch) : (myBranch ? branchCur(myBranch) : "SR");
+  const salaryCur = salBranch !== "all" ? branchCur(salBranch) : (myBranch ? branchCur(myBranch) : "SR");
+
   const expenseTotal = useMemo(() => filteredExpenses.reduce((s, x) => s + Number(x.amount || 0), 0), [filteredExpenses]);
 
   const byCategory = useMemo(() => {
@@ -228,9 +245,9 @@ export default function OfficeAccount() {
         x.purpose,
         methodLabel(x.payment_method),
         userName(x.created_by),
-        fmt(Number(x.amount || 0)),
+        fmt(Number(x.amount || 0), branchCur(x.branch_id)),
       ]),
-      foot: [["", "", "", "", "", "", "Total", fmt(expenseTotal)]],
+      foot: [["", "", "", "", "", "", "Total", fmt(expenseTotal, costCur)]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [30, 41, 59] },
       footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: "bold" },
@@ -351,13 +368,13 @@ export default function OfficeAccount() {
           e.name,
           e.designation ?? "—",
           branchName(e.branch_id),
-          fmt(Number(e.monthly_salary || 0)),
-          p ? fmt(Number(p.amount || 0)) : "Unpaid",
+          fmt(Number(e.monthly_salary || 0), branchCur(e.branch_id)),
+          p ? fmt(Number(p.amount || 0), branchCur(e.branch_id)) : "Unpaid",
           p ? methodLabel(p.payment_method) : "—",
           p?.paid_date ? p.paid_date.slice(0, 10) : "—",
         ];
       }),
-      foot: [["", "Total", "", "", fmt(salaryTotals.payable), fmt(salaryTotals.paid), "", ""]],
+      foot: [["", "Total", "", "", fmt(salaryTotals.payable, salaryCur), fmt(salaryTotals.paid, salaryCur), "", ""]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [30, 41, 59] },
       footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: "bold" },
@@ -375,6 +392,20 @@ export default function OfficeAccount() {
         <p className="mt-1 text-sm text-muted-foreground max-w-xl">
           Office running costs by category and monthly employee salary management.
         </p>
+        {isAdmin && (
+          <Button
+            variant="outline"
+            className="absolute right-6 top-6 gap-1.5"
+            onClick={() => {
+              const d: Record<string, string> = {};
+              branches.forEach((b) => { d[b.id] = b.currency || "SR"; });
+              setCurDraft(d);
+              setCurOpen(true);
+            }}
+          >
+            <Coins className="h-4 w-4" /> Branch Currency
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="cost">
@@ -388,7 +419,7 @@ export default function OfficeAccount() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Total Cost</p>
-              <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal)}</p>
+              <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal, costCur)}</p>
               <p className="text-xs text-muted-foreground">{filteredExpenses.length} entries</p>
             </Card>
             <Card className="p-4 md:col-span-2">
@@ -396,7 +427,7 @@ export default function OfficeAccount() {
               <div className="mt-2 flex flex-wrap gap-2">
                 {byCategory.length === 0 ? <span className="text-sm text-muted-foreground">No data</span> :
                   byCategory.map(([name, amt]) => (
-                    <Badge key={name} variant="secondary" className="text-xs">{name}: {fmt(amt)}</Badge>
+                    <Badge key={name} variant="secondary" className="text-xs">{name}: {fmt(amt, costCur)}</Badge>
                   ))}
               </div>
             </Card>
@@ -458,7 +489,7 @@ export default function OfficeAccount() {
                     <TableCell className="font-medium">{x.purpose}</TableCell>
                     <TableCell>{methodLabel(x.payment_method)}</TableCell>
                     <TableCell className="text-muted-foreground">{userName(x.created_by)}</TableCell>
-                    <TableCell className="text-right tabular-nums font-semibold">{fmt(Number(x.amount || 0))}</TableCell>
+                    <TableCell className="text-right tabular-nums font-semibold">{fmt(Number(x.amount || 0), branchCur(x.branch_id))}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => openExpense(x)}><Pencil className="h-4 w-4" /></Button>
@@ -477,15 +508,15 @@ export default function OfficeAccount() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Monthly Payable</p>
-              <p className="mt-1 text-2xl font-bold">{fmt(salaryTotals.payable)}</p>
+              <p className="mt-1 text-2xl font-bold">{fmt(salaryTotals.payable, salaryCur)}</p>
             </Card>
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Paid ({salMonth})</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(salaryTotals.paid)}</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(salaryTotals.paid, salaryCur)}</p>
             </Card>
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Remaining</p>
-              <p className="mt-1 text-2xl font-bold text-destructive">{fmt(salaryTotals.due)}</p>
+              <p className="mt-1 text-2xl font-bold text-destructive">{fmt(salaryTotals.due, salaryCur)}</p>
             </Card>
           </div>
 
@@ -529,10 +560,10 @@ export default function OfficeAccount() {
                       <TableCell className="font-medium">{e.name}</TableCell>
                       <TableCell>{e.designation ?? "—"}</TableCell>
                       <TableCell>{branchName(e.branch_id)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{fmt(Number(e.monthly_salary || 0))}</TableCell>
+                      <TableCell className="text-right tabular-nums">{fmt(Number(e.monthly_salary || 0), branchCur(e.branch_id))}</TableCell>
                       <TableCell>
                         {p ? (
-                          <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Paid {fmt(Number(p.amount || 0))} · {methodLabel(p.payment_method)}</Badge>
+                          <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Paid {fmt(Number(p.amount || 0), branchCur(e.branch_id))} · {methodLabel(p.payment_method)}</Badge>
                         ) : (
                           <Badge variant="secondary">Unpaid</Badge>
                         )}
@@ -557,6 +588,29 @@ export default function OfficeAccount() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Branch currency dialog */}
+      <Dialog open={curOpen} onOpenChange={setCurOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Branch Currency</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Choose which currency each branch uses for office costs and salaries.</p>
+          <div className="mt-2 max-h-80 space-y-2 overflow-auto">
+            {branches.length === 0 && <p className="text-sm text-muted-foreground">No branches yet.</p>}
+            {branches.map((b) => (
+              <div key={b.id} className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
+                <span className="text-sm font-medium">{b.name}</span>
+                <Select value={curDraft[b.id] || "SR"} onValueChange={(v) => setCurDraft({ ...curDraft, [b.id]: v })}>
+                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+          <DialogFooter><Button onClick={saveCurrencies}>Save</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Categories dialog */}
       <Dialog open={catOpen} onOpenChange={setCatOpen}>
@@ -589,7 +643,7 @@ export default function OfficeAccount() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Amount (SR)</Label>
+                <Label>Amount ({branchCur(expForm.branch_id || null)})</Label>
                 <Input type="number" value={expForm.amount} onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })} />
               </div>
               <div>
@@ -651,7 +705,7 @@ export default function OfficeAccount() {
                 <div><p className="text-muted-foreground">Designation</p><p className="font-medium">{viewTarget.designation ?? "—"}</p></div>
                 <div><p className="text-muted-foreground">Branch</p><p className="font-medium">{branchName(viewTarget.branch_id)}</p></div>
                 <div><p className="text-muted-foreground">Phone</p><p className="font-medium">{viewTarget.phone ?? "—"}</p></div>
-                <div><p className="text-muted-foreground">Monthly Salary</p><p className="font-medium">{fmt(Number(viewTarget.monthly_salary || 0))}</p></div>
+                <div><p className="text-muted-foreground">Monthly Salary</p><p className="font-medium">{fmt(Number(viewTarget.monthly_salary || 0), branchCur(viewTarget.branch_id))}</p></div>
               </div>
 
               <div>
@@ -676,7 +730,7 @@ export default function OfficeAccount() {
                         .map((s) => (
                           <TableRow key={s.id}>
                             <TableCell>{s.salary_month}</TableCell>
-                            <TableCell className="text-right tabular-nums">{fmt(Number(s.amount || 0))}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(Number(s.amount || 0), branchCur(viewTarget.branch_id))}</TableCell>
                             <TableCell>{methodLabel(s.payment_method)}</TableCell>
                             <TableCell>{s.paid_date ? new Date(s.paid_date).toLocaleDateString() : "—"}</TableCell>
                             <TableCell className="text-muted-foreground">{userName(s.created_by)}</TableCell>
@@ -717,7 +771,7 @@ export default function OfficeAccount() {
                 <Input value={empForm.designation} onChange={(e) => setEmpForm({ ...empForm, designation: e.target.value })} />
               </div>
               <div>
-                <Label>Monthly Salary (SR)</Label>
+                <Label>Monthly Salary ({branchCur(empForm.branch_id || null)})</Label>
                 <Input type="number" value={empForm.monthly_salary} onChange={(e) => setEmpForm({ ...empForm, monthly_salary: e.target.value })} />
               </div>
             </div>
@@ -753,7 +807,7 @@ export default function OfficeAccount() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Amount (SR)</Label>
+                <Label>Amount ({branchCur(payTarget?.branch_id ?? null)})</Label>
                 <Input type="number" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} />
               </div>
               <div>
