@@ -447,15 +447,25 @@ export default function OfficeAccount() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Total Cost</p>
-              <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal, costCur)}</p>
+              {fBranch === "all" ? (
+                <div className="mt-1 space-y-0.5">
+                  {expenseTotalsByCur.length === 0 ? (
+                    <p className="text-2xl font-bold">{fmt(0, costCur)}</p>
+                  ) : expenseTotalsByCur.map(([cur, amt]) => (
+                    <p key={cur} className="text-2xl font-bold leading-tight">{fmt(amt, cur)}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal, costCur)}</p>
+              )}
               <p className="text-xs text-muted-foreground">{filteredExpenses.length} entries</p>
             </Card>
             <Card className="p-4 md:col-span-2">
               <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">By Category</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {byCategory.length === 0 ? <span className="text-sm text-muted-foreground">No data</span> :
-                  byCategory.map(([name, amt]) => (
-                    <Badge key={name} variant="secondary" className="text-xs">{name}: {fmt(amt, costCur)}</Badge>
+                  byCategory.map((c) => (
+                    <Badge key={`${c.name}|${c.cur}`} variant="secondary" className="text-xs">{c.name}: {fmt(c.amt, c.cur)}</Badge>
                   ))}
               </div>
             </Card>
