@@ -43,7 +43,9 @@ interface SalaryPayment {
 }
 
 export default function OfficeAccount() {
-  const { user } = useAuth();
+  const { user, role, officeBranchId } = useAuth();
+  const isAdmin = role === "admin";
+  const myBranch = isAdmin ? null : officeBranchId;
   const profileNames = useProfileNames();
 
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -102,10 +104,11 @@ export default function OfficeAccount() {
       supabase.from("employees").select("*").order("name"),
       supabase.from("salary_payments").select("*"),
     ]);
-    setBranches((b.data as Branch[]) ?? []);
+    const allBranches = (b.data as Branch[]) ?? [];
+    setBranches(myBranch ? allBranches.filter((x) => x.id === myBranch) : allBranches);
     setCategories((c.data as Category[]) ?? []);
-    setExpenses((e.data as any[]) ?? []);
-    setEmployees((emp.data as any[]) ?? []);
+    setExpenses(((e.data as any[]) ?? []).filter((x) => !myBranch || x.branch_id === myBranch));
+    setEmployees(((emp.data as any[]) ?? []).filter((x) => !myBranch || x.branch_id === myBranch));
     setSalaries((sal.data as any[]) ?? []);
     setLoading(false);
   };
@@ -144,13 +147,14 @@ export default function OfficeAccount() {
       expense_date: (row.expense_date ?? "").slice(0, 10) || today(),
       payment_method: row.payment_method ?? "cash",
       note: row.note ?? "",
-    } : { category_id: "", branch_id: "", purpose: "", amount: "", expense_date: today(), payment_method: "cash", note: "" });
+    } : { category_id: "", branch_id: myBranch ?? "", purpose: "", amount: "", expense_date: today(), payment_method: "cash", note: "" });
     setExpOpen(true);
   };
 
   const saveExpense = async () => {
     if (!expForm.purpose.trim()) { toast.error("Purpose is required"); return; }
     if (!expForm.amount || Number(expForm.amount) <= 0) { toast.error("Enter a valid amount"); return; }
+    if (myBranch && expForm.branch_id !== myBranch) { toast.error("You can only add cost for your branch"); return; }
     const payload: any = {
       category_id: expForm.category_id || null,
       branch_id: expForm.branch_id || null,
@@ -242,12 +246,13 @@ export default function OfficeAccount() {
       monthly_salary: String(row.monthly_salary ?? ""),
       phone: row.phone ?? "",
       active: row.active,
-    } : { name: "", designation: "", branch_id: "", monthly_salary: "", phone: "", active: true });
+    } : { name: "", designation: "", branch_id: myBranch ?? "", monthly_salary: "", phone: "", active: true });
     setEmpOpen(true);
   };
 
   const saveEmployee = async () => {
     if (!empForm.name.trim()) { toast.error("Name is required"); return; }
+    if (myBranch && empForm.branch_id !== myBranch) { toast.error("You can only add employees for your branch"); return; }
     const payload: any = {
       name: empForm.name.trim(),
       designation: empForm.designation || null,
@@ -302,6 +307,7 @@ export default function OfficeAccount() {
 
   const savePay = async () => {
     if (!payTarget) return;
+    if (!isAdmin) { toast.error("Only admin can pay salary"); return; }
     const existing = paidFor(payTarget.id);
     const payload: any = {
       employee_id: payTarget.id,
@@ -533,8 +539,10 @@ export default function OfficeAccount() {
                       <TableCell className="text-right">
                          <div className="flex justify-end gap-1">
                            <Button variant="ghost" size="icon" title="View employee" onClick={() => openView(e)}><Eye className="h-4 w-4" /></Button>
-                           <Button variant="outline" size="sm" onClick={() => openPay(e)}>{p ? "Edit Pay" : "Pay"}</Button>
-                          {p && <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deletePay(p.id)}><Trash2 className="h-4 w-4" /></Button>}
+                           {isAdmin && (
+                             <Button variant="outline" size="sm" onClick={() => openPay(e)}>{p ? "Edit Pay" : "Pay"}</Button>
+                           )}
+                          {isAdmin && p && <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deletePay(p.id)}><Trash2 className="h-4 w-4" /></Button>}
                           <Button variant="ghost" size="icon" onClick={() => openEmployee(e)}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteEmployee(e.id)}><Trash2 className="h-4 w-4" /></Button>
                         </div>
@@ -603,7 +611,7 @@ export default function OfficeAccount() {
                 <Select value={expForm.branch_id || "__none__"} onValueChange={(v) => setExpForm({ ...expForm, branch_id: v === "__none__" ? "" : v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">No branch</SelectItem>
+                    {!myBranch && <SelectItem value="__none__">No branch</SelectItem>}
                     {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -717,7 +725,7 @@ export default function OfficeAccount() {
                 <Select value={empForm.branch_id || "__none__"} onValueChange={(v) => setEmpForm({ ...empForm, branch_id: v === "__none__" ? "" : v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">No branch</SelectItem>
+                    {!myBranch && <SelectItem value="__none__">No branch</SelectItem>}
                     {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>

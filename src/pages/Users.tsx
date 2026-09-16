@@ -18,7 +18,7 @@ import { AssignTaskDialog } from "@/components/AssignTaskDialog";
 import { TodoTaskDialog } from "@/components/TodoTaskDialog";
 import { UserActivityDialog } from "@/components/UserActivityDialog";
 
-interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; expenses_branch_id: string | null; office_access: boolean; }
+interface Profile { id: string; username: string; email: string | null; branch_id: string | null; accounts_access: boolean; expenses_access: boolean; expenses_branch_id: string | null; office_access: boolean; office_branch_id: string | null; }
 interface RoleRow { user_id: string; role: AppRole; }
 interface Branch { id: string; name: string; }
 
@@ -46,7 +46,7 @@ export default function UsersPage() {
   const load = async () => {
     setLoading(true);
     const [{ data: p }, { data: r }, { data: b }] = await Promise.all([
-      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access, expenses_branch_id, office_access").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, username, email, branch_id, accounts_access, expenses_access, expenses_branch_id, office_access, office_branch_id").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("branches").select("id, name").order("name"),
     ]);
@@ -98,10 +98,20 @@ export default function UsersPage() {
   };
 
   const toggleOfficeAccess = async (userId: string, value: boolean) => {
-    const { error } = await supabase.from("profiles").update({ office_access: value } as any).eq("id", userId);
+    const patch: any = { office_access: value };
+    if (!value) patch.office_branch_id = null;
+    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
     if (error) { toast.error(error.message); return; }
     toast.success("Office Account access updated");
-    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, office_access: value } : p));
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, office_access: value, office_branch_id: value ? p.office_branch_id : null } : p));
+  };
+
+  const changeOfficeBranch = async (userId: string, branchId: string) => {
+    const value = branchId === "__all__" ? null : branchId;
+    const { error } = await supabase.from("profiles").update({ office_branch_id: value } as any).eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Office branch updated");
+    setProfiles((s) => s.map((p) => p.id === userId ? { ...p, office_branch_id: value } : p));
   };
 
   const changeExpensesBranch = async (userId: string, branchId: string) => {
@@ -251,9 +261,22 @@ export default function UsersPage() {
                 </TableCell>
                 <TableCell>
                   {isAdmin ? (
-                    <Switch checked={!!p.office_access} onCheckedChange={(v) => toggleOfficeAccess(p.id, v)} />
+                    <div className="space-y-2">
+                      <Switch checked={!!p.office_access} onCheckedChange={(v) => toggleOfficeAccess(p.id, v)} />
+                      {p.office_access && (
+                        <Select value={p.office_branch_id ?? "__all__"} onValueChange={(v) => changeOfficeBranch(p.id, v)}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__all__">All branches</SelectItem>
+                            {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
                   ) : (
-                    <Badge variant="secondary">{p.office_access ? "Yes" : "No"}</Badge>
+                    <Badge variant="secondary">
+                      {p.office_access ? (p.office_branch_id ? branchName(p.office_branch_id) : "All branches") : "No"}
+                    </Badge>
                   )}
                 </TableCell>
 

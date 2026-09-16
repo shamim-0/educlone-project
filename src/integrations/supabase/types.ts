@@ -862,6 +862,7 @@ export type Database = {
           expenses_branch_id: string | null
           id: string
           office_access: boolean
+          office_branch_id: string | null
           username: string
         }
         Insert: {
@@ -873,6 +874,7 @@ export type Database = {
           expenses_branch_id?: string | null
           id: string
           office_access?: boolean
+          office_branch_id?: string | null
           username: string
         }
         Update: {
@@ -884,6 +886,7 @@ export type Database = {
           expenses_branch_id?: string | null
           id?: string
           office_access?: boolean
+          office_branch_id?: string | null
           username?: string
         }
         Relationships: [
@@ -897,6 +900,13 @@ export type Database = {
           {
             foreignKeyName: "profiles_expenses_branch_id_fkey"
             columns: ["expenses_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_office_branch_id_fkey"
+            columns: ["office_branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
             referencedColumns: ["id"]
@@ -1131,6 +1141,10 @@ export type Database = {
       }
       has_expenses_access: { Args: { _user_id: string }; Returns: boolean }
       has_office_access: { Args: { _user_id: string }; Returns: boolean }
+      has_office_branch_access: {
+        Args: { _branch_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

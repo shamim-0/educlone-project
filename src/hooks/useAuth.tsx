@@ -14,6 +14,7 @@ interface AuthCtx {
   expensesAccess: boolean;
   expensesBranchId: string | null;
   officeAccess: boolean;
+  officeBranchId: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (username: string, email: string, password: string) => Promise<{ error: string | null }>;
@@ -32,12 +33,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [expensesAccess, setExpensesAccess] = useState<boolean>(false);
   const [expensesBranchId, setExpensesBranchId] = useState<string | null>(null);
   const [officeAccess, setOfficeAccess] = useState<boolean>(false);
+  const [officeBranchId, setOfficeBranchId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (uid: string) => {
     const [{ data: roleRow }, { data: profile }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", uid).order("role").limit(1).maybeSingle(),
-      supabase.from("profiles").select("username, branch_id, accounts_access, expenses_access, expenses_branch_id, office_access").eq("id", uid).maybeSingle(),
+      supabase.from("profiles").select("username, branch_id, accounts_access, expenses_access, expenses_branch_id, office_access, office_branch_id").eq("id", uid).maybeSingle(),
     ]);
     setRole((roleRow?.role as AppRole) ?? "viewer");
     setUsername(profile?.username ?? null);
@@ -46,6 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setExpensesAccess(!!(profile as any)?.expenses_access);
     setExpensesBranchId((profile as any)?.expenses_branch_id ?? null);
     setOfficeAccess(!!(profile as any)?.office_access);
+    setOfficeBranchId((profile as any)?.office_branch_id ?? null);
   };
 
 
@@ -63,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setExpensesAccess(false);
         setExpensesBranchId(null);
         setOfficeAccess(false);
+        setOfficeBranchId(null);
       }
     });
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -96,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <Ctx.Provider value={{ session, user, role, username, branchId, accountsAccess, expensesAccess, expensesBranchId, officeAccess, loading, signIn, signUp, signOut }}>
+    <Ctx.Provider value={{ session, user, role, username, branchId, accountsAccess, expensesAccess, expensesBranchId, officeAccess, officeBranchId, loading, signIn, signUp, signOut }}>
       {children}
     </Ctx.Provider>
   );
