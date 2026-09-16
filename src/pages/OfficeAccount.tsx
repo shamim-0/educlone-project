@@ -19,13 +19,15 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-const fmt = (n: number) =>
-  `${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SR`;
+const CURRENCIES = ["SR", "USD", "EUR", "AED", "BDT", "PKR", "INR", "EGP", "GBP"];
+
+const fmt = (n: number, cur = "SR") =>
+  `${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur}`;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const thisMonth = () => new Date().toISOString().slice(0, 7);
 
-interface Branch { id: string; name: string }
+interface Branch { id: string; name: string; currency?: string | null }
 interface Category { id: string; name: string }
 interface OfficeExpense {
   id: string; category_id: string | null; branch_id: string | null; purpose: string;
