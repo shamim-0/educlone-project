@@ -372,6 +372,8 @@ export default function Index() {
     const trading = active.filter((c) => c.type === "trading").length;
     const entrepreneur = active.filter((c) => c.type === "entrepreneur").length;
     const industrial = active.filter((c) => c.type === "industrial_license").length;
+    const tga = active.filter((c) => c.type === "tga").length;
+    const afterLicence = active.filter((c) => c.type === "after_licence").length;
     const completed = completedIds.size;
     const takeAction = active.filter((c) => c.take_action).length;
     const emergency = active.filter((c) => c.emergency).length;
@@ -400,9 +402,9 @@ export default function Index() {
   }, [companies]);
 
   const typeOptions = useMemo(() => {
-    const s = new Set<string>();
+    const s = new Set<string>(COMPANY_TYPES.map((t) => t.value as string));
     companies.forEach((c) => c.type && s.add(c.type));
-    return Array.from(s).sort();
+    return Array.from(s);
   }, [companies]);
 
   const addedRange = useMemo(() => {
@@ -702,7 +704,7 @@ export default function Index() {
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {typeOptions.map((t) => (
-              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+              <SelectItem key={t} value={t} className="capitalize">{companyTypeLabel(t)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
