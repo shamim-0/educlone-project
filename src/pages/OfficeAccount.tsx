@@ -624,31 +624,33 @@ export default function OfficeAccount() {
               <TableBody>
                 {loading ? (
                   <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">Loading…</TableCell></TableRow>
-                ) : monthEmployees.length === 0 ? (
+                ) : listEmployees.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">No employees yet.</TableCell></TableRow>
-                ) : monthEmployees.map((e) => {
+                ) : listEmployees.map((e) => {
                   const p = paidFor(e.id);
                   return (
-                    <TableRow key={e.id}>
+                    <TableRow key={e.id} className={e.active ? undefined : "opacity-60"}>
                       <TableCell className="font-medium">{e.name}</TableCell>
                       <TableCell>{e.designation ?? "—"}</TableCell>
                       <TableCell>{branchName(e.branch_id)}</TableCell>
                       <TableCell className="text-right tabular-nums">{fmt(Number(e.monthly_salary || 0), branchCur(e.branch_id))}</TableCell>
                       <TableCell>
-                        {p ? (
+                        {!e.active ? (
+                          <Badge variant="outline" className="text-muted-foreground">Inactive</Badge>
+                        ) : p ? (
                           <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Paid {fmt(Number(p.amount || 0), branchCur(e.branch_id))} · {methodLabel(p.payment_method)}</Badge>
                         ) : (
                           <Badge variant="secondary">Unpaid</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{p ? userName(p.created_by) : "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{e.active && p ? userName(p.created_by) : "—"}</TableCell>
                       <TableCell className="text-right">
                          <div className="flex justify-end gap-1">
                            <Button variant="ghost" size="icon" title="View employee" onClick={() => openView(e)}><Eye className="h-4 w-4" /></Button>
-                           {isAdmin && (
+                           {isAdmin && e.active && (
                              <Button variant="outline" size="sm" onClick={() => openPay(e)}>{p ? "Edit Pay" : "Pay"}</Button>
                            )}
-                          {isAdmin && p && <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deletePay(p.id)}><Trash2 className="h-4 w-4" /></Button>}
+                          {isAdmin && e.active && p && <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deletePay(p.id)}><Trash2 className="h-4 w-4" /></Button>}
                           <Button variant="ghost" size="icon" onClick={() => openEmployee(e)}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteEmployee(e.id)}><Trash2 className="h-4 w-4" /></Button>
                         </div>
