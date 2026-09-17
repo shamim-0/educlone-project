@@ -15,6 +15,7 @@ import { getApplicableServiceDefs } from "@/lib/steps";
 import { isCompanyOverdue, getOverdueServices } from "@/lib/overdue";
 import { auditTitle, fmtWhen } from "@/lib/audit";
 import { getExpiryAlerts, fmtDate } from "@/lib/licenceExpiry";
+import { COMPANY_TYPES, companyTypeLabel } from "@/lib/companyTypes";
 
 const extractCode = extractCompanyCode;
 
@@ -387,7 +388,7 @@ export default function Index() {
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress, paused, inactive };
+    return { total, service, trading, entrepreneur, industrial, tga, afterLicence, completed, takeAction, emergency, overdue, avgProgress, paused, inactive };
   }, [companies, stepCounts, serviceDefs, completedIds, overdueIds]);
 
 
@@ -465,6 +466,8 @@ export default function Index() {
         case "trading":
         case "entrepreneur":
         case "industrial_license":
+        case "tga":
+        case "after_licence":
           if (!isActive || c.type !== cardTab) return false;
           break;
         case "completed":
@@ -611,6 +614,8 @@ export default function Index() {
           { id: "trading", value: stats.trading, label: "Trading", color: "text-primary" },
           { id: "entrepreneur", value: stats.entrepreneur, label: "Entrepreneur", color: "text-primary" },
           { id: "industrial_license", value: stats.industrial, label: "Industrial", color: "text-primary" },
+          { id: "tga", value: stats.tga, label: "TGA", color: "text-primary" },
+          { id: "after_licence", value: stats.afterLicence, label: "After Licence", color: "text-primary" },
           { id: "completed", value: stats.completed, label: "সম্পন্ন", color: "text-success" },
           { id: "overdue", value: stats.overdue, label: "Over Date", color: "text-destructive" },
           { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },

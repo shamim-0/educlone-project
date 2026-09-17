@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileNames } from "@/hooks/useProfileNames";
 import { auditTitle } from "@/lib/audit";
+import { COMPANY_TYPES, companyTypeLabel } from "@/lib/companyTypes";
 
 type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license" | "tga" | "after_licence";
 interface Company {
