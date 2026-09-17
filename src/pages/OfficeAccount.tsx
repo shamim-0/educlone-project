@@ -309,10 +309,13 @@ export default function OfficeAccount() {
     load();
   };
 
-  const monthEmployees = useMemo(
-    () => employees.filter((e) => e.active && (salBranch === "all" || e.branch_id === salBranch)),
+  const listEmployees = useMemo(
+    () => employees
+      .filter((e) => salBranch === "all" || e.branch_id === salBranch)
+      .sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name)),
     [employees, salBranch]
   );
+  const monthEmployees = useMemo(() => listEmployees.filter((e) => e.active), [listEmployees]);
 
   const paidFor = (empId: string) => salaries.find((s) => s.employee_id === empId && s.salary_month === salMonth);
 
