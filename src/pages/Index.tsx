@@ -607,7 +607,7 @@ export default function Index() {
       </div>
 
       {/* Stats — clickable tabs */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-11 gap-3">
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {[
           { id: "total", value: stats.total, label: "Total", color: "text-foreground" },
           { id: "services", value: stats.service, label: "Service", color: "text-primary" },
