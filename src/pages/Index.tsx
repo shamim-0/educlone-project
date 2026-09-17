@@ -15,6 +15,7 @@ import { getApplicableServiceDefs } from "@/lib/steps";
 import { isCompanyOverdue, getOverdueServices } from "@/lib/overdue";
 import { auditTitle, fmtWhen } from "@/lib/audit";
 import { getExpiryAlerts, fmtDate } from "@/lib/licenceExpiry";
+import { COMPANY_TYPES, companyTypeLabel } from "@/lib/companyTypes";
 
 const extractCode = extractCompanyCode;
 
@@ -372,6 +373,8 @@ export default function Index() {
     const trading = active.filter((c) => c.type === "trading").length;
     const entrepreneur = active.filter((c) => c.type === "entrepreneur").length;
     const industrial = active.filter((c) => c.type === "industrial_license").length;
+    const tga = active.filter((c) => c.type === "tga").length;
+    const afterLicence = active.filter((c) => c.type === "after_licence").length;
     const completed = completedIds.size;
     const takeAction = active.filter((c) => c.take_action).length;
     const emergency = active.filter((c) => c.emergency).length;
@@ -385,7 +388,7 @@ export default function Index() {
             }, 0) / total
           )
         : 0;
-    return { total, service, trading, entrepreneur, industrial, completed, takeAction, emergency, overdue, avgProgress, paused, inactive };
+    return { total, service, trading, entrepreneur, industrial, tga, afterLicence, completed, takeAction, emergency, overdue, avgProgress, paused, inactive };
   }, [companies, stepCounts, serviceDefs, completedIds, overdueIds]);
 
 
@@ -400,9 +403,9 @@ export default function Index() {
   }, [companies]);
 
   const typeOptions = useMemo(() => {
-    const s = new Set<string>();
+    const s = new Set<string>(COMPANY_TYPES.map((t) => t.value as string));
     companies.forEach((c) => c.type && s.add(c.type));
-    return Array.from(s).sort();
+    return Array.from(s);
   }, [companies]);
 
   const addedRange = useMemo(() => {
@@ -463,6 +466,8 @@ export default function Index() {
         case "trading":
         case "entrepreneur":
         case "industrial_license":
+        case "tga":
+        case "after_licence":
           if (!isActive || c.type !== cardTab) return false;
           break;
         case "completed":
@@ -602,13 +607,15 @@ export default function Index() {
       </div>
 
       {/* Stats — clickable tabs */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-11 gap-3">
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {[
           { id: "total", value: stats.total, label: "Total", color: "text-foreground" },
           { id: "services", value: stats.service, label: "Service", color: "text-primary" },
           { id: "trading", value: stats.trading, label: "Trading", color: "text-primary" },
           { id: "entrepreneur", value: stats.entrepreneur, label: "Entrepreneur", color: "text-primary" },
           { id: "industrial_license", value: stats.industrial, label: "Industrial", color: "text-primary" },
+          { id: "tga", value: stats.tga, label: "TGA", color: "text-primary" },
+          { id: "after_licence", value: stats.afterLicence, label: "After Licence", color: "text-primary" },
           { id: "completed", value: stats.completed, label: "সম্পন্ন", color: "text-success" },
           { id: "overdue", value: stats.overdue, label: "Over Date", color: "text-destructive" },
           { id: "take_action", value: stats.takeAction, label: "Take Action", color: "text-[rgb(234,88,12)]", icon: true },
@@ -702,7 +709,7 @@ export default function Index() {
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {typeOptions.map((t) => (
-              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+              <SelectItem key={t} value={t} className="capitalize">{companyTypeLabel(t)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

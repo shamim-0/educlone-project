@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileNames } from "@/hooks/useProfileNames";
 import { auditTitle } from "@/lib/audit";
+import { COMPANY_TYPES, companyTypeLabel } from "@/lib/companyTypes";
 
 type CompanyType = "entrepreneur" | "trading" | "services" | "industrial_license" | "tga" | "after_licence";
 interface Company {
@@ -257,9 +258,9 @@ export default function CompanyPage() {
   }, [rows]);
 
   const typeOptions = useMemo(() => {
-    const s = new Set<string>();
+    const s = new Set<string>(COMPANY_TYPES.map((t) => t.value as string));
     rows.forEach((c) => c.type && s.add(c.type));
-    return Array.from(s).sort();
+    return Array.from(s);
   }, [rows]);
 
   const extractCode = extractCompanyCode;
@@ -345,7 +346,7 @@ export default function CompanyPage() {
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {typeOptions.map((t) => (
-              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+              <SelectItem key={t} value={t} className="capitalize">{companyTypeLabel(t)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
