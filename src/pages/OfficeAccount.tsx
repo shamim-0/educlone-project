@@ -461,9 +461,15 @@ export default function OfficeAccount() {
                 <div className="mt-1 space-y-0.5">
                   {expenseTotalsByCur.length === 0 ? (
                     <p className="text-2xl font-bold">{fmt(0, costCur)}</p>
-                  ) : expenseTotalsByCur.map(([cur, amt]) => (
-                    <p key={cur} className="text-2xl font-bold leading-tight">{fmt(amt, cur)}</p>
-                  ))}
+                  ) : expenseTotalsByCur.map(([cur, amt]) => {
+                    const sr = toSR(amt, cur);
+                    return (
+                      <div key={cur}>
+                        <p className="text-2xl font-bold leading-tight">{fmt(amt, cur)}</p>
+                        {sr != null && <p className="text-xs text-muted-foreground leading-tight">≈ {fmt(sr, "SR")}</p>}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal, costCur)}</p>
