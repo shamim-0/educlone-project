@@ -24,6 +24,11 @@ const CURRENCIES = ["SR", "USD", "EUR", "AED", "BDT", "PKR", "INR", "EGP", "GBP"
 const fmt = (n: number, cur = "SR") =>
   `${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur}`;
 
+// Currency units per 1 SR (used to show SR equivalent next to foreign totals).
+const SR_UNITS_PER_SR: Record<string, number> = { BDT: 33.5 };
+const toSR = (amt: number, cur: string): number | null =>
+  cur !== "SR" && SR_UNITS_PER_SR[cur] != null ? amt / SR_UNITS_PER_SR[cur] : null;
+
 const today = () => new Date().toISOString().slice(0, 10);
 const thisMonth = () => new Date().toISOString().slice(0, 7);
 
