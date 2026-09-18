@@ -24,6 +24,11 @@ const CURRENCIES = ["SR", "USD", "EUR", "AED", "BDT", "PKR", "INR", "EGP", "GBP"
 const fmt = (n: number, cur = "SR") =>
   `${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur}`;
 
+// Currency units per 1 SR (used to show SR equivalent next to foreign totals).
+const SR_UNITS_PER_SR: Record<string, number> = { BDT: 33.5 };
+const toSR = (amt: number, cur: string): number | null =>
+  cur !== "SR" && SR_UNITS_PER_SR[cur] != null ? amt / SR_UNITS_PER_SR[cur] : null;
+
 const today = () => new Date().toISOString().slice(0, 10);
 const thisMonth = () => new Date().toISOString().slice(0, 7);
 
@@ -456,9 +461,15 @@ export default function OfficeAccount() {
                 <div className="mt-1 space-y-0.5">
                   {expenseTotalsByCur.length === 0 ? (
                     <p className="text-2xl font-bold">{fmt(0, costCur)}</p>
-                  ) : expenseTotalsByCur.map(([cur, amt]) => (
-                    <p key={cur} className="text-2xl font-bold leading-tight">{fmt(amt, cur)}</p>
-                  ))}
+                  ) : expenseTotalsByCur.map(([cur, amt]) => {
+                    const sr = toSR(amt, cur);
+                    return (
+                      <div key={cur}>
+                        <p className="text-2xl font-bold leading-tight">{fmt(amt, cur)}</p>
+                        {sr != null && <p className="text-xs text-muted-foreground leading-tight">≈ {fmt(sr, "SR")}</p>}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="mt-1 text-2xl font-bold">{fmt(expenseTotal, costCur)}</p>
@@ -555,9 +566,15 @@ export default function OfficeAccount() {
                 <div className="mt-1 space-y-0.5">
                   {salaryTotalsByCur.length === 0 ? (
                     <p className="text-2xl font-bold">{fmt(0, salaryCur)}</p>
-                  ) : salaryTotalsByCur.map((t) => (
-                    <p key={t.cur} className="text-2xl font-bold leading-tight">{fmt(t.payable, t.cur)}</p>
-                  ))}
+                  ) : salaryTotalsByCur.map((t) => {
+                    const sr = toSR(t.payable, t.cur);
+                    return (
+                      <div key={t.cur}>
+                        <p className="text-2xl font-bold leading-tight">{fmt(t.payable, t.cur)}</p>
+                        {sr != null && <p className="text-xs text-muted-foreground leading-tight">≈ {fmt(sr, "SR")}</p>}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="mt-1 text-2xl font-bold">{fmt(salaryTotals.payable, salaryCur)}</p>
@@ -569,9 +586,15 @@ export default function OfficeAccount() {
                 <div className="mt-1 space-y-0.5">
                   {salaryTotalsByCur.length === 0 ? (
                     <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(0, salaryCur)}</p>
-                  ) : salaryTotalsByCur.map((t) => (
-                    <p key={t.cur} className="text-2xl font-bold leading-tight text-emerald-600 dark:text-emerald-400">{fmt(t.paid, t.cur)}</p>
-                  ))}
+                  ) : salaryTotalsByCur.map((t) => {
+                    const sr = toSR(t.paid, t.cur);
+                    return (
+                      <div key={t.cur}>
+                        <p className="text-2xl font-bold leading-tight text-emerald-600 dark:text-emerald-400">{fmt(t.paid, t.cur)}</p>
+                        {sr != null && <p className="text-xs text-muted-foreground leading-tight">≈ {fmt(sr, "SR")}</p>}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(salaryTotals.paid, salaryCur)}</p>
@@ -583,9 +606,15 @@ export default function OfficeAccount() {
                 <div className="mt-1 space-y-0.5">
                   {salaryTotalsByCur.length === 0 ? (
                     <p className="text-2xl font-bold text-destructive">{fmt(0, salaryCur)}</p>
-                  ) : salaryTotalsByCur.map((t) => (
-                    <p key={t.cur} className="text-2xl font-bold leading-tight text-destructive">{fmt(t.due, t.cur)}</p>
-                  ))}
+                  ) : salaryTotalsByCur.map((t) => {
+                    const sr = toSR(t.due, t.cur);
+                    return (
+                      <div key={t.cur}>
+                        <p className="text-2xl font-bold leading-tight text-destructive">{fmt(t.due, t.cur)}</p>
+                        {sr != null && <p className="text-xs text-muted-foreground leading-tight">≈ {fmt(sr, "SR")}</p>}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="mt-1 text-2xl font-bold text-destructive">{fmt(salaryTotals.due, salaryCur)}</p>
