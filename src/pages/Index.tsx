@@ -36,6 +36,8 @@ interface Company {
   note?: string | null;
   status?: string | null;
   branches?: { name: string } | null;
+  package_id?: string | null;
+  packages?: { name: string } | null;
   mother_company_issued_date?: string | null;
   mother_company_expire_date?: string | null;
   company_issue_date?: string | null;
@@ -136,6 +138,11 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         <Badge className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 capitalize">
           {c.type}
         </Badge>
+        {c.packages?.name && (
+          <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+            {c.packages.name}
+          </Badge>
+        )}
         {lastUpdate && (
           <Badge
             variant="outline"
