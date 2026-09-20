@@ -804,6 +804,7 @@ export type Database = {
       packages: {
         Row: {
           created_at: string
+          duration_months: number | null
           id: string
           name: string
           price: number
@@ -811,6 +812,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duration_months?: number | null
           id?: string
           name: string
           price?: number
@@ -818,6 +820,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duration_months?: number | null
           id?: string
           name?: string
           price?: number
