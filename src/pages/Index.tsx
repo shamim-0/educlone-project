@@ -353,6 +353,12 @@ export default function Index() {
     if (role !== null && serviceDefs.length > 0) load();
   }, [role, branchId, serviceDefs]);
 
+  useEffect(() => {
+    supabase.from("packages").select("id, name").order("name").then(({ data }) => {
+      setPackageOptions((data ?? []) as { id: string; name: string }[]);
+    });
+  }, []);
+
 
   const overdueIds = useMemo(() => {
     const set = new Set<string>();
@@ -458,6 +464,7 @@ export default function Index() {
     return companies.filter((c) => {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
+      if (packageFilter !== "all" && (c.package_id ?? "") !== packageFilter) return false;
       const query = search.trim().toLowerCase();
       if (query && ![c.name, c.company_code, c.tracking_id].some((value) => value?.toLowerCase().includes(query))) return false;
       if (addedRange) {
