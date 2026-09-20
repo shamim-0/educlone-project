@@ -1,61 +1,83 @@
-# Lovable Cloud → Personal Supabase সম্পূর্ণ মাইগ্রেশন প্ল্যান
+# Company Profile Agreement System — বাস্তবায়ন পরিকল্পনা
 
-আপনার এই প্রজেক্টের সব ডেটা (schema, টেবিল ডেটা, auth ইউজার, storage ফাইল, edge functions, triggers) একটি নতুন external/personal Supabase প্রজেক্টে সরানো হবে। নিচে ধাপে ধাপে কী কী হবে তা দেওয়া হলো।
+## লক্ষ্য
+Company Profile-এ একটি নতুন **Agreements** section থাকবে। Diagram অনুযায়ী মোট ১৬টি agreement template থাকবে:
 
-## ১. বর্তমান অবস্থা (যা মাইগ্রেট করতে হবে)
+- Service License Agreement: ৮টি
+- Trading License Agreement: ৮টি
+- প্রতিটি license type-এর অধীনে:
+  - International Investor: Legacy, Executive, Business, Starter
+  - KSA Resident: Legacy, Executive, Business, Starter
 
-- **টেবিল:** ২৪টি public টেবিল — companies, branches, company_steps, company_installments, company_expenses, company_extra_deals, company_extra_expenses, company_managers, company_shareholders, company_documents, cr_activities, todo_tasks, todo_task_services, user_roles, user_service_assignments, profiles, services, packages, pending_tasks, employees, salary_payments, office_expenses, office_expense_categories, accounts
-- **Enum টাইপ:** account_type, app_role, company_type
-- **ফাংশন (Security Definer):** has_role, get_user_role, has_expenses_access, has_company_expenses_access, has_office_access, handle_new_user, generate_company_codes, enforce_todo_task_editor_update, set_status_changed_at, set_updated_at
-- **Triggers:** সব আপডেট-অ্যাট এবং কোড-জেনারেশন ট্রিগার (14টি)
-- **Storage বাকেট:** company-documents (private) — আপলোড করা ফাইলসহ
-- **Edge Functions:** admin-create-user, admin-delete-user, admin-update-password, company-detail-api
-- **Auth ইউজার:** বর্তমান লগইন ইউজার ও তাদের রোল/প্রোফাইল
-- **RLS পলিসি + GRANT:** প্রতিটি টেবিলের জন্য
+User agreement তৈরির সময় license type, investor type এবং package manually নির্বাচন করবে।
 
-## ২. মাইগ্রেশন ধাপ
+## ব্যবহারকারীর ধাপ
+1. Company Profile থেকে **Agreements** section খুলবে।
+2. **Create Agreement** চাপবে।
+3. License type, investor type এবং package নির্বাচন করবে।
+4. নির্বাচনের ভিত্তিতে ১৬টি HTML template-এর সঠিক template খুলবে।
+5. Company Profile থেকে company name, client name, passport/Iqama, branch, package, deal amount এবং প্রযোজ্য অন্যান্য তথ্য auto-fill হবে।
+6. HTML-এ আগে থেকে editable রাখা field/section সরাসরি edit করা যাবে।
+7. Preview দেখে Print বা PDF download করা যাবে।
+8. **Save Final Version** করলে সেই সময়ের সম্পূর্ণ agreement snapshot company-এর সঙ্গে স্থায়ীভাবে সংরক্ষিত হবে।
 
-### ধাপ A — ডেটাবেস ব্যাকআপ ডাউনলোড (আপনি করবেন)
-1. Lovable এডিটরে **More → Cloud → Database → Backups** অথবা **Cloud → Advanced settings → Export data** যান।
-2. সম্পূর্ণ ডেটাবেস ব্যাকআপ (SQL/PG dump) ডাউনলোড করুন।
-3. ফাইলটি এই চ্যাটে সংযুক্ত করুন অথবা নির্দেশিত হলে নিরাপদ স্থানে রাখুন।
+## Company Profile UI
+- বর্তমান Company Profile-এর পাশে/নিচে একটি পূর্ণ-প্রস্থ **Agreements** section যোগ হবে, যাতে document preview পড়ার মতো যথেষ্ট বড় থাকে।
+- Saved agreement list-এ থাকবে:
+  - Agreement type
+  - Investor type
+  - Package
+  - Created date
+  - Created by
+  - Status: Draft / Final
+  - View, Edit Draft, Print/PDF এবং Delete action (permission অনুযায়ী)
+- Final agreement খুললে আগের saved content-ই দেখাবে; পরবর্তীতে company/profile/package বদলালেও final copy পরিবর্তিত হবে না।
 
-### ধাপ B — নতুন Supabase প্রজেক্ট তৈরি (আপনি করবেন)
-1. supabase.com-এ নতুন প্রজেক্ট খুলুন, region ও পাসওয়ার্ড সেট করুন।
-2. প্রজেক্ট ready হলে আমাকে জানান — আমি SQL কমান্ড দিয়ে রিস্টোর করতে সাহায্য করব।
+## ১৬টি HTML Template সংযুক্তকরণ
+- আপনার ZIP থেকে ১৬টি HTML file ও তাদের local CSS/image/font asset আলাদা template হিসেবে যোগ করা হবে।
+- প্রতিটি file-কে diagram-এর একটি নির্দিষ্ট combination-এর সঙ্গে map করা হবে।
+- HTML-এর editable অংশ অক্ষুণ্ণ রাখা হবে।
+- Unsafe script সরিয়ে template নিরাপদভাবে preview করা হবে।
+- Existing design, pagination, print size এবং page breaks যথাসম্ভব অপরিবর্তিত রাখা হবে।
 
-### ধাপ C — Schema + Data রিস্টোর (আমি গাইড করব)
-- Enum ও টেবিল তৈরির সম্পূর্ণ SQL (GRANT + RLS + পলিসি সহ) প্রস্তুত করব।
-- ডেটা ইনসার্ট ক্রম (foreign-key অনুযায়ী): branches → companies → services/packages → বাকি সব → todo_tasks → todo_task_services।
-- ট্রিগার ও ফাংশন রিক্রিয়েট করব।
+## Auto-fill ও Editing
+- Template placeholder-গুলোর জন্য একটি common mapping থাকবে, যেমন:
+  - Company এবং client details
+  - Passport/Iqama
+  - Branch
+  - Package name, price এবং duration
+  - Agreement date
+  - License ও investor selection
+- Missing তথ্য থাকলে blank/editable থাকবে; ভুল placeholder silently বসানো হবে না।
+- User-এর edit আলাদা draft data হিসেবে save হবে, মূল ১৬টি template বদলাবে না।
 
-### ধাপ D — Auth ইউজার মাইগ্রেশন
-- Lovable-এর `auth.users` সরাসরি ডাম্প করা যায় না (Supabase-managed)।
-- প্রতিটি ইউজার নতুন প্রজেক্টে পাসওয়ার্ড রিসেট লিঙ্ক দিয়ে রিক্রিয়েট করবে, একই UUID সহ।
-- `profiles`, `user_roles`, `user_service_assignments` ডেটা ঐ UUID দিয়ে ইম্পোর্ট হবে।
+## সংরক্ষণ ও অনুমতি
+- প্রতিটি company-এর একাধিক agreement রাখা যাবে।
+- Draft update করা যাবে; Final version immutable snapshot হিসেবে রাখা হবে। প্রয়োজন হলে সেটি duplicate করে নতুন draft বানানো যাবে।
+- Authenticated authorized users agreement দেখতে পারবে।
+- Company edit permission থাকা user draft তৈরি/edit করতে পারবে; destructive/final-management action বর্তমান role rules অনুসরণ করবে।
+- Created by, updated by এবং timestamps রাখা হবে audit-এর জন্য।
 
-### ধাপ E — Storage ফাইল মাইগ্রেশন
-- `company-documents` বাকেট নতুন প্রজেক্টে তৈরি করব।
-- প্রতিটি ফাইল Supabase Storage API দিয়ে ডাউনলোড ও রি-আপলোড করব, `file_path` ঠিক রেখে।
-- `company_documents` টেবিলের রেকর্ড অপরিবর্তিত থাকবে।
+## Print ও PDF
+- Agreement-এর original A4 layout, page count, header/footer এবং page break বজায় রেখে print view থাকবে।
+- Browser Print থেকে PDF save এবং একটি পরিষ্কার **Download PDF** action থাকবে।
+- PDF-তে editor controls বা app navigation থাকবে না।
 
-### ধাপ F — Edge Functions ডিপ্লয়
-- `supabase/functions/` ফোল্ডারের ৪টি ফাংশন নতুন প্রজেক্টে ডিপ্লয় করব।
-- `company-detail-api`-এর `verify_jwt=false` কনফিগ ঠিক রাখব।
-- প্রয়োজনীয় সিক্রেট যোগ করব।
+## Technical details
+- Agreement records-এর জন্য secured database table তৈরি হবে, যেখানে template key, selections, draft HTML/content, final HTML snapshot, status এবং audit fields থাকবে।
+- নতুন table-এ explicit grants এবং row-level access rules একই migration-এ যোগ হবে।
+- Agreement template registry ১৬টি file-এর mapping centrally পরিচালনা করবে।
+- Template HTML isolated preview-তে render হবে, যাতে agreement CSS Company Profile-এর design নষ্ট না করে।
+- Existing `packages` relation থেকে package name, price ও `duration_months` নেওয়া হবে।
+- Existing document category **Final quotation and agreement** অপরিবর্তিত থাকবে; generated agreements নতুন Agreements section-এ পরিচালিত হবে।
 
-### ধাপ G — অ্যাপ কনফিগ পরিবর্তন
-- নতুন Supabase URL ও anon key অ্যাপে বসাব (Lovable-এর `.env` বা external কানেকশন)।
-- লক্ষ্য রাখব: Lovable Cloud থেকে external Supabase-এ "disconnect" সম্ভব নয়; তাই মাইগ্রেশনের পর অ্যাপ চালাতে নতুন external প্রজেক্টের কানেকশন ব্যবহার করতে হবে।
+## যাচাই
+- ১৬টি combination প্রত্যেকটি সঠিক template খোলে কিনা পরীক্ষা।
+- Auto-fill, editable fields, draft reopen এবং final snapshot পরীক্ষা।
+- A4 print/PDF-এর প্রতিটি page-এ clipping, overflow, missing font/image এবং page-break পরীক্ষা।
+- Admin/editor/view-only permission পরীক্ষা।
+- Desktop ও mobile-এ Agreement list এবং viewer ব্যবহারযোগ্য কিনা পরীক্ষা।
 
-## ৩. বিশেষ সতর্কতা
-- `generate_company_codes` ট্রিগার direct execution revoked — নতুন প্রজেক্টেও পাবলিক রোল থেকে revoke রাখব।
-- প্রতিটি টেবিলে GRANT অনুপস্থিত থাকলে Data API কাজ করবে না — মাইগ্রেশন SQL-এ GRANT থাকবেই।
-- Auth ইউজারের পাসওয়ার্ড ব্যাকআপে থাকে না — রিসেট লিঙ্ক দিয়ে রিক্রিয়েট করতে হবে।
-
-## ৪. আমার পরবর্তী কাজ (অনুমোদন পেলে)
-- সম্পূর্ণ schema + RLS + GRANT + ট্রিগার + ফাংশন SQL একসাথে তৈরি করা।
-- ধাপ ধাপে ডেটা ইম্পোর্ট স্ক্রিপ্ট তৈরি করা।
-- স্টোরেজ ও এজ ফাংশন মাইগ্রেশন গাইড করা।
-
-প্ল্যান অনুমোদন করলে আমি SQL মাইগ্রেশন ফাইল তৈরি শুরু করব।
+## বাস্তবায়নের আগে প্রয়োজন
+- ১৬টি HTML file এবং ব্যবহৃত CSS, font, image-সহ একটি ZIP upload করতে হবে।
+- File name বা folder structure থেকে mapping স্পষ্ট না হলে ZIP পর্যালোচনা করে একটি mapping তালিকা তৈরি করা হবে; তারপর implementation শুরু হবে।
