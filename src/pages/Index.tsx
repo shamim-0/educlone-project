@@ -273,6 +273,8 @@ export default function Index() {
   const [branchFilter, setBranchFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [packageFilter, setPackageFilter] = useState<string>("all");
+  const [packageOptions, setPackageOptions] = useState<{ id: string; name: string }[]>([]);
   const [sortBy, setSortBy] = useState<string>("default");
   const [cardTab, setCardTab] = useState<string>("total");
   const [addedFilter, setAddedFilter] = useState<string>("all");
@@ -286,7 +288,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, company_code, tracking_id, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, mother_company_issued_date, mother_company_expire_date, company_issue_date, company_expire_date, misa_issued_date, misa_expire_date, branches!companies_branch_id_fkey(name)")
+        .select("id, name, company_code, tracking_id, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, mother_company_issued_date, mother_company_expire_date, company_issue_date, company_expire_date, misa_issued_date, misa_expire_date, package_id, branches!companies_branch_id_fkey(name), packages(name)")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
