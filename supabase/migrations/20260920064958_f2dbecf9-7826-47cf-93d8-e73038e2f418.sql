@@ -1,0 +1,1 @@
+ALTER TABLE public.packages ADD COLUMN duration_months integer;
