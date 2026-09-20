@@ -504,7 +504,7 @@ export default function Index() {
       }
       return true;
     });
-  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds, addedRange]);
+  }, [companies, branchFilter, typeFilter, packageFilter, search, cardTab, completedIds, overdueIds, addedRange]);
 
 
   const sorted = useMemo(() => {
@@ -726,6 +726,15 @@ export default function Index() {
             <SelectItem value="all">All Types</SelectItem>
             {typeOptions.map((t) => (
               <SelectItem key={t} value={t} className="capitalize">{companyTypeLabel(t)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={packageFilter} onValueChange={setPackageFilter}>
+          <SelectTrigger className="md:w-48"><SelectValue placeholder="All Packages" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Packages</SelectItem>
+            {packageOptions.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
