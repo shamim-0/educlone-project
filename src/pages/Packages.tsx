@@ -32,9 +32,12 @@ export default function PackagesPage() {
     const fd = new FormData(e.currentTarget);
     const name = String(fd.get("name") ?? "").trim();
     const price = Number(fd.get("price") ?? 0);
+    const durationRaw = String(fd.get("duration_months") ?? "").trim();
+    const duration_months = durationRaw ? Number(durationRaw) : null;
     if (!name) { toast.error("Name required"); return; }
     if (Number.isNaN(price)) { toast.error("Invalid price"); return; }
-    const payload = { name, price };
+    if (duration_months !== null && (Number.isNaN(duration_months) || duration_months < 1)) { toast.error("Invalid duration"); return; }
+    const payload = { name, price, duration_months };
     const { error } = editing
       ? await supabase.from("packages").update(payload).eq("id", editing.id)
       : await supabase.from("packages").insert(payload);
@@ -60,6 +63,7 @@ export default function PackagesPage() {
         columns={[
           { key: "name", header: "Name" },
           { key: "price", header: "Price", render: (r) => r.price.toLocaleString() },
+          { key: "duration_months", header: "Duration", render: (r) => r.duration_months ? `${r.duration_months} month${r.duration_months > 1 ? "s" : ""}` : "—" },
         ]}
         onAdd={() => { setEditing(null); setOpen(true); }}
         onEdit={(r) => { setEditing(r); setOpen(true); }}
@@ -77,6 +81,10 @@ export default function PackagesPage() {
             <div>
               <Label htmlFor="price">Price</Label>
               <Input id="price" name="price" type="number" step="0.01" defaultValue={editing?.price ?? 0} required />
+            </div>
+            <div>
+              <Label htmlFor="duration_months">Duration (months)</Label>
+              <Input id="duration_months" name="duration_months" type="number" min={1} step={1} defaultValue={editing?.duration_months ?? ""} placeholder="e.g. 6" />
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>
