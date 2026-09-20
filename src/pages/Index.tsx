@@ -36,6 +36,8 @@ interface Company {
   note?: string | null;
   status?: string | null;
   branches?: { name: string } | null;
+  package_id?: string | null;
+  packages?: { name: string } | null;
   mother_company_issued_date?: string | null;
   mother_company_expire_date?: string | null;
   company_issue_date?: string | null;
@@ -136,6 +138,11 @@ function CompanyCard({ c, done, processing, totalSteps, applicableDefs, stepStat
         <Badge className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 capitalize">
           {c.type}
         </Badge>
+        {c.packages?.name && (
+          <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+            {c.packages.name}
+          </Badge>
+        )}
         {lastUpdate && (
           <Badge
             variant="outline"
@@ -266,6 +273,8 @@ export default function Index() {
   const [branchFilter, setBranchFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [packageFilter, setPackageFilter] = useState<string>("all");
+  const [packageOptions, setPackageOptions] = useState<{ id: string; name: string }[]>([]);
   const [sortBy, setSortBy] = useState<string>("default");
   const [cardTab, setCardTab] = useState<string>("total");
   const [addedFilter, setAddedFilter] = useState<string>("all");
@@ -279,7 +288,7 @@ export default function Index() {
     const load = async () => {
       let q = supabase
         .from("companies")
-        .select("id, name, company_code, tracking_id, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, mother_company_issued_date, mother_company_expire_date, company_issue_date, company_expire_date, misa_issued_date, misa_expire_date, branches!companies_branch_id_fkey(name)")
+        .select("id, name, company_code, tracking_id, type, branch_id, created_at, emergency, take_action, warning, warning_note, note, status, mother_company_issued_date, mother_company_expire_date, company_issue_date, company_expire_date, misa_issued_date, misa_expire_date, package_id, branches!companies_branch_id_fkey(name), packages(name)")
         .order("created_at", { ascending: false });
       if (role && role !== "admin" && branchId) {
         q = q.eq("branch_id", branchId);
@@ -343,6 +352,12 @@ export default function Index() {
 
     if (role !== null && serviceDefs.length > 0) load();
   }, [role, branchId, serviceDefs]);
+
+  useEffect(() => {
+    supabase.from("packages").select("id, name").order("name").then(({ data }) => {
+      setPackageOptions((data ?? []) as { id: string; name: string }[]);
+    });
+  }, []);
 
 
   const overdueIds = useMemo(() => {
@@ -449,6 +464,7 @@ export default function Index() {
     return companies.filter((c) => {
       if (branchFilter !== "all" && (c.branches?.name ?? "—") !== branchFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
+      if (packageFilter !== "all" && (c.package_id ?? "") !== packageFilter) return false;
       const query = search.trim().toLowerCase();
       if (query && ![c.name, c.company_code, c.tracking_id].some((value) => value?.toLowerCase().includes(query))) return false;
       if (addedRange) {
@@ -488,7 +504,7 @@ export default function Index() {
       }
       return true;
     });
-  }, [companies, branchFilter, typeFilter, search, cardTab, completedIds, overdueIds, addedRange]);
+  }, [companies, branchFilter, typeFilter, packageFilter, search, cardTab, completedIds, overdueIds, addedRange]);
 
 
   const sorted = useMemo(() => {
@@ -710,6 +726,15 @@ export default function Index() {
             <SelectItem value="all">All Types</SelectItem>
             {typeOptions.map((t) => (
               <SelectItem key={t} value={t} className="capitalize">{companyTypeLabel(t)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={packageFilter} onValueChange={setPackageFilter}>
+          <SelectTrigger className="md:w-48"><SelectValue placeholder="All Packages" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Packages</SelectItem>
+            {packageOptions.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
