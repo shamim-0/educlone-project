@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-interface Pkg { id: string; name: string; price: number; }
+interface Pkg { id: string; name: string; price: number; duration_months: number | null; }
 
 export default function PackagesPage() {
   const [rows, setRows] = useState<Pkg[]>([]);
@@ -19,7 +19,7 @@ export default function PackagesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("packages")
-      .select("id, name, price")
+      .select("id, name, price, duration_months")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     setRows((data ?? []) as Pkg[]);
