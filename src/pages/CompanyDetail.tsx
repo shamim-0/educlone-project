@@ -30,6 +30,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfileNames } from "@/hooks/useProfileNames";
 import { auditTitle, fmtWhen } from "@/lib/audit";
 import { EXPIRY_FIELDS, daysUntil } from "@/lib/licenceExpiry";
+import CompanyAgreements from "@/components/CompanyAgreements";
+
 
 interface Branch { id: string; name: string }
 interface Company {
