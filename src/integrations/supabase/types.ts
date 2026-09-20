@@ -234,6 +234,68 @@ export type Database = {
           },
         ]
       }
+      company_agreements: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          field_values: Json
+          finalized_at: string | null
+          id: string
+          investor_type: string
+          license_type: string
+          package_key: string
+          status: string
+          template_key: string
+          title: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          field_values?: Json
+          finalized_at?: string | null
+          id?: string
+          investor_type: string
+          license_type: string
+          package_key: string
+          status?: string
+          template_key: string
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          field_values?: Json
+          finalized_at?: string | null
+          id?: string
+          investor_type?: string
+          license_type?: string
+          package_key?: string
+          status?: string
+          template_key?: string
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_agreements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_documents: {
         Row: {
           category: string

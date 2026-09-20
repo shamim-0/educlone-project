@@ -30,6 +30,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfileNames } from "@/hooks/useProfileNames";
 import { auditTitle, fmtWhen } from "@/lib/audit";
 import { EXPIRY_FIELDS, daysUntil } from "@/lib/licenceExpiry";
+import CompanyAgreements from "@/components/CompanyAgreements";
+
 
 interface Branch { id: string; name: string }
 interface Company {
@@ -1695,7 +1697,18 @@ export default function CompanyDetail() {
             )}
           </Card>
 
+          {/* Agreements */}
+          <CompanyAgreements company={{
+            id: company.id,
+            name: company.name,
+            client_name: (company as any).client_name ?? null,
+            passport_iqama: (company as any).passport_iqama ?? null,
+            whatsapp: company.whatsapp,
+            contact_email: company.contact_email,
+          }} />
+
           {/* Documents */}
+
           <Card className="p-4 space-y-3">
             <h2 className="font-semibold flex items-center gap-2">
               <Folder className="h-5 w-5 text-accent" /> Documents
