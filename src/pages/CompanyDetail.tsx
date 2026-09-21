@@ -441,11 +441,23 @@ export default function CompanyDetail() {
   }
 
   async function removeStoredFile(doc: CompanyDoc) {
-    if (doc.storage_provider === "r2") {
-      try { await r2SignedUrl("delete", doc.file_path); } catch (e) { console.error("R2 delete failed:", e); }
+    if (doc.storage_provider === "legacy") {
+      await supabase.storage.from("company-documents").remove([doc.file_path]);
       return;
     }
-    await supabase.storage.from("company-documents").remove([doc.file_path]);
+    // New files live in the R2 bucket — retry so a cold start doesn't leave an orphan file.
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await r2SignedUrl("delete", doc.file_path);
+        return;
+      } catch (e) {
+        lastErr = e;
+        await new Promise(r => setTimeout(r, 700 * (attempt + 1)));
+      }
+    }
+    console.error("R2 delete failed:", lastErr);
+    throw new Error(`Could not delete "${doc.file_name}" from storage. Please try again.`);
   }
 
   async function downloadDocument(doc: CompanyDoc) {
