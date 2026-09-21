@@ -22,7 +22,7 @@ export default function PackagesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("packages")
-      .select("id, name, price, duration_months")
+      .select("id, name, price, duration_working_days")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     setRows((data ?? []) as Pkg[]);
@@ -35,12 +35,12 @@ export default function PackagesPage() {
     const fd = new FormData(e.currentTarget);
     const name = String(fd.get("name") ?? "").trim();
     const price = Number(fd.get("price") ?? 0);
-    const durationRaw = String(fd.get("duration_months") ?? "").trim();
-    const duration_months = durationRaw ? Number(durationRaw) : null;
+    const durationRaw = String(fd.get("duration_working_days") ?? "").trim();
+    const duration_working_days = durationRaw ? Number(durationRaw) : null;
     if (!name) { toast.error("Name required"); return; }
     if (Number.isNaN(price)) { toast.error("Invalid price"); return; }
-    if (duration_months !== null && (Number.isNaN(duration_months) || duration_months < 1)) { toast.error("Invalid duration"); return; }
-    const payload = { name, price, duration_months };
+    if (duration_working_days !== null && (Number.isNaN(duration_working_days) || duration_working_days < 1)) { toast.error("Invalid duration"); return; }
+    const payload = { name, price, duration_working_days };
     const { error } = editing
       ? await supabase.from("packages").update(payload).eq("id", editing.id)
       : await supabase.from("packages").insert(payload);
