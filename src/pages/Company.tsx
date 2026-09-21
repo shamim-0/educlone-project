@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { extractCompanyCode } from "@/lib/companySort";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/appClient";
 import { CrudTable } from "@/components/CrudTable";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";

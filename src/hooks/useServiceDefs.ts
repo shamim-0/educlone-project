@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/appClient";
 import { STEP_DEFS as FALLBACK } from "@/lib/steps";
 
 export interface ServiceDef {
