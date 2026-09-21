@@ -423,8 +423,18 @@ export default function CompanyDetail() {
 
   async function downloadDocument(doc: CompanyDoc) {
     const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
-    if (error || !data) return toast.error(error?.message || "Failed to get URL");
-    window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+      return;
+    }
+    // Older files still live in the previous storage — fall back to it.
+    const { data: legacy, error: legacyErr } = await supabase.functions.invoke("legacy-document-url", {
+      body: { path: doc.file_path },
+    });
+    if (legacyErr || !legacy?.signedUrl) {
+      return toast.error(error?.message || legacyErr?.message || "Failed to get URL");
+    }
+    window.open(legacy.signedUrl as string, "_blank");
   }
 
   async function deleteDocument(doc: CompanyDoc) {
