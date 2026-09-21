@@ -428,7 +428,7 @@ export default function CompanyDetail() {
     const inFolder = documents.filter(d => d.category === category && d.folder === folder);
     if (inFolder.length > 0 && !window.confirm(`Delete folder "${folder}" and its ${inFolder.length} file(s)?`)) return;
     if (inFolder.length > 0) {
-      await supabase.storage.from("company-documents").remove(inFolder.map(d => d.file_path));
+      await Promise.all(inFolder.map(d => removeStoredFile(d)));
       const { error } = await supabase
         .from("company_documents")
         .delete()
@@ -440,10 +440,25 @@ export default function CompanyDetail() {
     toast.success("Folder deleted");
   }
 
-
-
+  async function removeStoredFile(doc: CompanyDoc) {
+    if (doc.storage_provider === "r2") {
+      try { await r2SignedUrl("delete", doc.file_path); } catch (e) { console.error("R2 delete failed:", e); }
+      return;
+    }
+    await supabase.storage.from("company-documents").remove([doc.file_path]);
+  }
 
   async function downloadDocument(doc: CompanyDoc) {
+    if (doc.storage_provider === "r2") {
+      try {
+        const { url } = await r2SignedUrl("download", doc.file_path);
+        if (!url) throw new Error("No download URL");
+        window.open(url, "_blank");
+      } catch (e) {
+        toast.error((e as Error).message || "Failed to get URL");
+      }
+      return;
+    }
     const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
     if (data?.signedUrl) {
       window.open(data.signedUrl, "_blank");
@@ -460,11 +475,12 @@ export default function CompanyDetail() {
   }
 
   async function deleteDocument(doc: CompanyDoc) {
-    await supabase.storage.from("company-documents").remove([doc.file_path]);
+    await removeStoredFile(doc);
     const { error } = await supabase.from("company_documents").delete().eq("id", doc.id);
     if (error) return toast.error(error.message);
     setDocuments(prev => prev.filter(d => d.id !== doc.id));
   }
+
 
   async function renameCompany() {
     if (!company) return;
