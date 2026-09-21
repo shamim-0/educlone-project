@@ -428,7 +428,11 @@ export default function CompanyDetail() {
     const inFolder = documents.filter(d => d.category === category && d.folder === folder);
     if (inFolder.length > 0 && !window.confirm(`Delete folder "${folder}" and its ${inFolder.length} file(s)?`)) return;
     if (inFolder.length > 0) {
-      await Promise.all(inFolder.map(d => removeStoredFile(d)));
+      try {
+        await Promise.all(inFolder.map(d => removeStoredFile(d)));
+      } catch (e) {
+        return toast.error((e as Error).message);
+      }
       const { error } = await supabase
         .from("company_documents")
         .delete()
