@@ -66,7 +66,21 @@ export default function PackagesPage() {
         columns={[
           { key: "name", header: "Name" },
           { key: "price", header: "Price", render: (r) => r.price.toLocaleString() },
-          { key: "duration_months", header: "Duration", render: (r) => r.duration_months ? `${r.duration_months} month${r.duration_months > 1 ? "s" : ""}` : "—" },
+          {
+            key: "duration_working_days",
+            header: "Duration",
+            render: (r) =>
+              r.duration_working_days ? (
+                <span>
+                  {r.duration_working_days + EXTRA_WORKING_DAYS} working days
+                  <span className="text-muted-foreground text-xs ml-1">
+                    ({r.duration_working_days} + {EXTRA_WORKING_DAYS})
+                  </span>
+                </span>
+              ) : (
+                "—"
+              ),
+          },
         ]}
         onAdd={() => { setEditing(null); setOpen(true); }}
         onEdit={(r) => { setEditing(r); setOpen(true); }}
@@ -86,8 +100,9 @@ export default function PackagesPage() {
               <Input id="price" name="price" type="number" step="0.01" defaultValue={editing?.price ?? 0} required />
             </div>
             <div>
-              <Label htmlFor="duration_months">Duration (months)</Label>
-              <Input id="duration_months" name="duration_months" type="number" min={1} step={1} defaultValue={editing?.duration_months ?? ""} placeholder="e.g. 6" />
+              <Label htmlFor="duration_working_days">Duration (working days)</Label>
+              <Input id="duration_working_days" name="duration_working_days" type="number" min={1} step={1} defaultValue={editing?.duration_working_days ?? ""} placeholder="e.g. 20" />
+              <p className="text-xs text-muted-foreground mt-1">+{EXTRA_WORKING_DAYS} working days are added automatically to the total duration.</p>
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>
