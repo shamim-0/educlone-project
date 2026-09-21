@@ -1,27 +1,9 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/appClient";
+import { Ctx, AppRole } from "@/hooks/authContext";
 
-export type AppRole = "admin" | "sub_admin" | "editor" | "viewer";
-
-interface AuthCtx {
-  session: Session | null;
-  user: User | null;
-  role: AppRole | null;
-  username: string | null;
-  branchId: string | null;
-  accountsAccess: boolean;
-  expensesAccess: boolean;
-  expensesBranchId: string | null;
-  officeAccess: boolean;
-  officeBranchId: string | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (username: string, email: string, password: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
-}
-
-const Ctx = createContext<AuthCtx | undefined>(undefined);
+export type { AppRole };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
