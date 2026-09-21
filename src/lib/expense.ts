@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/appClient";
 import { methodLabel, numberToWords } from "@/lib/invoice";
 
 export function formatVoucherNo(n?: number | null) {

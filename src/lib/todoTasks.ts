@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/appClient";
 import type { TodoTaskCardData } from "@/components/TodoTaskCard";
 
 interface FetchOpts {

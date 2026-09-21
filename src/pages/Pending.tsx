@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { extractCompanyCode } from "@/lib/companySort";
 import { Link, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/appClient";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";

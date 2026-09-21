@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/appClient";
 
 export const PAYMENT_METHODS = [
   { value: "bank", label: "In Bank" },

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { sortCompanies } from "@/lib/companySort";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/appClient";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
