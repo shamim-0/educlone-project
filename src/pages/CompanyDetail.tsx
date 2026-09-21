@@ -54,8 +54,17 @@ interface Shareholder {
   share_percent: number | null; phone: string | null; email: string | null;
   birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
 }
-interface CompanyDoc { id: string; category: string; folder: string | null; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
+interface CompanyDoc { id: string; category: string; folder: string | null; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string; storage_provider?: string | null }
 const folderKey = (cat: string, folder: string | null) => `${cat}::${folder ?? ""}`;
+
+// New uploads go to the R2 bucket; older files stay in the previous storage.
+async function r2SignedUrl(mode: "upload" | "download" | "delete", path: string, contentType?: string) {
+  const { data, error } = await supabase.functions.invoke("r2-object-url", { body: { mode, path, contentType } });
+  if (error) throw new Error(error.message);
+  if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+  return data as { url?: string; ok?: boolean };
+}
+
 
 const DOC_CATEGORIES = [
   { key: "final_quotation", title: "Final quotation and agreement", subtitle: "", flag: "FQ", color: "border-primary/30" },
