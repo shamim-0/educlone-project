@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState, ReactNode } from "react";
+import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/appClient";
 import { Ctx, AppRole } from "@/hooks/authContext";
 
