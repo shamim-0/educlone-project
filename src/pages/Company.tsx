@@ -141,6 +141,7 @@ export default function CompanyPage() {
     }
     const rawName = String(fd.get("name") ?? "").trim();
     if (!rawName) { toast.error("Company name required"); return; }
+    if (!packageId) { toast.error("Package is required"); return; }
     const payload: Record<string, unknown> = {
       name: editing ? `${editing.company_code ?? ""} ${rawName}`.trim() : `${companyCode} ${rawName}`.trim(),
       type,
@@ -501,11 +502,10 @@ export default function CompanyPage() {
               </Select>
             </div>
             <div>
-              <Label>Package (optional)</Label>
-              <Select value={packageId || "none"} onValueChange={onPackageChange}>
-                <SelectTrigger><SelectValue placeholder="No package" /></SelectTrigger>
+              <Label>Package <span className="text-destructive">*</span></Label>
+              <Select value={packageId || undefined} onValueChange={onPackageChange}>
+                <SelectTrigger><SelectValue placeholder="Select a package" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No package</SelectItem>
                   {packages.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.name} — {p.price.toLocaleString()}</SelectItem>
                   ))}
