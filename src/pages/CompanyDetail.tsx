@@ -374,8 +374,20 @@ export default function CompanyDetail() {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const safeFolder = folder ? `${folder.replace(/[^a-zA-Z0-9._-]/g, "_")}/` : "";
       const path = `${id}/${category}/${safeFolder}${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
-      const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
-      if (upErr) { failed.push(file.name); continue; }
+      try {
+        const { url } = await r2SignedUrl("upload", path, file.type || "application/octet-stream");
+        if (!url) throw new Error("No upload URL");
+        const putRes = await fetch(url, {
+          method: "PUT",
+          body: file,
+          headers: file.type ? { "Content-Type": file.type } : undefined,
+        });
+        if (!putRes.ok) throw new Error(`Upload failed [${putRes.status}]`);
+      } catch (e) {
+        console.error("R2 upload failed:", e);
+        failed.push(file.name);
+        continue;
+      }
       const { data, error } = await supabase
         .from("company_documents")
         .insert({
@@ -386,6 +398,7 @@ export default function CompanyDetail() {
           file_path: path,
           file_size: file.size,
           mime_type: file.type || null,
+          storage_provider: "r2",
           uploaded_by: (await supabase.auth.getUser()).data.user?.id ?? null,
         })
         .select()
