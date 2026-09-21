@@ -4,7 +4,7 @@
 
 - **Purono document** (jegulo age upload kora) — age-r moto-i Lovable-er storage theke download hobe. Kono poriborton nei.
 - **Notun upload** — sob notun file apnar R2 bucket-e jabe (S3 API diye).
-- **Download button** — app nije bujhe nebe file-ta kothay ache (R2 / notun storage / purono Lovable storage) ar shothik jaygatheke khulbe.
+- **Download button** —nije bujhe neb app e file-ta kothay ache (R2 / notun storage / purono Lovable storage) ar shothik jaygatheke khulbe.
 - **Delete** — file jekhane ache sekhan thekei muche jabe.
 
 Bhabishyot-e chaile purono file gulo-o R2-te copy kora jabe — ekhon dorkar nei.
