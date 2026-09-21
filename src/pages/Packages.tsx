@@ -7,7 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-interface Pkg { id: string; name: string; price: number; duration_months: number | null; }
+interface Pkg { id: string; name: string; price: number; duration_working_days: number | null; }
+
+/** Working days entered by admin always get +7 added for the effective duration. */
+const EXTRA_WORKING_DAYS = 7;
 
 export default function PackagesPage() {
   const [rows, setRows] = useState<Pkg[]>([]);
