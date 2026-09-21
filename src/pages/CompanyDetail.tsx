@@ -487,7 +487,11 @@ export default function CompanyDetail() {
   }
 
   async function deleteDocument(doc: CompanyDoc) {
-    await removeStoredFile(doc);
+    try {
+      await removeStoredFile(doc);
+    } catch (e) {
+      return toast.error((e as Error).message);
+    }
     const { error } = await supabase.from("company_documents").delete().eq("id", doc.id);
     if (error) return toast.error(error.message);
     setDocuments(prev => prev.filter(d => d.id !== doc.id));
