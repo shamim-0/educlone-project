@@ -428,7 +428,11 @@ export default function CompanyDetail() {
     const inFolder = documents.filter(d => d.category === category && d.folder === folder);
     if (inFolder.length > 0 && !window.confirm(`Delete folder "${folder}" and its ${inFolder.length} file(s)?`)) return;
     if (inFolder.length > 0) {
-      await Promise.all(inFolder.map(d => removeStoredFile(d)));
+      try {
+        await Promise.all(inFolder.map(d => removeStoredFile(d)));
+      } catch (e) {
+        return toast.error((e as Error).message);
+      }
       const { error } = await supabase
         .from("company_documents")
         .delete()
@@ -441,11 +445,23 @@ export default function CompanyDetail() {
   }
 
   async function removeStoredFile(doc: CompanyDoc) {
-    if (doc.storage_provider === "r2") {
-      try { await r2SignedUrl("delete", doc.file_path); } catch (e) { console.error("R2 delete failed:", e); }
+    if (doc.storage_provider === "legacy") {
+      await supabase.storage.from("company-documents").remove([doc.file_path]);
       return;
     }
-    await supabase.storage.from("company-documents").remove([doc.file_path]);
+    // New files live in the R2 bucket — retry so a cold start doesn't leave an orphan file.
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await r2SignedUrl("delete", doc.file_path);
+        return;
+      } catch (e) {
+        lastErr = e;
+        await new Promise(r => setTimeout(r, 700 * (attempt + 1)));
+      }
+    }
+    console.error("R2 delete failed:", lastErr);
+    throw new Error(`Could not delete "${doc.file_name}" from storage. Please try again.`);
   }
 
   async function downloadDocument(doc: CompanyDoc) {
@@ -475,7 +491,11 @@ export default function CompanyDetail() {
   }
 
   async function deleteDocument(doc: CompanyDoc) {
-    await removeStoredFile(doc);
+    try {
+      await removeStoredFile(doc);
+    } catch (e) {
+      return toast.error((e as Error).message);
+    }
     const { error } = await supabase.from("company_documents").delete().eq("id", doc.id);
     if (error) return toast.error(error.message);
     setDocuments(prev => prev.filter(d => d.id !== doc.id));
