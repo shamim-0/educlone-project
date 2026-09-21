@@ -7,7 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-interface Pkg { id: string; name: string; price: number; duration_months: number | null; }
+interface Pkg { id: string; name: string; price: number; duration_working_days: number | null; }
+
+/** Working days entered by admin always get +7 added for the effective duration. */
+const EXTRA_WORKING_DAYS = 7;
 
 export default function PackagesPage() {
   const [rows, setRows] = useState<Pkg[]>([]);
@@ -19,7 +22,7 @@ export default function PackagesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("packages")
-      .select("id, name, price, duration_months")
+      .select("id, name, price, duration_working_days")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     setRows((data ?? []) as Pkg[]);
@@ -32,12 +35,12 @@ export default function PackagesPage() {
     const fd = new FormData(e.currentTarget);
     const name = String(fd.get("name") ?? "").trim();
     const price = Number(fd.get("price") ?? 0);
-    const durationRaw = String(fd.get("duration_months") ?? "").trim();
-    const duration_months = durationRaw ? Number(durationRaw) : null;
+    const durationRaw = String(fd.get("duration_working_days") ?? "").trim();
+    const duration_working_days = durationRaw ? Number(durationRaw) : null;
     if (!name) { toast.error("Name required"); return; }
     if (Number.isNaN(price)) { toast.error("Invalid price"); return; }
-    if (duration_months !== null && (Number.isNaN(duration_months) || duration_months < 1)) { toast.error("Invalid duration"); return; }
-    const payload = { name, price, duration_months };
+    if (duration_working_days !== null && (Number.isNaN(duration_working_days) || duration_working_days < 1)) { toast.error("Invalid duration"); return; }
+    const payload = { name, price, duration_working_days };
     const { error } = editing
       ? await supabase.from("packages").update(payload).eq("id", editing.id)
       : await supabase.from("packages").insert(payload);
@@ -63,7 +66,21 @@ export default function PackagesPage() {
         columns={[
           { key: "name", header: "Name" },
           { key: "price", header: "Price", render: (r) => r.price.toLocaleString() },
-          { key: "duration_months", header: "Duration", render: (r) => r.duration_months ? `${r.duration_months} month${r.duration_months > 1 ? "s" : ""}` : "—" },
+          {
+            key: "duration_working_days",
+            header: "Duration",
+            render: (r) =>
+              r.duration_working_days ? (
+                <span>
+                  {r.duration_working_days + EXTRA_WORKING_DAYS} working days
+                  <span className="text-muted-foreground text-xs ml-1">
+                    ({r.duration_working_days} + {EXTRA_WORKING_DAYS})
+                  </span>
+                </span>
+              ) : (
+                "—"
+              ),
+          },
         ]}
         onAdd={() => { setEditing(null); setOpen(true); }}
         onEdit={(r) => { setEditing(r); setOpen(true); }}
@@ -83,8 +100,9 @@ export default function PackagesPage() {
               <Input id="price" name="price" type="number" step="0.01" defaultValue={editing?.price ?? 0} required />
             </div>
             <div>
-              <Label htmlFor="duration_months">Duration (months)</Label>
-              <Input id="duration_months" name="duration_months" type="number" min={1} step={1} defaultValue={editing?.duration_months ?? ""} placeholder="e.g. 6" />
+              <Label htmlFor="duration_working_days">Duration (working days)</Label>
+              <Input id="duration_working_days" name="duration_working_days" type="number" min={1} step={1} defaultValue={editing?.duration_working_days ?? ""} placeholder="e.g. 20" />
+              <p className="text-xs text-muted-foreground mt-1">+{EXTRA_WORKING_DAYS} working days are added automatically to the total duration.</p>
             </div>
             <DialogFooter><Button type="submit">{editing ? "Save" : "Create"}</Button></DialogFooter>
           </form>
