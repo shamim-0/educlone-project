@@ -307,6 +307,7 @@ export type Database = {
           folder: string | null
           id: string
           mime_type: string | null
+          storage_provider: string
           uploaded_by: string | null
         }
         Insert: {
@@ -319,6 +320,7 @@ export type Database = {
           folder?: string | null
           id?: string
           mime_type?: string | null
+          storage_provider?: string
           uploaded_by?: string | null
         }
         Update: {
@@ -331,6 +333,7 @@ export type Database = {
           folder?: string | null
           id?: string
           mime_type?: string | null
+          storage_provider?: string
           uploaded_by?: string | null
         }
         Relationships: [

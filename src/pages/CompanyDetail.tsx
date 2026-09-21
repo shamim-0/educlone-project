@@ -54,8 +54,17 @@ interface Shareholder {
   share_percent: number | null; phone: string | null; email: string | null;
   birthdate: string | null; passport: string | null; nid: string | null; iqama: string | null;
 }
-interface CompanyDoc { id: string; category: string; folder: string | null; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string }
+interface CompanyDoc { id: string; category: string; folder: string | null; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; created_at: string; storage_provider?: string | null }
 const folderKey = (cat: string, folder: string | null) => `${cat}::${folder ?? ""}`;
+
+// New uploads go to the R2 bucket; older files stay in the previous storage.
+async function r2SignedUrl(mode: "upload" | "download" | "delete", path: string, contentType?: string) {
+  const { data, error } = await supabase.functions.invoke("r2-object-url", { body: { mode, path, contentType } });
+  if (error) throw new Error(error.message);
+  if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+  return data as { url?: string; ok?: boolean };
+}
+
 
 const DOC_CATEGORIES = [
   { key: "final_quotation", title: "Final quotation and agreement", subtitle: "", flag: "FQ", color: "border-primary/30" },
@@ -365,8 +374,20 @@ export default function CompanyDetail() {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const safeFolder = folder ? `${folder.replace(/[^a-zA-Z0-9._-]/g, "_")}/` : "";
       const path = `${id}/${category}/${safeFolder}${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
-      const { error: upErr } = await supabase.storage.from("company-documents").upload(path, file);
-      if (upErr) { failed.push(file.name); continue; }
+      try {
+        const { url } = await r2SignedUrl("upload", path, file.type || "application/octet-stream");
+        if (!url) throw new Error("No upload URL");
+        const putRes = await fetch(url, {
+          method: "PUT",
+          body: file,
+          headers: file.type ? { "Content-Type": file.type } : undefined,
+        });
+        if (!putRes.ok) throw new Error(`Upload failed [${putRes.status}]`);
+      } catch (e) {
+        console.error("R2 upload failed:", e);
+        failed.push(file.name);
+        continue;
+      }
       const { data, error } = await supabase
         .from("company_documents")
         .insert({
@@ -377,6 +398,7 @@ export default function CompanyDetail() {
           file_path: path,
           file_size: file.size,
           mime_type: file.type || null,
+          storage_provider: "r2",
           uploaded_by: (await supabase.auth.getUser()).data.user?.id ?? null,
         })
         .select()
@@ -406,7 +428,7 @@ export default function CompanyDetail() {
     const inFolder = documents.filter(d => d.category === category && d.folder === folder);
     if (inFolder.length > 0 && !window.confirm(`Delete folder "${folder}" and its ${inFolder.length} file(s)?`)) return;
     if (inFolder.length > 0) {
-      await supabase.storage.from("company-documents").remove(inFolder.map(d => d.file_path));
+      await Promise.all(inFolder.map(d => removeStoredFile(d)));
       const { error } = await supabase
         .from("company_documents")
         .delete()
@@ -418,10 +440,25 @@ export default function CompanyDetail() {
     toast.success("Folder deleted");
   }
 
-
-
+  async function removeStoredFile(doc: CompanyDoc) {
+    if (doc.storage_provider === "r2") {
+      try { await r2SignedUrl("delete", doc.file_path); } catch (e) { console.error("R2 delete failed:", e); }
+      return;
+    }
+    await supabase.storage.from("company-documents").remove([doc.file_path]);
+  }
 
   async function downloadDocument(doc: CompanyDoc) {
+    if (doc.storage_provider === "r2") {
+      try {
+        const { url } = await r2SignedUrl("download", doc.file_path);
+        if (!url) throw new Error("No download URL");
+        window.open(url, "_blank");
+      } catch (e) {
+        toast.error((e as Error).message || "Failed to get URL");
+      }
+      return;
+    }
     const { data, error } = await supabase.storage.from("company-documents").createSignedUrl(doc.file_path, 60);
     if (data?.signedUrl) {
       window.open(data.signedUrl, "_blank");
@@ -438,11 +475,12 @@ export default function CompanyDetail() {
   }
 
   async function deleteDocument(doc: CompanyDoc) {
-    await supabase.storage.from("company-documents").remove([doc.file_path]);
+    await removeStoredFile(doc);
     const { error } = await supabase.from("company_documents").delete().eq("id", doc.id);
     if (error) return toast.error(error.message);
     setDocuments(prev => prev.filter(d => d.id !== doc.id));
   }
+
 
   async function renameCompany() {
     if (!company) return;
